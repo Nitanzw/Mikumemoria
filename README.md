@@ -15,6 +15,43 @@ y árbol de habilidades.
    (`emulate_touch_from_mouse=true`), así que no hace falta un dispositivo
    táctil para probar.
 
+## Generar música con Suno
+
+`tools/generate_music_suno.py` llama a la [API de Suno](https://docs.sunoapi.org)
+para generar la música definitiva del juego (reemplaza los `.wav`
+placeholder). Es un script Python de la librería estándar, sin
+dependencias que instalar.
+
+```bash
+export SUNO_API_KEY="tu_clave"          # https://sunoapi.org/api-key
+python3 tools/generate_music_suno.py --list                 # ver las 11 pistas definidas
+python3 tools/generate_music_suno.py --track menu_theme      # generar una
+python3 tools/generate_music_suno.py --all --skip-existing   # generar todo lo que falte
+```
+
+Por cada pista: crea la tarea (`POST /api/v1/generate`), espera con
+polling (`GET /api/v1/generate/record-info`) y descarga el `.mp3` a
+`assets/sounds/music/<nombre>.mp3`. No hace falta tocar GDScript después:
+`AudioManager` ya prioriza `.mp3` sobre el `.wav` placeholder.
+
+Pistas definidas: `menu_theme` y `level_theme_1` (ya usadas por el
+código) más `level_theme_2` a `level_theme_10`, una por capítulo de
+`LevelManager`. `game_level.gd` reproduce `level_theme_<capítulo actual>`
+si existe, y si no, cae en `level_theme_1` — así el juego nunca se queda
+sin música mientras se van generando los capítulos restantes.
+
+Notas importantes:
+- **Nunca commitees `SUNO_API_KEY`.** Usá variable de entorno o copiá
+  `.env.example` a `.env` (ya está en `.gitignore`).
+- Suno borra los archivos generados a los **15 días**: por eso el script
+  descarga y guarda el `.mp3` en el repo en vez de dejar que el juego
+  dependa de la URL remota.
+- Cada corrida de `--track`/`--all` gasta créditos de tu cuenta de Suno;
+  usá `--skip-existing` para no regenerar lo que ya está bien.
+- Los prompts de cada pista (estilo, título, descripción) están en el
+  diccionario `TRACKS` al principio del script — se pueden ajustar y
+  volver a correr para otra versión de la misma pista.
+
 ## Qué está implementado
 
 - **Autoloads**: `GameManager`, `SaveManager`, `AudioManager`, `EventManager`.
@@ -64,18 +101,25 @@ y árbol de habilidades.
   generadas por script (`gen_assets.py`, no incluido en el repo), solo para
   poder ver y probar el juego. Hay que reemplazarlas por arte final
   manteniendo los mismos nombres de archivo.
-- **Audio**: `assets/sounds/**/*.wav` son sonidos placeholder sintetizados
+- **SFX**: `assets/sounds/sfx/*.wav` son sonidos placeholder sintetizados
   por script (`gen_audio.py`, no incluido en el repo) — ondas simples con
-  envolvente, sin ninguna API externa. Cubren todos los SFX que dispara el
-  código (`hit_<tipo_de_insecto>`, `taunt`, `mystery_revealed`,
-  `level_complete`, `unlock`) y dos loops cortos de música (`menu_theme`,
-  `level_theme_1`) que `AudioManager` repite reconectando la señal
-  `finished` del reproductor, así que no dependen de metadata de loop del
-  archivo. `AudioManager._resolve_path()` prueba `.ogg` antes que `.wav`,
-  así que para reemplazar un sonido por uno real (de Kenney.nl, freesound,
-  etc.) basta con soltar un `.ogg` con el mismo nombre — no hace falta
-  tocar código. `AudioManager` sigue tolerando archivos faltantes
-  (imprime un aviso y continúa).
+  envolvente, sin ninguna API externa. Cubren todo lo que dispara el código
+  (`hit_<tipo_de_insecto>`, `taunt`, `mystery_revealed`, `level_complete`,
+  `unlock`). Para reemplazar uno por uno real (Kenney.nl, freesound, etc.)
+  basta con soltar un `.ogg` con el mismo nombre en esa carpeta — ver
+  "Cómo reemplazar un asset" abajo.
+- **Música**: hoy `assets/sounds/music/menu_theme.wav` y `level_theme_1.wav`
+  son los mismos placeholders sintetizados. La música real se genera con
+  **Suno** vía `tools/generate_music_suno.py` — ver "Generar música con
+  Suno" más arriba.
+- **Cómo reemplazar un asset de audio**: `AudioManager._resolve_path()`
+  prueba `.ogg`, después `.mp3`, y por último `.wav` (el orden es a
+  propósito: `.ogg` para bancos de sonido definitivos, `.mp3` para lo que
+  genera Suno, `.wav` como placeholder de último recurso). Alcanza con
+  soltar el archivo con el nombre correcto — no hace falta tocar código.
+  La música loopea reconectando la señal `finished` del reproductor en
+  vez de depender de metadata de loop del archivo. `AudioManager` tolera
+  archivos faltantes (imprime un aviso y continúa).
 - **Capítulos 2-10**: `LevelManager` ya tiene su configuración (velocidad,
   cadencia de spawn, fondo), pero solo hay biomas gameplay-probados para
   el capítulo 1; conviene revisar el ritmo de dificultad real al jugar.

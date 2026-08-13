@@ -6,10 +6,12 @@ const SFX_PLAYER_COUNT := 6
 const SFX_DIR := "res://assets/sounds/sfx/"
 const MUSIC_DIR := "res://assets/sounds/music/"
 
-# Se prueban en este orden: los placeholders generados son .wav, pero un
-# reemplazo con arte final probablemente use .ogg (más liviano para loops
-# largos), así que no hace falta tocar código al reemplazar assets.
-const AUDIO_EXTENSIONS := ["ogg", "wav", "mp3"]
+# Se prueban en este orden de "mejor a peor" fuente: .ogg para assets
+# definitivos (bancos como Kenney/freesound), .mp3 para lo que genera
+# tools/generate_music_suno.py, y .wav como placeholder sintetizado de
+# último recurso. Así no hace falta tocar código al reemplazar assets:
+# alcanza con soltar el archivo con el mismo nombre.
+const AUDIO_EXTENSIONS := ["ogg", "mp3", "wav"]
 
 var sfx_players: Array[AudioStreamPlayer] = []
 var current_music: AudioStreamPlayer
@@ -52,6 +54,9 @@ func _get_available_sfx_player() -> AudioStreamPlayer:
 			return player
 	# Todos ocupados: reutiliza el primero para no perder el golpe.
 	return sfx_players[0] if not sfx_players.is_empty() else null
+
+func has_music(music_name: String) -> bool:
+	return _resolve_path(MUSIC_DIR, music_name) != ""
 
 func play_music(music_name: String, fade_in: float = 0.0, loop: bool = true) -> void:
 	var path := _resolve_path(MUSIC_DIR, music_name)

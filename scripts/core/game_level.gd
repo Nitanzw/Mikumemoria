@@ -24,7 +24,7 @@ func _ready() -> void:
 	GameManager.start_level(GameManager.current_level)
 	level_config = GameManager.get_current_level_config()
 
-	AudioManager.play_music("level_theme_1")
+	_play_chapter_music()
 	_setup_background()
 
 	time_remaining = float(level_config.get("time_limit", 60))
@@ -59,6 +59,16 @@ func _process(delta: float) -> void:
 
 	if time_remaining <= 0.0:
 		_end_level()
+
+func _play_chapter_music() -> void:
+	# Cada capítulo puede tener su propio tema (generado con
+	# tools/generate_music_suno.py); si todavía no existe, se usa el del
+	# capítulo 1 para que nunca falte música de fondo.
+	var chapter_track := "level_theme_%d" % GameManager.current_chapter
+	if AudioManager.has_music(chapter_track):
+		AudioManager.play_music(chapter_track)
+	else:
+		AudioManager.play_music("level_theme_1")
 
 func _setup_background() -> void:
 	var path: String = level_config.get("background", "")

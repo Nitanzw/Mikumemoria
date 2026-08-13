@@ -14,3 +14,10 @@ build/
 # OS / editor
 .DS_Store
 *.swp
+
+# Secretos (ver .env.example)
+.env
+
+# Python (tools/)
+__pycache__/
+*.pyc
