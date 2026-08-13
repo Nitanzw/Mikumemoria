@@ -52,27 +52,50 @@ Notas importantes:
   diccionario `TRACKS` al principio del script — se pueden ajustar y
   volver a correr para otra versión de la misma pista.
 
-## Generar sprites con OpenRouter
+## Generar sprites con Gemini o con OpenRouter
 
-`tools/generate_sprites_openrouter.py` llama a la [API de imágenes de
-OpenRouter](https://openrouter.ai/docs/features/multimodal/image-generation)
-para generar los 33 assets visuales del juego (16 insectos, 5 armas,
-personaje, 10 fondos de capítulo, ícono), reemplazando los `.png`
-placeholder geométricos. A diferencia del script de Suno, necesita
-Pillow y numpy:
+Hay **dos scripts equivalentes** para generar los 33 assets visuales del
+juego (16 insectos, 5 armas, personaje, 10 fondos de capítulo, ícono) —
+mismos prompts, mismo post-proceso de transparencia, misma interfaz de
+línea de comandos:
+
+- `tools/generate_sprites_gemini.py` — llama **directo** a la API de
+  Google AI / Gemini, sin intermediario. Usalo si ya tenés cuenta de
+  Google AI paga (evita el margen de OpenRouter).
+- `tools/generate_sprites_openrouter.py` — pasa por OpenRouter, útil si
+  no tenés cuenta directa de Google o preferís poder cambiar de modelo
+  fácil (Flux, GPT Image, etc. con `--model`).
 
 ```bash
 pip install pillow numpy
+
+# Opción directa (Gemini):
+export GEMINI_API_KEY="tu_clave"            # https://aistudio.google.com/apikey
+python3 tools/generate_sprites_gemini.py --list
+python3 tools/generate_sprites_gemini.py --asset hormiga_obrera   # probar UNO primero
+python3 tools/generate_sprites_gemini.py --all --skip-existing
+
+# Opción por OpenRouter:
 export OPENROUTER_API_KEY="tu_clave"        # https://openrouter.ai/keys
-python3 tools/generate_sprites_openrouter.py --list                    # ver los 33 assets definidos
-python3 tools/generate_sprites_openrouter.py --asset hormiga_obrera     # generar uno
-python3 tools/generate_sprites_openrouter.py --category insect          # generar toda una categoría
-python3 tools/generate_sprites_openrouter.py --all --skip-existing      # generar todo lo que falte
+python3 tools/generate_sprites_openrouter.py --all --skip-existing
 ```
 
-Modelo por defecto: **`google/gemini-3.1-flash-image`** ("Nano Banana 2"),
-gama económica ("flash") de Gemini para imagen — buena relación
-calidad/costo para sprites de juego. Se puede cambiar con `--model`.
+⚠️ `generate_sprites_gemini.py` apunta al endpoint `/v1beta/interactions`
+que describe la documentación pública, pero no lo pude probar contra una
+llamada real antes de escribirlo — por eso corré primero `--asset
+hormiga_obrera` (un solo sprite) y revisá que el `.png` haya salido bien
+antes de tirar `--all` (que genera los 33 y gasta créditos reales). El
+script imprime las claves de la respuesta cruda en el primer request de
+cada corrida para poder diagnosticar rápido si el formato no coincide;
+si el endpoint no existe (404), cae automáticamente al `generateContent`
+clásico y estable.
+
+`generate_sprites_openrouter.py` usa por defecto
+**`google/gemini-3.1-flash-image`** ("Nano Banana 2", el mismo modelo que
+`generate_sprites_gemini.py` pero vía [API de imágenes de
+OpenRouter](https://openrouter.ai/docs/features/multimodal/image-generation)),
+gama económica ("flash") — buena relación calidad/costo. Se puede
+cambiar con `--model` (Flux, GPT Image, etc.).
 
 Cómo se logra el fondo transparente en insectos/armas/personaje (los
 fondos de capítulo y el ícono son opacos, no pasan por este paso): en
@@ -142,8 +165,8 @@ Notas importantes:
 - **Arte**: `assets/sprites/**/*.png` son formas geométricas simples
   generadas por script (`gen_assets.py`, no incluido en el repo), solo para
   poder ver y probar el juego. El arte final se genera con
-  `tools/generate_sprites_openrouter.py` — ver "Generar sprites con
-  OpenRouter" más arriba.
+  `tools/generate_sprites_gemini.py` (o `generate_sprites_openrouter.py`)
+  — ver "Generar sprites con Gemini o con OpenRouter" más arriba.
 - **SFX**: `assets/sounds/sfx/*.wav` son sonidos placeholder sintetizados
   por script (`gen_audio.py`, no incluido en el repo) — ondas simples con
   envolvente, sin ninguna API externa. Cubren todo lo que dispara el código
