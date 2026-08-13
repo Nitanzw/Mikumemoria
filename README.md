@@ -64,12 +64,18 @@ y árbol de habilidades.
   generadas por script (`gen_assets.py`, no incluido en el repo), solo para
   poder ver y probar el juego. Hay que reemplazarlas por arte final
   manteniendo los mismos nombres de archivo.
-- **Audio**: no hay ningún `.ogg` todavía. `AudioManager` tolera archivos
-  faltantes (imprime un aviso y sigue), así que el juego corre en
-  silencio hasta que se agreguen `assets/sounds/sfx/*.ogg` y
-  `assets/sounds/music/*.ogg` con los nombres que ya usa el código
-  (`hit_<tipo>`, `taunt`, `mystery_revealed`, `level_complete`, `unlock`,
-  `menu_theme`, etc).
+- **Audio**: `assets/sounds/**/*.wav` son sonidos placeholder sintetizados
+  por script (`gen_audio.py`, no incluido en el repo) — ondas simples con
+  envolvente, sin ninguna API externa. Cubren todos los SFX que dispara el
+  código (`hit_<tipo_de_insecto>`, `taunt`, `mystery_revealed`,
+  `level_complete`, `unlock`) y dos loops cortos de música (`menu_theme`,
+  `level_theme_1`) que `AudioManager` repite reconectando la señal
+  `finished` del reproductor, así que no dependen de metadata de loop del
+  archivo. `AudioManager._resolve_path()` prueba `.ogg` antes que `.wav`,
+  así que para reemplazar un sonido por uno real (de Kenney.nl, freesound,
+  etc.) basta con soltar un `.ogg` con el mismo nombre — no hace falta
+  tocar código. `AudioManager` sigue tolerando archivos faltantes
+  (imprime un aviso y continúa).
 - **Capítulos 2-10**: `LevelManager` ya tiene su configuración (velocidad,
   cadencia de spawn, fondo), pero solo hay biomas gameplay-probados para
   el capítulo 1; conviene revisar el ritmo de dificultad real al jugar.

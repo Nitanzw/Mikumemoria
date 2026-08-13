@@ -24,6 +24,7 @@ func _ready() -> void:
 	GameManager.start_level(GameManager.current_level)
 	level_config = GameManager.get_current_level_config()
 
+	AudioManager.play_music("level_theme_1")
 	_setup_background()
 
 	time_remaining = float(level_config.get("time_limit", 60))
