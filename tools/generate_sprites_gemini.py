@@ -192,7 +192,10 @@ def _call_interactions(api_key: str, model: str, prompt: str, aspect_ratio: str 
     payload = {
         "model": model,
         "input": [{"type": "text", "text": prompt}],
-        "response_format": {"type": "image", "mime_type": "image/png"},
+        # La API solo acepta image/jpeg (image/png da 400). No importa:
+        # el chroma-key/resize post-proceso decodifica cualquier formato
+        # con Pillow y siempre guarda PNG en disco al final.
+        "response_format": {"type": "image", "mime_type": "image/jpeg"},
     }
     if aspect_ratio:
         payload["response_format"]["aspect_ratio"] = aspect_ratio
