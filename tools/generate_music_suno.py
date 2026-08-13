@@ -47,6 +47,12 @@ DEFAULT_MODEL = "V4_5"
 POLL_INTERVAL_SECONDS = 8
 POLL_TIMEOUT_SECONDS = 8 * 60
 
+# La API exige callBackUrl aunque la doc lo marca opcional. Este script
+# no depende del webhook (hace polling con record-info), así que basta
+# con una URL sintácticamente válida; example.com es el dominio reservado
+# de IANA para esto y no necesita servidor propio.
+DEFAULT_CALLBACK_URL = "https://example.com/suno-callback-unused"
+
 # nombre -> (título, estilo, prompt)
 # Los nombres son justo los que ya usa/usará el código GDScript
 # (AudioManager.play_music("menu_theme"), "level_theme_<capítulo>", etc).
@@ -142,8 +148,16 @@ def _api_key() -> str:
     return key
 
 
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
+
+
 def _request(url: str, api_key: str, method: str = "GET", payload: dict | None = None) -> dict:
-    headers = {"Authorization": f"Bearer {api_key}"}
+    # Cloudflare (delante de api.sunoapi.org) devuelve 403 "error code:
+    # 1010" al User-Agent por defecto de urllib; con uno de navegador pasa.
+    headers = {"Authorization": f"Bearer {api_key}", "User-Agent": USER_AGENT, "Accept": "application/json"}
     data = None
     if payload is not None:
         headers["Content-Type"] = "application/json"
@@ -172,6 +186,7 @@ def start_generation(name: str, api_key: str, model: str) -> str:
         "style": style,
         "title": title,
         "instrumental": True,
+        "callBackUrl": DEFAULT_CALLBACK_URL,
     }
     data = _request(GENERATE_ENDPOINT, api_key, method="POST", payload=payload)
     task_id = data["taskId"]
@@ -188,10 +203,18 @@ def wait_for_result(task_id: str, api_key: str) -> dict:
         status = data.get("status")
 
         if status == "SUCCESS":
-            items = data.get("response", {}).get("data", [])
+            # La doc dice response.data con audio_url; en la práctica la API
+            # devuelve response.sunoData con audioUrl (y 2 variaciones por
+            # tarea). Se prueban ambas formas por las dudas.
+            response = data.get("response", {})
+            items = response.get("sunoData") or response.get("data") or []
             if not items:
                 raise RuntimeError(f"Tarea {task_id} exitosa pero sin audio en la respuesta: {data}")
-            return items[0]
+            chosen = items[0]
+            return {
+                "audio_url": chosen.get("audioUrl") or chosen.get("audio_url"),
+                "duration": chosen.get("duration"),
+            }
 
         if status == "FAILED":
             raise RuntimeError(f"Tarea {task_id} falló: {data}")
@@ -204,7 +227,8 @@ def wait_for_result(task_id: str, api_key: str) -> dict:
 
 def download(url: str, dest_path: str) -> None:
     os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-    with urllib.request.urlopen(url, timeout=60) as resp, open(dest_path, "wb") as f:
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(req, timeout=60) as resp, open(dest_path, "wb") as f:
         f.write(resp.read())
 
 
