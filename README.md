@@ -52,6 +52,48 @@ Notas importantes:
   diccionario `TRACKS` al principio del script — se pueden ajustar y
   volver a correr para otra versión de la misma pista.
 
+## Generar sprites con OpenRouter
+
+`tools/generate_sprites_openrouter.py` llama a la [API de imágenes de
+OpenRouter](https://openrouter.ai/docs/features/multimodal/image-generation)
+para generar los 33 assets visuales del juego (16 insectos, 5 armas,
+personaje, 10 fondos de capítulo, ícono), reemplazando los `.png`
+placeholder geométricos. A diferencia del script de Suno, necesita
+Pillow y numpy:
+
+```bash
+pip install pillow numpy
+export OPENROUTER_API_KEY="tu_clave"        # https://openrouter.ai/keys
+python3 tools/generate_sprites_openrouter.py --list                    # ver los 33 assets definidos
+python3 tools/generate_sprites_openrouter.py --asset hormiga_obrera     # generar uno
+python3 tools/generate_sprites_openrouter.py --category insect          # generar toda una categoría
+python3 tools/generate_sprites_openrouter.py --all --skip-existing      # generar todo lo que falte
+```
+
+Modelo por defecto: **`google/gemini-3.1-flash-image`** ("Nano Banana 2"),
+gama económica ("flash") de Gemini para imagen — buena relación
+calidad/costo para sprites de juego. Se puede cambiar con `--model`.
+
+Cómo se logra el fondo transparente en insectos/armas/personaje (los
+fondos de capítulo y el ícono son opacos, no pasan por este paso): en
+vez de confiar en que el modelo soporte transparencia nativa vía API, se
+le pide el sujeto "aislado sobre fondo magenta plano (#FF00FF)" y
+después un post-proceso local con Pillow/numpy vuelve transparente todo
+lo parecido a ese magenta (con degradado suave en el borde). Cada sprite
+se reencuadra después al tamaño exacto que ya esperan las escenas
+(`insect.tscn`/`mystery_bug.tscn` esperan 128×128, `main_game.tscn`
+espera el personaje en un lienzo ~200×320, fondos a 540×960).
+
+Notas importantes:
+- **Nunca commitees `OPENROUTER_API_KEY`.** Mismo mecanismo que
+  `SUNO_API_KEY`: variable de entorno o `.env` (gitignoreado).
+- Cada asset generado cuesta créditos de tu cuenta de OpenRouter; el
+  script imprime el costo reportado por request y el total al final. Usá
+  `--skip-existing` para no regenerar lo que ya está bien.
+- Los prompts de cada asset (uno por insecto/arma/fondo/etc., con un
+  sufijo de estilo compartido `STYLE_SUFFIX` para mantener consistencia
+  visual) están en el diccionario `ASSETS` al principio del script.
+
 ## Qué está implementado
 
 - **Autoloads**: `GameManager`, `SaveManager`, `AudioManager`, `EventManager`.
@@ -99,8 +141,9 @@ Notas importantes:
 
 - **Arte**: `assets/sprites/**/*.png` son formas geométricas simples
   generadas por script (`gen_assets.py`, no incluido en el repo), solo para
-  poder ver y probar el juego. Hay que reemplazarlas por arte final
-  manteniendo los mismos nombres de archivo.
+  poder ver y probar el juego. El arte final se genera con
+  `tools/generate_sprites_openrouter.py` — ver "Generar sprites con
+  OpenRouter" más arriba.
 - **SFX**: `assets/sounds/sfx/*.wav` son sonidos placeholder sintetizados
   por script (`gen_audio.py`, no incluido en el repo) — ondas simples con
   envolvente, sin ninguna API externa. Cubren todo lo que dispara el código
