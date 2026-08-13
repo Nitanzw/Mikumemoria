@@ -1,0 +1,16 @@
+# Godot 4+ specific ignores
+.godot/
+.import/
+export.cfg
+export_credentials.cfg
+
+# Godot exported builds
+build/
+*.apk
+*.aab
+*.pck
+*.exe
+
+# OS / editor
+.DS_Store
+*.swp
