@@ -54,56 +54,64 @@ Notas importantes:
 
 ## Generar sprites con Gemini o con OpenRouter
 
-Hay **dos scripts equivalentes** para generar los 33 assets visuales del
-juego (16 insectos, 5 armas, personaje, 10 fondos de capítulo, ícono) —
-mismos prompts, mismo post-proceso de transparencia, misma interfaz de
-línea de comandos:
+Ya generados y commiteados los 33 assets visuales (16 insectos, 5 armas,
+personaje, 10 fondos de capítulo, ícono) con
+`tools/generate_sprites_openrouter.py` — el arte "final" actual del
+juego viene de ahí, no de los placeholders geométricos originales.
+Quedan dos scripts equivalentes por si querés regenerar algo (mismos
+prompts, mismo post-proceso, misma interfaz de línea de comandos):
 
 - `tools/generate_sprites_gemini.py` — llama **directo** a la API de
   Google AI / Gemini, sin intermediario. Usalo si ya tenés cuenta de
-  Google AI paga (evita el margen de OpenRouter).
-- `tools/generate_sprites_openrouter.py` — pasa por OpenRouter, útil si
-  no tenés cuenta directa de Google o preferís poder cambiar de modelo
-  fácil (Flux, GPT Image, etc. con `--model`).
+  Google AI paga (evita el margen de OpenRouter) *y* tenés facturación
+  habilitada en el proyecto de Cloud asociado a tu API key (ver
+  advertencia abajo — es un paso aparte de pagar Gemini como app).
+- `tools/generate_sprites_openrouter.py` — pasa por OpenRouter. Es el
+  que efectivamente se usó para generar el arte actual, con
+  `google/gemini-3.1-flash-lite-image` ("Nano Banana 2 Lite" — la
+  variante económica, ~$0.034 por sprite, $1.12 en total las 33).
 
 ```bash
-pip install pillow numpy
+pip install pillow numpy scipy
 
 # Opción directa (Gemini):
 export GEMINI_API_KEY="tu_clave"            # https://aistudio.google.com/apikey
-python3 tools/generate_sprites_gemini.py --list
 python3 tools/generate_sprites_gemini.py --asset hormiga_obrera   # probar UNO primero
-python3 tools/generate_sprites_gemini.py --all --skip-existing
+python3 tools/generate_sprites_gemini.py --all          # sin --skip-existing si querés regenerar todo
 
 # Opción por OpenRouter:
 export OPENROUTER_API_KEY="tu_clave"        # https://openrouter.ai/keys
-python3 tools/generate_sprites_openrouter.py --all --skip-existing
+python3 tools/generate_sprites_openrouter.py --all
 ```
 
-⚠️ `generate_sprites_gemini.py` apunta al endpoint `/v1beta/interactions`
-que describe la documentación pública, pero no lo pude probar contra una
-llamada real antes de escribirlo — por eso corré primero `--asset
-hormiga_obrera` (un solo sprite) y revisá que el `.png` haya salido bien
-antes de tirar `--all` (que genera los 33 y gasta créditos reales). El
-script imprime las claves de la respuesta cruda en el primer request de
-cada corrida para poder diagnosticar rápido si el formato no coincide;
-si el endpoint no existe (404), cae automáticamente al `generateContent`
-clásico y estable.
+⚠️ Ojo con `--skip-existing`: como los 33 archivos ya existen (ya sea el
+arte generado o, antes, el placeholder geométrico), esa flag se los
+salteará a TODOS. Usala solo para completar assets puntuales que
+todavía no tengas; para regenerar algo que ya existe, corré sin ella o
+borrá el `.png` primero.
 
-`generate_sprites_openrouter.py` usa por defecto
-**`google/gemini-3.1-flash-image`** ("Nano Banana 2", el mismo modelo que
-`generate_sprites_gemini.py` pero vía [API de imágenes de
-OpenRouter](https://openrouter.ai/docs/features/multimodal/image-generation)),
-gama económica ("flash") — buena relación calidad/costo. Se puede
-cambiar con `--model` (Flux, GPT Image, etc.).
+⚠️ `generate_sprites_gemini.py`: confirmado que el endpoint
+`/v1beta/interactions` existe y funciona, pero solo acepta
+`mime_type: "image/jpeg"` (`image/png` da 400 — no importa, el
+post-proceso decodifica cualquier formato). Si te da 429 con
+`"free_tier_requests, limit: 0"`, no es por exceso de pedidos —
+significa que falta habilitar facturación en el proyecto de Cloud de
+esa API key (distinto de pagar Gemini como app), en
+console.cloud.google.com/billing.
 
 Cómo se logra el fondo transparente en insectos/armas/personaje (los
-fondos de capítulo y el ícono son opacos, no pasan por este paso): en
-vez de confiar en que el modelo soporte transparencia nativa vía API, se
-le pide el sujeto "aislado sobre fondo magenta plano (#FF00FF)" y
-después un post-proceso local con Pillow/numpy vuelve transparente todo
-lo parecido a ese magenta (con degradado suave en el borde). Cada sprite
-se reencuadra después al tamaño exacto que ya esperan las escenas
+fondos de capítulo y el ícono son opacos, no pasan por este paso): se le
+pide al modelo el sujeto "aislado sobre fondo magenta plano (#FF00FF)",
+pero en la práctica el modelo no siempre respeta ese color exacto (salió
+un lila apagado en las pruebas) — así que el post-proceso con
+Pillow/numpy/scipy NO asume un color fijo: samplea el color real del
+borde de la imagen y hace flood-fill (componentes conexas) desde ahí,
+volviendo transparente solo el fondo *conectado al borde* (con blur
+suave en el límite de la máscara). Esto evita agujerear el sujeto si por
+casualidad tiene un tono parecido en el medio, a costa de a veces dejar
+alguna manchita de fondo aislada que no toca el borde (se vio un caso
+chico en `zapato_viejo.png`, cosmético, no bloquea nada). Cada sprite se
+reencuadra después al tamaño exacto que ya esperan las escenas
 (`insect.tscn`/`mystery_bug.tscn` esperan 128×128, `main_game.tscn`
 espera el personaje en un lienzo ~200×320, fondos a 540×960).
 
@@ -160,24 +168,18 @@ Notas importantes:
   nunca actualizaba `current_level` en memoria, así que "siguiente nivel"
   no avanzaba realmente sin recargar el guardado.
 
-## Qué falta (placeholders a reemplazar)
+## Qué falta
 
-- **Arte**: `assets/sprites/**/*.png` son formas geométricas simples
-  generadas por script (`gen_assets.py`, no incluido en el repo), solo para
-  poder ver y probar el juego. El arte final se genera con
-  `tools/generate_sprites_gemini.py` (o `generate_sprites_openrouter.py`)
-  — ver "Generar sprites con Gemini o con OpenRouter" más arriba.
-- **SFX**: `assets/sounds/sfx/*.wav` son sonidos placeholder sintetizados
+Ya resuelto (no son placeholders): el **arte** (33 sprites, ver más
+arriba) y la **música** (11 pistas por Suno, ver más arriba). Queda:
+
+- **SFX**: `assets/sounds/sfx/*.wav` siguen siendo placeholder sintetizados
   por script (`gen_audio.py`, no incluido en el repo) — ondas simples con
   envolvente, sin ninguna API externa. Cubren todo lo que dispara el código
   (`hit_<tipo_de_insecto>`, `taunt`, `mystery_revealed`, `level_complete`,
   `unlock`). Para reemplazar uno por uno real (Kenney.nl, freesound, etc.)
   basta con soltar un `.ogg` con el mismo nombre en esa carpeta — ver
   "Cómo reemplazar un asset" abajo.
-- **Música**: hoy `assets/sounds/music/menu_theme.wav` y `level_theme_1.wav`
-  son los mismos placeholders sintetizados. La música real se genera con
-  **Suno** vía `tools/generate_music_suno.py` — ver "Generar música con
-  Suno" más arriba.
 - **Cómo reemplazar un asset de audio**: `AudioManager._resolve_path()`
   prueba `.ogg`, después `.mp3`, y por último `.wav` (el orden es a
   propósito: `.ogg` para bancos de sonido definitivos, `.mp3` para lo que
@@ -194,5 +196,6 @@ Notas importantes:
   enemigo "normal" en niveles futuros — eso requeriría escenas/sprites
   dedicados por cada uno de los 100 incógnitos, fuera del alcance de este
   primer pase.
-- **Sonidos e íconos de Android** reales (`icon.png` actual es un ícono
-  placeholder cuadrado).
+- **Íconos de Android**: `icon.png` ya es arte generado (no geométrico),
+  pero conviene revisar que se vea bien en las distintas resoluciones
+  que pide un adaptive icon de Android antes de publicar.

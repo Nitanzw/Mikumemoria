@@ -2,9 +2,9 @@
 """Genera los sprites del juego con OpenRouter (https://openrouter.ai).
 
 Requiere la variable de entorno OPENROUTER_API_KEY (https://openrouter.ai/keys)
-y las librerías Pillow + numpy (no vienen en la librería estándar):
+y las librerías Pillow + numpy + scipy (no vienen en la librería estándar):
 
-    pip install pillow numpy
+    pip install pillow numpy scipy
     export OPENROUTER_API_KEY="tu_clave"
 
 Uso:
@@ -13,17 +13,26 @@ Uso:
     python3 tools/generate_sprites_openrouter.py --category insect
     python3 tools/generate_sprites_openrouter.py --all --skip-existing
 
-Modelo por defecto: google/gemini-3.1-flash-image ("Nano Banana 2"), gama
-económica ("flash") de Gemini para imagen — buena relación calidad/costo
-para sprites de juego. Se puede cambiar con --model.
+Modelo por defecto: google/gemini-3.1-flash-lite-image ("Nano Banana 2
+Lite"), la variante económica de la gama "flash" de Gemini para imagen
+(precio por token de salida bastante menor que la variante "flash" sin
+-lite, misma familia/calidad visual). Se puede cambiar con --model —
+por ejemplo black-forest-labs/flux.2-klein-4b sale aún más barato
+(cobra por megapíxel, y estos sprites son chicos).
 
 Cómo se generan los sprites con transparencia (insectos, armas, personaje):
     1. Se le pide al modelo el sujeto "aislado sobre fondo magenta plano
        (#FF00FF)" en vez de pedirle transparencia nativa (no todos los
-       modelos la soportan bien vía API).
-    2. Post-proceso local con Pillow/numpy: cualquier pixel parecido al
-       magenta se vuelve transparente (con degradado suave en el borde
-       para no dejar un contorno duro).
+       modelos la soportan bien vía API) — pero en la práctica el modelo
+       no siempre respeta el magenta exacto, así que el post-proceso NO
+       asume ese color fijo.
+    2. Post-proceso local con Pillow/numpy/scipy: se samplea el color
+       real del borde de la imagen (sea cual sea) y se hace flood-fill
+       (componentes conexas) desde los bordes para volver transparente
+       solo el fondo *conectado al borde* — así no se generan agujeros
+       si el sujeto tiene por casualidad un color parecido en el medio.
+       El borde de la máscara se difumina un poco para evitar contornos
+       duros tipo "recorte con tijera".
     3. Se reencuadra al tamaño exacto que ya esperan las escenas .tscn.
 
 Los fondos de capítulo y el ícono no llevan este paso (son opacos).
@@ -42,8 +51,9 @@ import urllib.request
 try:
     import numpy as np
     from PIL import Image
+    from scipy import ndimage
 except ImportError:
-    sys.exit("Faltan dependencias: pip install pillow numpy")
+    sys.exit("Faltan dependencias: pip install pillow numpy scipy")
 
 API_BASE = "https://openrouter.ai/api/v1"
 IMAGES_ENDPOINT = f"{API_BASE}/images"
@@ -51,15 +61,14 @@ IMAGES_ENDPOINT = f"{API_BASE}/images"
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SPRITES_DIR = os.path.join(REPO_ROOT, "assets", "sprites")
 
-DEFAULT_MODEL = "google/gemini-3.1-flash-image"
+DEFAULT_MODEL = "google/gemini-3.1-flash-lite-image"
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 )
 
-CHROMA_KEY = (255, 0, 255)  # magenta: casi nunca aparece "de casualidad" en el arte
-CHROMA_THRESHOLD = 55  # distancia RGB por debajo de la cual se considera "fondo"
-CHROMA_FEATHER = 45  # ancho del degradado del borde (evita contornos duros)
+BG_COLOR_TOLERANCE = 65.0  # distancia RGB al color de fondo sampleado del borde
+BG_FEATHER_SIGMA = 2.0  # blur (px) del borde de la máscara, evita contorno duro
 
 STYLE_SUFFIX = (
     ", flat cartoon vector game-icon art style, bold clean black outline, "
@@ -178,14 +187,30 @@ def _call_images_api(api_key: str, model: str, prompt: str, aspect_ratio: str | 
 
 
 def remove_chroma_key(img: "Image.Image") -> "Image.Image":
+    """Quita el fondo sin asumir un color fijo: samplea el color real del
+    borde de la imagen y hace flood-fill (componentes conexas) desde ese
+    borde, así solo se borra lo que está *conectado* a él (evita agujeros
+    si el sujeto tiene, por casualidad, un tono parecido en el medio)."""
     img = img.convert("RGBA")
     arr = np.array(img).astype(np.float32)
-    key = np.array(CHROMA_KEY, dtype=np.float32)
+    rgb = arr[..., :3]
+    h, w = rgb.shape[:2]
 
-    diff = np.sqrt(((arr[..., :3] - key) ** 2).sum(axis=-1))
-    # < threshold -> alpha 0 (fondo puro); entre threshold y threshold+feather -> degrade
-    alpha_from_key = np.clip((diff - CHROMA_THRESHOLD) / CHROMA_FEATHER, 0.0, 1.0) * 255.0
-    arr[..., 3] = np.minimum(arr[..., 3], alpha_from_key)
+    border_mask = np.zeros((h, w), dtype=bool)
+    border_mask[0, :] = border_mask[-1, :] = True
+    border_mask[:, 0] = border_mask[:, -1] = True
+    key_color = rgb[border_mask].mean(axis=0)
+
+    dist = np.sqrt(((rgb - key_color) ** 2).sum(axis=-1))
+    bg_candidate = dist < BG_COLOR_TOLERANCE
+
+    labeled, _ = ndimage.label(bg_candidate)
+    border_labels = set(labeled[border_mask].tolist()) - {0}
+    connected_bg = np.isin(labeled, list(border_labels)) if border_labels else np.zeros((h, w), dtype=bool)
+
+    alpha = np.where(connected_bg, 0.0, 255.0)
+    alpha = ndimage.gaussian_filter(alpha, sigma=BG_FEATHER_SIGMA)
+    arr[..., 3] = np.minimum(arr[..., 3], alpha)
 
     return Image.fromarray(arr.astype(np.uint8), mode="RGBA")
 

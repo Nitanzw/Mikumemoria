@@ -16,21 +16,22 @@ Uso: igual que generate_sprites_openrouter.py
     python3 tools/generate_sprites_gemini.py --category insect
     python3 tools/generate_sprites_gemini.py --all --skip-existing
 
-IMPORTANTE - incertidumbre de API: la doc pública de generación de
-imágenes (ai.google.dev/gemini-api/docs/image-generation) describe un
-endpoint nuevo `/v1beta/interactions` con forma de request/response que
-no pude verificar contra una llamada real antes de escribir esto. Este
-script:
-  1. Prueba primero `/v1beta/interactions`.
-  2. Si devuelve 404 (no existe todavía en tu proyecto/región), cae
-     automáticamente al endpoint clásico y estable `generateContent`
-     con `responseModalities: ["IMAGE"]`, que es la forma en que
-     Gemini viene generando imágenes desde el lanzamiento de
-     Gemini 2.5 Flash Image ("Nano Banana").
-  3. En el primer asset que genere en cada corrida, imprime las claves
-     de nivel superior de la respuesta cruda — así, si el formato real
-     no coincide con lo documentado, se ve enseguida en vez de fallar
-     en silencio o interpretar mal el JSON.
+CONFIRMADO contra una llamada real (13/8/2026): el endpoint
+`/v1beta/interactions` SÍ existe y funciona, pero solo acepta
+`response_format.mime_type: "image/jpeg"` — "image/png" da HTTP 400. No
+es problema: igual se hace chroma-key/resize local después, así que da
+lo mismo qué formato devuelva la API.
+
+Si en tu cuenta te da 429 con un mensaje tipo "free_tier_requests,
+limit: 0" para el modelo, NO es por exceso de pedidos (fijate que el
+límite es 0, no que lo hayas superado) — es que el proyecto de Google
+Cloud detrás de tu API key no tiene facturación habilitada todavía.
+Activala en https://console.cloud.google.com/billing (es un paso
+aparte de pagar Gemini/Google One como app) y reintentá.
+
+Si el endpoint /interactions llegara a devolver 404 en tu región, el
+script cae automáticamente al `generateContent` clásico con
+`responseModalities: ["IMAGE"]`.
 
 Corré primero con --asset para UN solo sprite y revisá que el .png haya
 salido bien antes de tirar --all (que gasta créditos en las 33).
@@ -49,8 +50,9 @@ import urllib.request
 try:
     import numpy as np
     from PIL import Image
+    from scipy import ndimage
 except ImportError:
-    sys.exit("Faltan dependencias: pip install pillow numpy")
+    sys.exit("Faltan dependencias: pip install pillow numpy scipy")
 
 API_BASE = "https://generativelanguage.googleapis.com/v1beta"
 INTERACTIONS_ENDPOINT = f"{API_BASE}/interactions"
@@ -58,11 +60,10 @@ INTERACTIONS_ENDPOINT = f"{API_BASE}/interactions"
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SPRITES_DIR = os.path.join(REPO_ROOT, "assets", "sprites")
 
-DEFAULT_MODEL = "gemini-3.1-flash-image"
+DEFAULT_MODEL = "gemini-3.1-flash-lite-image"
 
-CHROMA_KEY = (255, 0, 255)
-CHROMA_THRESHOLD = 55
-CHROMA_FEATHER = 45
+BG_COLOR_TOLERANCE = 65.0  # distancia RGB al color de fondo sampleado del borde
+BG_FEATHER_SIGMA = 2.0  # blur (px) del borde de la máscara, evita contorno duro
 
 STYLE_SUFFIX = (
     ", flat cartoon vector game-icon art style, bold clean black outline, "
@@ -249,12 +250,29 @@ def fetch_image_b64(api_key: str, model: str, prompt: str, aspect_ratio: str | N
 
 
 def remove_chroma_key(img: "Image.Image") -> "Image.Image":
+    """Samplea el color real del borde (el modelo no siempre respeta el
+    magenta pedido) y hace flood-fill desde ahí, así solo se borra el
+    fondo *conectado al borde* sin agujerear el sujeto."""
     img = img.convert("RGBA")
     arr = np.array(img).astype(np.float32)
-    key = np.array(CHROMA_KEY, dtype=np.float32)
-    diff = np.sqrt(((arr[..., :3] - key) ** 2).sum(axis=-1))
-    alpha_from_key = np.clip((diff - CHROMA_THRESHOLD) / CHROMA_FEATHER, 0.0, 1.0) * 255.0
-    arr[..., 3] = np.minimum(arr[..., 3], alpha_from_key)
+    rgb = arr[..., :3]
+    h, w = rgb.shape[:2]
+
+    border_mask = np.zeros((h, w), dtype=bool)
+    border_mask[0, :] = border_mask[-1, :] = True
+    border_mask[:, 0] = border_mask[:, -1] = True
+    key_color = rgb[border_mask].mean(axis=0)
+
+    dist = np.sqrt(((rgb - key_color) ** 2).sum(axis=-1))
+    bg_candidate = dist < BG_COLOR_TOLERANCE
+
+    labeled, _ = ndimage.label(bg_candidate)
+    border_labels = set(labeled[border_mask].tolist()) - {0}
+    connected_bg = np.isin(labeled, list(border_labels)) if border_labels else np.zeros((h, w), dtype=bool)
+
+    alpha = np.where(connected_bg, 0.0, 255.0)
+    alpha = ndimage.gaussian_filter(alpha, sigma=BG_FEATHER_SIGMA)
+    arr[..., 3] = np.minimum(arr[..., 3], alpha)
     return Image.fromarray(arr.astype(np.uint8), mode="RGBA")
 
 
