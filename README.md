@@ -225,23 +225,43 @@ silencio. Lo único que debería importar es el project setting
 `[display]` dentro de `project.godot`, ya seteado en `"portrait"`), pero
 en la práctica el build Gradle de Android sigue empaquetando
 `android:screenOrientation="landscape"` **hardcodeado** en
-`android/build/src/{main,debug,release}/AndroidManifest.xml` — Godot no
+`android/build/src/{main,release}/AndroidManifest.xml` — Godot no
 reescribe ese valor al exportar (al menos no de forma confiable en esta
-versión). Si exportás desde la UI del editor puede que este paso sí
-funcione bien (usa un flujo distinto a `--export-release`/`--export-debug`
-por CLI); si no, la forma confirmada de arreglarlo:
+versión).
+
+Hay una **segunda parte de este mismo bug**, más sutil, que no alcanza
+con arreglar el `screenOrientation`: el manifest `main/AndroidManifest.xml`
+del proyecto ya trae `android:resizeableActivity="false"` en la
+`<activity>`, pero el manifest generado `release/AndroidManifest.xml`
+lo pisa con `tools:replace="...,android:resizeableActivity" ...
+android:resizeableActivity="true"` — el merge de Gradle le da prioridad
+a ese `tools:replace`, así que el APK final termina con
+`resizeableActivity="true"` **aunque el `screenOrientation` ya diga
+"portrait"**. En Android, una activity marcada como resizeable puede
+hacer que el sistema ignore el orientation lock (sobre todo en
+dispositivos con soporte de pantalla grande / multi-ventana) — el
+síntoma es que el juego arranca de costado y hay que rotar el celular
+para verlo bien, con márgenes negros. Si exportás desde la UI del editor
+puede que este paso sí funcione bien (usa un flujo distinto a
+`--export-release`/`--export-debug` por CLI); si no, la forma confirmada
+de arreglar **las dos cosas**:
 
 ```bash
 # 1. Exportar una vez para que Godot regenere android/build/ con el resto
 #    de la configuración (assets, versión, etc.) — el manifest va a
-#    quedar en landscape, no importa.
+#    quedar en landscape y resizeable, no importa.
 godot --headless --export-release "Android" build/android/app.apk
 
-# 2. Forzar portrait a mano en los 3 manifests del proyecto Gradle:
-sed -i 's/android:screenOrientation="landscape"/android:screenOrientation="portrait"/g' \
-  android/build/src/debug/AndroidManifest.xml \
-  android/build/src/release/AndroidManifest.xml \
-  android/build/src/main/AndroidManifest.xml
+# 2. Forzar portrait Y no-resizeable a mano en los manifests del
+#    proyecto Gradle (main no necesita el segundo sed, ya trae
+#    resizeableActivity="false", pero no molesta repetirlo):
+sed -i \
+  -e 's/android:screenOrientation="landscape"/android:screenOrientation="portrait"/g' \
+  -e 's/android:resizeableActivity="true"/android:resizeableActivity="false"/g' \
+  android/build/src/main/AndroidManifest.xml \
+  android/build/src/release/AndroidManifest.xml
+# (si exportaste también un build debug, el mismo sed aplica a
+# android/build/src/debug/AndroidManifest.xml)
 
 # 3. Compilar con Gradle directamente (Godot ya no vuelve a tocar el
 #    manifest si no volvés a llamar --export-*), pasándole las mismas
@@ -258,6 +278,18 @@ cd android/build
 
 # El APK final queda en:
 # android/build/build/outputs/apk/standard/release/android_release.apk
+```
+
+Para verificar que las dos cosas quedaron bien en el APK final (sin
+instalar nada, antes de repartirlo):
+
+```bash
+aapt2 dump badging android/build/build/outputs/apk/standard/release/android_release.apk | grep orientation
+# tiene que aparecer: uses-implied-feature: name='android.hardware.screen.portrait'
+
+grep -o 'android:resizeableActivity="[a-z]*"' \
+  android/build/build/intermediates/packaged_manifests/standardRelease/processStandardReleaseManifestForPackage/AndroidManifest.xml
+# tiene que decir "false"
 ```
 
 Si esto se corrige en una versión más nueva de Godot, o si exportar

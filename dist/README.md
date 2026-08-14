@@ -30,11 +30,25 @@ GitHub en el celular) y abrilo — Android va a pedir habilitar "instalar
 apps de orígenes desconocidos" para el navegador/gestor de archivos que
 uses.
 
-**Sobre el bug de orientación**: Godot 4.7.1 empaqueta el manifest de
-Android con `screenOrientation="landscape"` hardcodeado, ignorando la
-configuración del proyecto — hace falta parchear el manifest a mano y
-compilar con Gradle directamente en vez de con el exportador de Godot
-por CLI. Está documentado paso a paso en el `README.md` de la raíz del
+**Sobre el bug de orientación**: son en realidad DOS bugs de exportación
+de Godot 4.7.1 sobre Android, no uno — hace falta arreglar los dos o el
+juego arranca de costado (con márgenes negros, hay que rotar el celular
+para verlo bien):
+
+1. El manifest de Android empaqueta `screenOrientation="landscape"`
+   hardcodeado, ignorando la configuración del proyecto.
+2. Un manifest generado (`release/AndroidManifest.xml`) pisa
+   `resizeableActivity` a `"true"` vía un merge de Gradle
+   (`tools:replace`), aunque el manifest principal del proyecto ya pide
+   `"false"` — y una activity marcada como resizeable hace que Android
+   ignore el orientation lock del punto 1 en varios dispositivos, incluso
+   con el `screenOrientation` ya arreglado. Este segundo bug es el que
+   se me había pasado en el build anterior.
+
+Los dos hace falta parchearlos a mano en el manifest y compilar con
+Gradle directamente en vez de con el exportador de Godot por CLI. Está
+documentado paso a paso (con el comando para verificar que las dos cosas
+quedaron bien antes de repartir el APK) en el `README.md` de la raíz del
 repo, sección "Gotcha de exportación Android". Si volvés a generar este
 APK vos mismo, seguí esos pasos o el build te va a salir en horizontal
 de nuevo.
