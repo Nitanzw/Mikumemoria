@@ -11,6 +11,11 @@ y árbol de habilidades.
 >
 > 📱 **[Bajar el APK de demo](dist/invasion_huerto_demo.apk)** — ver
 > [`dist/README.md`](dist/README.md) para qué trae y cómo instalarlo.
+>
+> 🎨 **[Pedido de arte: El Huerto de Sofía](ARTE_PEDIDO.md)** — los 48
+> prompts para regenerar todo el arte con el personaje y el estilo
+> nuevos. **En curso**: el juego todavía corre con el arte de Don Beto
+> hasta que estén las imágenes nuevas.
 
 ## Cómo probarlo
 
