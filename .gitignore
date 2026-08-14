@@ -11,6 +11,11 @@ build/
 *.pck
 *.exe
 
+# Excepción: APK de demo commiteado a propósito para probar sin exportar
+# (ver dist/README.md). Build reducido: solo música de menú + capítulo 1,
+# para entrar bajo el límite de 100MB de GitHub.
+!dist/*.apk
+
 # OS / editor
 .DS_Store
 *.swp
