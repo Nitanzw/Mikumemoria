@@ -10,7 +10,9 @@ y árbol de habilidades.
 1. Abre la carpeta del proyecto con **Godot 4.3+** (`project.godot` en la raíz).
 2. Al abrir por primera vez Godot reimportará todos los `.png` (son
    placeholders generados por script, no arte final — ver abajo).
-3. Ejecuta la escena principal (F5). Arranca en `scenes/menu/main_menu.tscn`.
+3. Ejecuta la escena principal (F5). Arranca en `scenes/story/story_intro.tscn`
+   (la intro con la historia, solo la primera vez; después salta directo al
+   menú — ver "Historia, diálogo y tutorial" más abajo).
 4. En escritorio, los clics de mouse se emulan como toques
    (`emulate_touch_from_mouse=true`), así que no hace falta un dispositivo
    táctil para probar.
@@ -252,15 +254,18 @@ en horizontal.
 ## Qué falta
 
 Ya resuelto (no son placeholders): el **arte** (33 sprites, ver más
-arriba) y la **música** (11 pistas por Suno, ver más arriba). Queda:
+arriba), la **música** (11 pistas por Suno, ver más arriba) y los **SFX**
+(ver abajo). Queda:
 
-- **SFX**: `assets/sounds/sfx/*.wav` siguen siendo placeholder sintetizados
-  por script (`gen_audio.py`, no incluido en el repo) — ondas simples con
-  envolvente, sin ninguna API externa. Cubren todo lo que dispara el código
-  (`hit_<tipo_de_insecto>`, `taunt`, `mystery_revealed`, `level_complete`,
-  `unlock`). Para reemplazar uno por uno real (Kenney.nl, freesound, etc.)
-  basta con soltar un `.ogg` con el mismo nombre en esa carpeta — ver
-  "Cómo reemplazar un asset" abajo.
+- **SFX**: `assets/sounds/sfx/*.ogg` son sonidos reales CC0 de
+  [Kenney.nl](https://kenney.nl) (packs "Impact Sounds", "Interface
+  Sounds" y "Music Jingles" — dominio público, no requieren atribución,
+  descargados directo del sitio sin API key). Cubren todo lo que dispara
+  el código (`hit_<tipo_de_insecto>`, `taunt`, `mystery_revealed`,
+  `level_complete`, `unlock`). Los `.wav` sintetizados anteriores se
+  borraron. Para reemplazar alguno por otro distinto basta con soltar un
+  `.ogg`/`.mp3`/`.wav` con el mismo nombre en esa carpeta — ver "Cómo
+  reemplazar un asset" abajo.
 - **Cómo reemplazar un asset de audio**: `AudioManager._resolve_path()`
   prueba `.ogg`, después `.mp3`, y por último `.wav` (el orden es a
   propósito: `.ogg` para bancos de sonido definitivos, `.mp3` para lo que
