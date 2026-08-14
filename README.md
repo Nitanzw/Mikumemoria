@@ -222,29 +222,45 @@ Probado contra Godot **4.7.1** real (no solo leído en la doc): la opción
 anteriores de Godot **ya no existe** — el exportador la ignora en
 silencio. Lo único que debería importar es el project setting
 `display/window/handheld/orientation` (`window/handheld/orientation` en
-`[display]` dentro de `project.godot`, ya seteado en `"portrait"`), pero
-en la práctica el build Gradle de Android sigue empaquetando
-`android:screenOrientation="landscape"` **hardcodeado** en
-`android/build/src/{main,release}/AndroidManifest.xml` — Godot no
-reescribe ese valor al exportar (al menos no de forma confiable en esta
-versión).
+`[display]` dentro de `project.godot`), pero en la práctica el build
+Gradle de Android sigue empaquetando `android:screenOrientation="landscape"`
+**hardcodeado** en `android/build/src/{main,release}/AndroidManifest.xml`
+— Godot no reescribe ese valor al exportar (al menos no de forma
+confiable en esta versión). Son en realidad **tres** problemas
+encadenados, no uno — hay que arreglar los tres o el juego arranca mal:
 
-Hay una **segunda parte de este mismo bug**, más sutil, que no alcanza
-con arreglar el `screenOrientation`: el manifest `main/AndroidManifest.xml`
-del proyecto ya trae `android:resizeableActivity="false"` en la
-`<activity>`, pero el manifest generado `release/AndroidManifest.xml`
-lo pisa con `tools:replace="...,android:resizeableActivity" ...
-android:resizeableActivity="true"` — el merge de Gradle le da prioridad
-a ese `tools:replace`, así que el APK final termina con
-`resizeableActivity="true"` **aunque el `screenOrientation` ya diga
-"portrait"**. En Android, una activity marcada como resizeable puede
-hacer que el sistema ignore el orientation lock (sobre todo en
-dispositivos con soporte de pantalla grande / multi-ventana) — el
-síntoma es que el juego arranca de costado y hay que rotar el celular
-para verlo bien, con márgenes negros. Si exportás desde la UI del editor
-puede que este paso sí funcione bien (usa un flujo distinto a
-`--export-release`/`--export-debug` por CLI); si no, la forma confirmada
-de arreglar **las dos cosas**:
+1. **Orientación hardcodeada en landscape** (el bug de arriba).
+2. **`resizeableActivity` pisado a `"true"`**: el manifest del proyecto
+   (`main/AndroidManifest.xml`) ya pide `android:resizeableActivity="false"`
+   en la `<activity>`, pero el manifest generado
+   `release/AndroidManifest.xml` lo pisa con
+   `tools:replace="...,android:resizeableActivity" ...
+   android:resizeableActivity="true"` — el merge de Gradle le da
+   prioridad a ese `tools:replace`. Con esto en `"true"`, Android puede
+   ignorar directamente el orientation lock (sobre todo en dispositivos
+   con soporte de pantalla grande/multi-ventana): el síntoma es que el
+   juego arranca de costado y hay que rotar el celular para verlo bien.
+3. **`screenOrientation="portrait"` (el valor absoluto) dispara
+   letterboxing en pantallas grandes**: arreglar 1 y 2 no alcanza en
+   celulares/tablets grandes (confirmado en un Galaxy S26 Ultra) — con
+   `resizeableActivity="false"` + `screenOrientation="portrait"` el
+   contenido ya se ve derecho, pero Android 12+/One UI lo mete en un
+   recuadro chico con franjas negras a los costados ("letterboxing para
+   apps de orientación fija y no-resizable en pantallas grandes", una
+   política real y documentada de Android, no un bug nuestro). La forma
+   estándar de evitarla sin perder el lock: pedir **`sensorPortrait`**
+   en vez de `portrait` a secas. Es funcionalmente igual para quien
+   juega (portrait, derecho o cabeza abajo según el sensor — nunca
+   landscape), pero al no ser un valor "absoluto" Android no lo
+   considera lo bastante restrictivo como para forzar el letterbox.
+   `project.godot` ya tiene `window/handheld/orientation="sensor_portrait"`
+   (el nombre del enum de Godot para esa opción) por este motivo — no es
+   solo cosmético, no lo cambies a `"portrait"` sin volver a probar en
+   un equipo de pantalla grande.
+
+Si exportás desde la UI del editor puede que el paso 1 sí funcione bien
+(usa un flujo distinto a `--export-release`/`--export-debug` por CLI); si
+no, la forma confirmada de arreglar los tres:
 
 ```bash
 # 1. Exportar una vez para que Godot regenere android/build/ con el resto
@@ -252,11 +268,11 @@ de arreglar **las dos cosas**:
 #    quedar en landscape y resizeable, no importa.
 godot --headless --export-release "Android" build/android/app.apk
 
-# 2. Forzar portrait Y no-resizeable a mano en los manifests del
+# 2. Forzar sensorPortrait Y no-resizeable a mano en los manifests del
 #    proyecto Gradle (main no necesita el segundo sed, ya trae
 #    resizeableActivity="false", pero no molesta repetirlo):
 sed -i \
-  -e 's/android:screenOrientation="landscape"/android:screenOrientation="portrait"/g' \
+  -e 's/android:screenOrientation="landscape"/android:screenOrientation="sensorPortrait"/g' \
   -e 's/android:resizeableActivity="true"/android:resizeableActivity="false"/g' \
   android/build/src/main/AndroidManifest.xml \
   android/build/src/release/AndroidManifest.xml
@@ -280,23 +296,23 @@ cd android/build
 # android/build/build/outputs/apk/standard/release/android_release.apk
 ```
 
-Para verificar que las dos cosas quedaron bien en el APK final (sin
+Para verificar que las tres cosas quedaron bien en el APK final (sin
 instalar nada, antes de repartirlo):
 
 ```bash
 aapt2 dump badging android/build/build/outputs/apk/standard/release/android_release.apk | grep orientation
 # tiene que aparecer: uses-implied-feature: name='android.hardware.screen.portrait'
 
-grep -o 'android:resizeableActivity="[a-z]*"' \
+grep -oE 'android:(screenOrientation|resizeableActivity)="[a-zA-Z]*"' \
   android/build/build/intermediates/packaged_manifests/standardRelease/processStandardReleaseManifestForPackage/AndroidManifest.xml
-# tiene que decir "false"
+# tiene que decir screenOrientation="sensorPortrait" y resizeableActivity="false"
 ```
 
 Si esto se corrige en una versión más nueva de Godot, o si exportar
 desde la UI del editor sí respeta la orientación (no lo pude probar acá,
 solo por CLI), este workaround dejará de hacer falta — probá primero un
 export normal y solo recurrí a este proceso si el APK te sigue saliendo
-en horizontal.
+en horizontal o con franjas negras.
 
 ## Qué falta
 
