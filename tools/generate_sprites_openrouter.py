@@ -79,6 +79,10 @@ TRANSPARENT_BG_INSTRUCTION = (
     ", isolated on a solid flat magenta background (#FF00FF), no shadow, "
     "no gradient, no other objects, no floor"
 )
+GREEN_SCREEN_BG_INSTRUCTION = (
+    ", isolated on a solid flat chroma-key green background (#00FF00), no "
+    "shadow, no gradient, no other objects, no floor"
+)
 
 CATEGORY_DEFAULTS = {
     "insect": {"dir": "insects", "size": (128, 128), "transparent": True, "aspect_ratio": "1:1"},
@@ -120,6 +124,13 @@ ASSETS: dict[str, tuple[str, str]] = {
     # --- Personaje (Player/DonBetoSprite en main_game.tscn) ---
     "don_beto": ("character", "a cheerful cartoon farmer character named Don Beto, older man with a mustache, straw hat, green overalls, holding a shoe raised up, full body, front view, video game character"),
 
+    # --- Retrato de Don Beto por emoción (don_beto_portrait.gd, dialogue_box) ---
+    "don_beto_neutral": ("character", "portrait of a cartoon farmer character named Don Beto, older man with a mustache, straw hat, green overalls, calm neutral friendly expression, waist-up, front view, video game character portrait"),
+    "don_beto_happy": ("character", "portrait of a cheerful cartoon farmer character named Don Beto, older man with a mustache, straw hat, green overalls, big warm smile, eyes crinkled with joy, waist-up, front view, video game character portrait"),
+    "don_beto_sad": ("character", "portrait of a cartoon farmer character named Don Beto, older man with a mustache, straw hat, green overalls, downturned mouth, droopy sad eyes, slumped shoulders, waist-up, front view, video game character portrait"),
+    "don_beto_angry": ("character", "portrait of a cartoon farmer character named Don Beto, older man with a mustache, straw hat, green overalls, furrowed angry eyebrows, gritted teeth, red flushed cheeks, waist-up, front view, video game character portrait"),
+    "don_beto_worried": ("character", "portrait of a cartoon farmer character named Don Beto, older man with a mustache, straw hat, green overalls, wide anguished eyes, sweat drop, biting lip, nervous expression, waist-up, front view, video game character portrait"),
+
     # --- Fondos de capitulo (LevelManager.chapter_configs) ---
     "chapter_1_huerto": ("background", "a sunny cheerful vegetable garden with tomato plants, wooden fences and blue sky, mobile game background, portrait orientation, no characters"),
     "chapter_2_invernadero": ("background", "the warm humid interior of a glass greenhouse full of tropical plants, soft light rays, mobile game background, portrait orientation, no characters"),
@@ -135,6 +146,87 @@ ASSETS: dict[str, tuple[str, str]] = {
 
 # El icono vive en la raiz del repo, no en assets/sprites/
 ICON_ASSET = ("icon", "a bold cute app icon: a cartoon shoe squashing an angry cartoon ant, garden background, square composition, readable at small size")
+
+# --- Sprite sheets de walk-cycle (grid NxM en una sola imagen, se generan
+# en una sola llamada para que los frames sean consistentes entre sí -
+# pedirle al modelo N imagenes separadas da resultados demasiado
+# distintos frame a frame). Se parte en celdas en post-proceso local. ---
+WALK_SHEETS: dict[str, dict] = {
+        "hormiga_obrera_walk": {
+        "prompt": (
+            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
+            "4 equal square cells, each cell shows the exact same cute cartoon "
+            "worker ant character (solid brown color all over, including legs "
+            "and joints, big round eyes, three-quarter view) in a different leg "
+            "position of a walking cycle, identical character design, size, "
+            "color and camera angle in all 4 cells, only the legs move between "
+            "cells, no pink or magenta color anywhere on the ant's body or legs"
+        ),
+        "grid": (2, 2),
+        "frame_size": (128, 128),
+        "dest_dir": "insects",
+        "dest_prefix": "hormiga_obrera_walk",
+    },
+}
+
+
+def split_walk_sheet(img: "Image.Image", cols: int, rows: int, frame_size: tuple[int, int]) -> list["Image.Image"]:
+    """Parte una imagen en una grilla cols x rows, escalando cada celda a
+    frame_size. Recorta un pequeño margen interno por celda para evitar
+    que la línea de grilla que pidió el prompt quede pegada al sujeto."""
+    w, h = img.size
+    cell_w, cell_h = w / cols, h / rows
+    trim = 0.04  # 4% de margen interno por celda
+    frames = []
+    for row in range(rows):
+        for col in range(cols):
+            left = (col + trim) * cell_w
+            top = (row + trim) * cell_h
+            right = (col + 1 - trim) * cell_w
+            bottom = (row + 1 - trim) * cell_h
+            cell = img.crop((int(left), int(top), int(right), int(bottom)))
+            frames.append(fit_transparent(cell, frame_size))
+    return frames
+
+
+def generate_walk_sheet(name: str, api_key: str, model: str, skip_existing: bool) -> float:
+    spec = WALK_SHEETS[name]
+    cols, rows = spec["grid"]
+    dest_dir = os.path.join(SPRITES_DIR, spec["dest_dir"])
+    first_frame_path = os.path.join(dest_dir, f"{spec['dest_prefix']}_0.png")
+
+    if skip_existing and os.path.exists(first_frame_path):
+        print(f"[{name}] ya existe, se salta (--skip-existing)")
+        return 0.0
+
+    prompt = spec["prompt"] + STYLE_SUFFIX + GREEN_SCREEN_BG_INSTRUCTION
+    print(f"[{name}] generando grid {cols}x{rows} con {model}...")
+
+    result = _call_images_api(api_key, model, prompt, "1:1")
+    if "error" in result:
+        raise RuntimeError(f"[{name}] OpenRouter respondió error: {result['error']}")
+
+    items = result.get("data", [])
+    if not items:
+        raise RuntimeError(f"[{name}] respuesta sin imágenes: {result}")
+
+    b64 = items[0].get("b64_json")
+    if not b64:
+        raise RuntimeError(f"[{name}] la respuesta no trae b64_json: {items[0]}")
+
+    img = Image.open(io.BytesIO(base64.b64decode(b64)))
+    img = remove_chroma_key(img)
+    frames = split_walk_sheet(img, cols, rows, spec["frame_size"])
+
+    os.makedirs(dest_dir, exist_ok=True)
+    for i, frame in enumerate(frames):
+        path = os.path.join(dest_dir, f"{spec['dest_prefix']}_{i}.png")
+        frame.save(path, "PNG")
+        print(f"[{name}] frame {i} -> {path}")
+
+    cost = float(result.get("usage", {}).get("cost", 0.0) or 0.0)
+    print(f"[{name}] listo ({len(frames)} frames)" + (f" (${cost:.4f})" if cost else ""))
+    return cost
 
 
 def _api_key() -> str:
@@ -299,6 +391,8 @@ def main() -> None:
     parser.add_argument("--model", default=DEFAULT_MODEL, help=f"modelo de OpenRouter (default: {DEFAULT_MODEL})")
     parser.add_argument("--skip-existing", action="store_true",
                          help="no regenerar assets cuyo .png ya existe")
+    parser.add_argument("--walk-sheet", action="append", dest="walk_sheets", metavar="NOMBRE",
+                         help=f"generar un sprite-sheet de walk-cycle (repetible). Disponibles: {sorted(WALK_SHEETS)}")
     args = parser.parse_args()
 
     all_items = _all_items()
@@ -306,6 +400,27 @@ def main() -> None:
     if args.list:
         for name, cat, _prompt in all_items:
             print(f"{name:24s} [{cat}]")
+        for name in WALK_SHEETS:
+            print(f"{name:24s} [walk-sheet]")
+        return
+
+    if args.walk_sheets:
+        api_key = _api_key()
+        total_cost = 0.0
+        failures = []
+        unknown = set(args.walk_sheets) - set(WALK_SHEETS)
+        if unknown:
+            parser.error(f"walk-sheets desconocidos: {sorted(unknown)}")
+        for name in args.walk_sheets:
+            try:
+                total_cost += generate_walk_sheet(name, api_key, args.model, args.skip_existing)
+            except Exception as exc:  # noqa: BLE001
+                print(f"[{name}] ERROR: {exc}")
+                failures.append(name)
+        if total_cost:
+            print(f"\nCosto total reportado por OpenRouter: ${total_cost:.4f}")
+        if failures:
+            sys.exit(f"Fallaron {len(failures)} walk-sheet(s): {failures}")
         return
 
     if args.all:

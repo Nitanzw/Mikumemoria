@@ -53,7 +53,7 @@ func _ready() -> void:
 
 	var sprite_path: String = insect_data.get("sprite", "")
 	if sprite and sprite_path != "" and ResourceLoader.exists(sprite_path):
-		sprite.texture = load(sprite_path)
+		_apply_static_texture(sprite, load(sprite_path))
 	if mystery_sprite:
 		mystery_sprite.texture = load("res://assets/sprites/insects/mystery_bug_silueta.png")
 
@@ -156,7 +156,7 @@ func _play_reveal_flash() -> void:
 		return
 	# Aplica el flash al sprite más visible en este momento (según cuánto
 	# se haya revelado), si no el jugador podría no ver feedback del golpe.
-	var target: Sprite2D = sprite if sprite and sprite.modulate.a >= 0.5 else mystery_sprite
+	var target: CanvasItem = sprite if sprite and sprite.modulate.a >= 0.5 else mystery_sprite
 	if not target:
 		target = sprite if sprite else mystery_sprite
 	var original_modulate := target.modulate

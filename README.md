@@ -56,8 +56,9 @@ Notas importantes:
 
 ## Generar sprites con Gemini o con OpenRouter
 
-Ya generados y commiteados los 33 assets visuales (16 insectos, 5 armas,
-personaje, 10 fondos de capítulo, ícono) con
+Ya generados y commiteados los 38 assets visuales (16 insectos, 5 armas,
+personaje + 5 retratos de expresión de Don Beto, 10 fondos de capítulo,
+ícono) más el ciclo de caminata de 4 frames de `hormiga_obrera`, con
 `tools/generate_sprites_openrouter.py` — el arte "final" actual del
 juego viene de ahí, no de los placeholders geométricos originales.
 Quedan dos scripts equivalentes por si querés regenerar algo (mismos
@@ -84,9 +85,13 @@ python3 tools/generate_sprites_gemini.py --all          # sin --skip-existing si
 # Opción por OpenRouter:
 export OPENROUTER_API_KEY="tu_clave"        # https://openrouter.ai/keys
 python3 tools/generate_sprites_openrouter.py --all
+
+# Ciclos de caminata (grid NxM en una sola llamada para que los frames
+# sean consistentes entre sí, después partido en post-proceso local):
+python3 tools/generate_sprites_openrouter.py --walk-sheet hormiga_obrera_walk
 ```
 
-⚠️ Ojo con `--skip-existing`: como los 33 archivos ya existen (ya sea el
+⚠️ Ojo con `--skip-existing`: como los 38 archivos ya existen (ya sea el
 arte generado o, antes, el placeholder geométrico), esa flag se los
 salteará a TODOS. Usala solo para completar assets puntuales que
 todavía no tengas; para regenerar algo que ya existe, corré sin ella o
@@ -153,20 +158,30 @@ Notas importantes:
   las plantillas de exportación en **Editor → Configuración del Editor →
   Exportación → Android**, además de una keystore de debug/release.
 - **Orientación fija en vertical** — animaciones idle en los insectos
-  (balanceo + rebote procedural, sin sprite-sheet) y un tema global con
-  fuente más grande para que el HUD y los botones se vean bien en un
-  celular real. Ver "Gotcha de exportación Android" abajo sobre la
-  orientación: es un bug real de la plantilla de Godot 4.7, no solo
-  configuración del proyecto.
+  (balanceo + rebote procedural, encima de la animación de caminata real
+  en `hormiga_obrera`, ver abajo) y un tema global con fuente más grande
+  para que el HUD y los botones se vean bien en un celular real. Ver
+  "Gotcha de exportación Android" abajo sobre la orientación: es un bug
+  real de la plantilla de Godot 4.7, no solo configuración del proyecto.
 - **Historia y diálogo**: guión completo en `scripts/data/story_data.gd`
   (intro, un gancho por capítulo, tutorial, final). `DialogueBox`
   (`scripts/ui/dialogue_box.gd`) es un componente reutilizable con
   retrato de Don Beto, texto tipo máquina de escribir y avance por tap.
-  Como no hay sprites de expresión todavía, las "emociones" (feliz,
-  triste, enojado, preocupado) se simulan sobre el único sprite
-  existente con tinte de color + un salto de énfasis, más un parpadeo
-  procedural periódico (`don_beto_portrait.gd`) — reemplazable por arte
-  real de expresiones sin tocar la API pública del componente.
+  Cada emoción (feliz, triste, enojado, preocupado, neutral) tiene su
+  propio sprite real (`assets/sprites/character/don_beto_<emocion>.png`,
+  generados con `tools/generate_sprites_openrouter.py`), con salto de
+  énfasis y parpadeo procedural periódico encima (`don_beto_portrait.gd`).
+  Si a alguna emoción le faltara el archivo, cae a un tinte de color sobre
+  el sprite neutral en vez de romperse.
+- **Insecto animado**: `hormiga_obrera` (el bicho del nivel 1 / tutorial)
+  tiene un ciclo de caminata real de 4 frames
+  (`assets/sprites/insects/hormiga_obrera_walk_0..3.png`, generado como un
+  sprite-sheet 2x2 en una sola llamada a la API para que los frames sean
+  consistentes entre sí, después partido en post-proceso). El resto de
+  los insectos usa un solo frame estático — mismo nodo `AnimatedSprite2D`
+  para todos (`insect.gd._apply_sprite_data`), así agregar más ciclos de
+  caminata más adelante es solo generar los frames y sumarlos a
+  `walk_frames` en `INSECT_DATA`.
 - **Intro estilo "cómic"** (`scenes/story/story_intro.tscn`): se muestra
   la primera vez que se abre el juego (con botón "Saltar"), y se puede
   volver a ver desde "Historia" en el menú principal.
@@ -253,9 +268,9 @@ en horizontal.
 
 ## Qué falta
 
-Ya resuelto (no son placeholders): el **arte** (33 sprites, ver más
-arriba), la **música** (11 pistas por Suno, ver más arriba) y los **SFX**
-(ver abajo). Queda:
+Ya resuelto (no son placeholders): el **arte** (38 sprites + el ciclo de
+caminata de 4 frames de `hormiga_obrera`, ver más arriba), la **música**
+(11 pistas por Suno, ver más arriba) y los **SFX** (ver abajo). Queda:
 
 - **SFX**: `assets/sounds/sfx/*.ogg` son sonidos reales CC0 de
   [Kenney.nl](https://kenney.nl) (packs "Impact Sounds", "Interface
@@ -285,11 +300,9 @@ arriba), la **música** (11 pistas por Suno, ver más arriba) y los **SFX**
 - **Íconos de Android**: `icon.png` ya es arte generado (no geométrico),
   pero conviene revisar que se vea bien en las distintas resoluciones
   que pide un adaptive icon de Android antes de publicar.
-- **Expresiones reales de Don Beto**: hoy las emociones en el diálogo
-  (feliz/triste/enojado/preocupado) son un tinte de color + animación
-  sobre el único sprite que existe (ver "Historia y diálogo" arriba).
-  Se puede reemplazar por sprites de expresión reales (generados con
-  `generate_sprites_gemini.py`/`openrouter.py`, agregando esos assets al
-  diccionario `ASSETS`) sin tocar la lógica de `DialogueBox` ni
-  `DonBetoPortrait` — solo habría que cargar la textura correspondiente
-  en `set_emotion()` en vez de aplicar un tinte.
+- **Más ciclos de caminata**: hoy solo `hormiga_obrera` tiene animación de
+  caminata real (4 frames); el resto de los insectos usa un solo frame
+  estático + el balanceo procedural. Para sumarle un ciclo a otro tipo:
+  `python3 tools/generate_sprites_openrouter.py --walk-sheet <nombre>`
+  (definir el spec en `WALK_SHEETS` primero) y agregar la lista
+  `walk_frames` a esa entrada en `Insect.INSECT_DATA`.

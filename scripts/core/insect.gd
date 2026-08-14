@@ -5,7 +5,12 @@ extends CharacterBody2D
 ## para que el spawner también pueda consultarlos sin instanciar la escena.
 
 const INSECT_DATA := {
-	"hormiga_obrera": {"speed": 100.0, "health": 1, "points": 50, "coin_reward": 10, "sprite": "res://assets/sprites/insects/hormiga_obrera.png"},
+	"hormiga_obrera": {"speed": 100.0, "health": 1, "points": 50, "coin_reward": 10, "sprite": "res://assets/sprites/insects/hormiga_obrera.png", "walk_frames": [
+		"res://assets/sprites/insects/hormiga_obrera_walk_0.png",
+		"res://assets/sprites/insects/hormiga_obrera_walk_1.png",
+		"res://assets/sprites/insects/hormiga_obrera_walk_2.png",
+		"res://assets/sprites/insects/hormiga_obrera_walk_3.png",
+	]},
 	"cucaracha_electrica": {"speed": 200.0, "health": 1, "points": 75, "coin_reward": 15, "sprite": "res://assets/sprites/insects/cucaracha_electrica.png"},
 	"escarabajo_blindado": {"speed": 50.0, "health": 3, "points": 150, "coin_reward": 30, "sprite": "res://assets/sprites/insects/escarabajo_blindado.png"},
 	"mosca_pesada": {"speed": 150.0, "health": 1, "points": 100, "coin_reward": 20, "sprite": "res://assets/sprites/insects/mosca_pesada.png"},
@@ -20,7 +25,7 @@ const SCREEN_MARGIN := 100.0
 @export var insect_type: String = "hormiga_obrera"
 @export var speed_mult: float = 1.0
 
-@onready var sprite: Sprite2D = $Sprite2D
+@onready var sprite: AnimatedSprite2D = $Sprite2D
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 
 var speed: float = 100.0
@@ -68,8 +73,40 @@ func initialize_by_type() -> void:
 	current_health = health
 	points = int(data["points"])
 	coin_reward = int(data["coin_reward"])
-	if sprite and data.has("sprite") and ResourceLoader.exists(data["sprite"]):
-		sprite.texture = load(data["sprite"])
+	_apply_sprite_data(sprite, data)
+
+## Arma un SpriteFrames a partir de la config del tipo de insecto: si trae
+## "walk_frames" (lista de rutas), arma un ciclo de caminata animado; si
+## no, cae en un único frame estático desde "sprite" (mismo resultado
+## visual que un Sprite2D de toda la vida, pero con el mismo tipo de nodo
+## para todos los insectos).
+func _apply_sprite_data(target: AnimatedSprite2D, data: Dictionary) -> void:
+	if not target:
+		return
+
+	var walk_frames: Array = data.get("walk_frames", [])
+	if not walk_frames.is_empty():
+		var frames := SpriteFrames.new()
+		frames.add_animation("walk")
+		frames.set_animation_loop("walk", true)
+		frames.set_animation_speed("walk", 8.0)
+		for path in walk_frames:
+			if ResourceLoader.exists(path):
+				frames.add_frame("walk", load(path))
+		target.sprite_frames = frames
+		target.play("walk")
+		return
+
+	var sprite_path: String = data.get("sprite", "")
+	if sprite_path != "" and ResourceLoader.exists(sprite_path):
+		_apply_static_texture(target, load(sprite_path))
+
+func _apply_static_texture(target: AnimatedSprite2D, texture: Texture2D) -> void:
+	var frames := SpriteFrames.new()
+	frames.add_animation("default")
+	frames.add_frame("default", texture)
+	target.sprite_frames = frames
+	target.play("default")
 
 func _physics_process(delta: float) -> void:
 	if is_dead:

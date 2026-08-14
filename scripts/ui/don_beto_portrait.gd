@@ -1,13 +1,21 @@
 class_name DonBetoPortrait
 extends Node2D
 
-## Retrato animado de Don Beto para el sistema de diálogo. No hay sprites
-## de expresión distintos todavía (haría falta arte nuevo), así que las
-## "emociones" se simulan sobre el único sprite existente: tinte de
-## color + un salto de énfasis al cambiar de línea, más un parpadeo
-## periódico (achique vertical breve) para que no se vea estático.
-## Reemplazar por sprites reales de expresión cuando haya arte, sin
-## tocar la API pública (set_emotion / play_emphasis).
+## Retrato animado de Don Beto para el sistema de diálogo. Cada emoción
+## tiene su propio sprite real (generado con tools/generate_sprites_openrouter.py
+## --asset don_beto_<emocion>); si a alguna le falta el archivo, cae en
+## el sprite neutral con un tinte de color como antes, para que nunca
+## quede un retrato roto. Encima de eso: un salto de énfasis al cambiar
+## de línea y un parpadeo periódico (achique vertical breve) para que no
+## se vea estático.
+
+const EMOTION_TEXTURES := {
+	"neutral": "res://assets/sprites/character/don_beto_neutral.png",
+	"happy": "res://assets/sprites/character/don_beto_happy.png",
+	"sad": "res://assets/sprites/character/don_beto_sad.png",
+	"angry": "res://assets/sprites/character/don_beto_angry.png",
+	"worried": "res://assets/sprites/character/don_beto_worried.png",
+}
 
 const EMOTION_TINTS := {
 	"neutral": Color(1, 1, 1),
@@ -39,7 +47,15 @@ func _process(delta: float) -> void:
 		_play_blink()
 
 func set_emotion(emotion: String) -> void:
-	var tint: Color = EMOTION_TINTS.get(emotion, Color.WHITE)
+	var texture_path: String = EMOTION_TEXTURES.get(emotion, "")
+	var tint: Color = Color.WHITE
+	if texture_path != "" and ResourceLoader.exists(texture_path):
+		sprite.texture = load(texture_path)
+	else:
+		# Sin sprite para esta emoción: nos quedamos con el que ya está
+		# puesto y simulamos la emoción con tinte, como antes.
+		tint = EMOTION_TINTS.get(emotion, Color.WHITE)
+
 	var tween := create_tween()
 	tween.tween_property(sprite, "modulate", tint, 0.2)
 	_play_emphasis(emotion)
