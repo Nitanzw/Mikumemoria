@@ -1,0 +1,6 @@
+[gd_resource type="Theme" format=3]
+
+[resource]
+default_font_size = 24
+Button/font_sizes/font_size = 26
+Label/font_sizes/font_size = 24

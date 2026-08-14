@@ -39,10 +39,26 @@ var taunt_timer: float = 0.0
 var wander_timer: float = 1.0
 var lifetime_timer: float = LIFETIME
 
+# Animación procedural (sin sprite-sheet): balanceo + rebote que simula una
+# caminata. Fase aleatoria para que no todos los insectos se muevan en
+# sincro. Velocidad de la oscilación ligada a la velocidad real, así un
+# insecto en "burla" (más rápido) se ve más agitado.
+var _wiggle_phase: float = randf() * TAU
+const WIGGLE_ROTATION := 0.14
+const WIGGLE_BOB_PX := 3.0
+
 func _ready() -> void:
 	add_to_group("insects")
 	initialize_by_type()
 	randomize_direction()
+
+func _process(delta: float) -> void:
+	if is_dead or not sprite:
+		return
+	var wiggle_speed: float = 6.0 * clamp(speed / max(base_speed, 1.0), 0.5, 2.5)
+	_wiggle_phase += delta * wiggle_speed
+	sprite.rotation = sin(_wiggle_phase) * WIGGLE_ROTATION
+	sprite.position.y = -absf(sin(_wiggle_phase)) * WIGGLE_BOB_PX
 
 func initialize_by_type() -> void:
 	var data: Dictionary = INSECT_DATA.get(insect_type, INSECT_DATA["hormiga_obrera"])

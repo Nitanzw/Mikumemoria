@@ -150,6 +150,12 @@ Notas importantes:
   Gradle build). Antes de exportar necesitas configurar el Android SDK y
   las plantillas de exportación en **Editor → Configuración del Editor →
   Exportación → Android**, además de una keystore de debug/release.
+- **Orientación fija en vertical** — animaciones idle en los insectos
+  (balanceo + rebote procedural, sin sprite-sheet) y un tema global con
+  fuente más grande para que el HUD y los botones se vean bien en un
+  celular real. Ver "Gotcha de exportación Android" abajo sobre la
+  orientación: es un bug real de la plantilla de Godot 4.7, no solo
+  configuración del proyecto.
 
 ## Bugs del documento original que se corrigieron
 
@@ -167,6 +173,57 @@ Notas importantes:
 - `on_level_complete()` guardaba `current_level + 1` en el archivo pero
   nunca actualizaba `current_level` en memoria, así que "siguiente nivel"
   no avanzaba realmente sin recargar el guardado.
+
+## ⚠️ Gotcha de exportación Android: orientación bloqueada en horizontal
+
+Probado contra Godot **4.7.1** real (no solo leído en la doc): la opción
+`screen/orientation` que existía en `export_presets.cfg` en versiones
+anteriores de Godot **ya no existe** — el exportador la ignora en
+silencio. Lo único que debería importar es el project setting
+`display/window/handheld/orientation` (`window/handheld/orientation` en
+`[display]` dentro de `project.godot`, ya seteado en `"portrait"`), pero
+en la práctica el build Gradle de Android sigue empaquetando
+`android:screenOrientation="landscape"` **hardcodeado** en
+`android/build/src/{main,debug,release}/AndroidManifest.xml` — Godot no
+reescribe ese valor al exportar (al menos no de forma confiable en esta
+versión). Si exportás desde la UI del editor puede que este paso sí
+funcione bien (usa un flujo distinto a `--export-release`/`--export-debug`
+por CLI); si no, la forma confirmada de arreglarlo:
+
+```bash
+# 1. Exportar una vez para que Godot regenere android/build/ con el resto
+#    de la configuración (assets, versión, etc.) — el manifest va a
+#    quedar en landscape, no importa.
+godot --headless --export-release "Android" build/android/app.apk
+
+# 2. Forzar portrait a mano en los 3 manifests del proyecto Gradle:
+sed -i 's/android:screenOrientation="landscape"/android:screenOrientation="portrait"/g' \
+  android/build/src/debug/AndroidManifest.xml \
+  android/build/src/release/AndroidManifest.xml \
+  android/build/src/main/AndroidManifest.xml
+
+# 3. Compilar con Gradle directamente (Godot ya no vuelve a tocar el
+#    manifest si no volvés a llamar --export-*), pasándole las mismas
+#    propiedades que usa internamente:
+cd android/build
+./gradlew assembleRelease \
+  -Pexport_package_name=com.invasionhuerto.game \
+  -Pexport_version_code=1 -Pexport_version_name=0.1.0 \
+  -Pexport_version_min_sdk=24 -Pexport_version_target_sdk=34 \
+  -Pexport_enabled_abis=arm64-v8a \
+  -Prelease_keystore_file=/ruta/a/tu.keystore \
+  -Prelease_keystore_password=TU_PASS -Prelease_keystore_alias=TU_ALIAS \
+  -Pperform_zipalign=true -Pperform_signing=true
+
+# El APK final queda en:
+# android/build/build/outputs/apk/standard/release/android_release.apk
+```
+
+Si esto se corrige en una versión más nueva de Godot, o si exportar
+desde la UI del editor sí respeta la orientación (no lo pude probar acá,
+solo por CLI), este workaround dejará de hacer falta — probá primero un
+export normal y solo recurrí a este proceso si el APK te sigue saliendo
+en horizontal.
 
 ## Qué falta
 

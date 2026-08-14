@@ -16,6 +16,10 @@ run/main_scene="res://scenes/menu/main_menu.tscn"
 config/features=PackedStringArray("4.3", "Mobile")
 config/icon="res://icon.png"
 
+[gui]
+
+theme/custom="res://assets/theme/default_theme.tres"
+
 [audio]
 
 buses/default_bus_layout="res://default_bus_layout.tres"

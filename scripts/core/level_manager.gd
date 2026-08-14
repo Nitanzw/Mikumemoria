@@ -44,7 +44,7 @@ func get_level_config(level: int) -> Dictionary:
 		"background": chapter_config.get("background", ""),
 		"spawn_rate": chapter_config.get("spawn_rate", 2.0),
 		"enemy_speed_mult": chapter_config.get("enemy_speed_mult", 1.0),
-		"time_limit": 60,
+		"time_limit": 30,
 		"enemy_types": get_available_enemies(level),
 		"has_mystery_bug": has_mystery_bug(level),
 		"mystery_index": get_mystery_bug_index(level),

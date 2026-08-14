@@ -27,7 +27,7 @@ func _ready() -> void:
 	_play_chapter_music()
 	_setup_background()
 
-	time_remaining = float(level_config.get("time_limit", 60))
+	time_remaining = float(level_config.get("time_limit", 30))
 	hud.set_level_label(GameManager.current_level, level_config.get("chapter_name", ""))
 	hud.set_time(time_remaining)
 	hud.set_score(0)

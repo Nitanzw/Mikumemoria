@@ -61,6 +61,12 @@ func _ready() -> void:
 	_show_mystery_sprite()
 	_update_reveal_visuals()
 
+func _process(delta: float) -> void:
+	super._process(delta)
+	if mystery_sprite and sprite:
+		mystery_sprite.rotation = sprite.rotation
+		mystery_sprite.position.y = sprite.position.y
+
 func _physics_process(delta: float) -> void:
 	if is_dead or is_revealed:
 		return
