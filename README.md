@@ -215,73 +215,99 @@ Notas importantes:
   nunca actualizaba `current_level` en memoria, así que "siguiente nivel"
   no avanzaba realmente sin recargar el guardado.
 
-## ⚠️ Gotcha de exportación Android: orientación bloqueada en horizontal
+## ⚠️ Orientación en Android: `handheld/orientation` es un ENTERO, no un string
 
-Probado contra Godot **4.7.1** real (no solo leído en la doc): la opción
-`screen/orientation` que existía en `export_presets.cfg` en versiones
-anteriores de Godot **ya no existe** — el exportador la ignora en
-silencio. Lo único que debería importar es el project setting
-`display/window/handheld/orientation` (`window/handheld/orientation` en
-`[display]` dentro de `project.godot`), pero en la práctica el build
-Gradle de Android sigue empaquetando `android:screenOrientation="landscape"`
-**hardcodeado** en `android/build/src/{main,release}/AndroidManifest.xml`
-— Godot no reescribe ese valor al exportar (al menos no de forma
-confiable en esta versión). Son en realidad **tres** problemas
-encadenados, no uno — hay que arreglar los tres o el juego arranca mal:
+**Esta es la causa raíz de todo el problema de orientación** — costó
+varios intentos fallidos encontrarla, así que vale la pena dejarla
+escrita con detalle.
 
-1. **Orientación hardcodeada en landscape** (el bug de arriba).
-2. **`resizeableActivity` pisado a `"true"`**: el manifest del proyecto
-   (`main/AndroidManifest.xml`) ya pide `android:resizeableActivity="false"`
-   en la `<activity>`, pero el manifest generado
-   `release/AndroidManifest.xml` lo pisa con
-   `tools:replace="...,android:resizeableActivity" ...
-   android:resizeableActivity="true"` — el merge de Gradle le da
-   prioridad a ese `tools:replace`. Con esto en `"true"`, Android puede
-   ignorar directamente el orientation lock (sobre todo en dispositivos
-   con soporte de pantalla grande/multi-ventana): el síntoma es que el
-   juego arranca de costado y hay que rotar el celular para verlo bien.
-3. **`screenOrientation="portrait"` (el valor absoluto) dispara
-   letterboxing en pantallas grandes**: arreglar 1 y 2 no alcanza en
-   celulares/tablets grandes (confirmado en un Galaxy S26 Ultra) — con
-   `resizeableActivity="false"` + `screenOrientation="portrait"` el
-   contenido ya se ve derecho, pero Android 12+/One UI lo mete en un
-   recuadro chico con franjas negras a los costados ("letterboxing para
-   apps de orientación fija y no-resizable en pantallas grandes", una
-   política real y documentada de Android, no un bug nuestro). La forma
-   estándar de evitarla sin perder el lock: pedir **`sensorPortrait`**
-   en vez de `portrait` a secas. Es funcionalmente igual para quien
-   juega (portrait, derecho o cabeza abajo según el sensor — nunca
-   landscape), pero al no ser un valor "absoluto" Android no lo
-   considera lo bastante restrictivo como para forzar el letterbox.
-   `project.godot` ya tiene `window/handheld/orientation="sensor_portrait"`
-   (el nombre del enum de Godot para esa opción) por este motivo — no es
-   solo cosmético, no lo cambies a `"portrait"` sin volver a probar en
-   un equipo de pantalla grande.
+En **Godot 3**, `display/window/handheld/orientation` era un **string**
+(`"portrait"` / `"landscape"`). En **Godot 4 es un entero** (un enum de
+`DisplayServer.ScreenOrientation`). Las settings vecinas
+(`window/stretch/mode`, `window/stretch/aspect`) **sí** siguen siendo
+strings, así que la mezcla es muy fácil de hacer sin darse cuenta — y
+Godot **no** avisa del error: acepta el string, lo convierte a entero,
+y como no es numérico da **0**, que en ese enum es **Landscape**.
 
-Si exportás desde la UI del editor puede que el paso 1 sí funcione bien
-(usa un flujo distinto a `--export-release`/`--export-debug` por CLI); si
-no, la forma confirmada de arreglar los tres:
+```ini
+# ❌ MAL (sintaxis de Godot 3 — Godot 4 lo lee como 0 = Landscape)
+window/handheld/orientation="portrait"
+
+# ✅ BIEN (Godot 4)
+window/handheld/orientation=1
+```
+
+Valores del enum: `0`=Landscape, `1`=Portrait, `2`=Reverse Landscape,
+`3`=Reverse Portrait, `4`=Sensor Landscape, `5`=Sensor Portrait,
+`6`=Sensor.
+
+Lo traicionero es que el síntoma **no** parece un problema de tipos:
+
+- Godot escribe `android:screenOrientation="landscape"` en el manifest
+  generado (`android/build/src/release/AndroidManifest.xml`), porque
+  está leyendo 0. Da la impresión de que "Godot hardcodea landscape",
+  que fue mi primera conclusión equivocada.
+- Y aunque parchees el manifest a mano a `portrait`, **el juego igual
+  arranca en horizontal**: Godot llama a `setRequestedOrientation()` en
+  tiempo de ejecución al iniciar la activity, con ese mismo 0, y esa
+  llamada **pisa lo que diga el manifest**. Por eso parchear el manifest
+  no arregla nada — es el lugar equivocado.
+- El resultado visual confunde más todavía: la ventana queda en
+  landscape y Godot, con `stretch/aspect="keep"`, encaja el contenido
+  vertical (540x960) centrado ahí adentro. Se ve *derecho pero angosto,
+  con franjas negras a los costados*, que parece "letterboxing de
+  Android en pantallas grandes" y no lo es.
+
+Para verificar el tipo (no el valor — el **tipo**) sin adivinar:
 
 ```bash
-# 1. Exportar una vez para que Godot regenere android/build/ con el resto
-#    de la configuración (assets, versión, etc.) — el manifest va a
-#    quedar en landscape y resizeable, no importa.
-godot --headless --export-release "Android" build/android/app.apk
+cat > /tmp/check.gd <<'EOF'
+extends SceneTree
+func _init():
+	for p in ProjectSettings.get_property_list():
+		if p.name == "display/window/handheld/orientation":
+			var v = ProjectSettings.get_setting(p.name)
+			print("declarado=", p.type, " real=", typeof(v), " valor=", v)
+	quit()
+EOF
+godot --headless --path . --script /tmp/check.gd
+# declarado=2 real=2  -> OK (2 = int en ambos)
+# declarado=2 real=4  -> ROTO (4 = String), lo lee como 0 = Landscape
+```
 
-# 2. Forzar sensorPortrait Y no-resizeable a mano en los manifests del
-#    proyecto Gradle (main no necesita el segundo sed, ya trae
-#    resizeableActivity="false", pero no molesta repetirlo):
+Y para confirmar el resultado en el APK ya compilado, mirando el
+manifest **binario real** que quedó adentro (no un intermedio de Gradle):
+
+```bash
+aapt2 dump xmltree --file AndroidManifest.xml ruta/al.apk | grep -i screenOrientation
+# screenOrientation=1  -> PORTRAIT  (constantes de Android, no las de Godot)
+# screenOrientation=0  -> LANDSCAPE
+```
+
+### Sobre el manifest: dos cosas menores, ya no críticas
+
+Con la setting bien puesta, Godot escribe `portrait` solo en
+`release/AndroidManifest.xml` al exportar. Quedan dos detalles que no
+causan el bug pero conviene dejar coherentes si compilás con Gradle a
+mano (`main/AndroidManifest.xml` es una plantilla estática que Godot no
+reescribe, y el flavor `release` pisa `resizeableActivity` a `true` vía
+`tools:replace`):
+
+```bash
 sed -i \
-  -e 's/android:screenOrientation="landscape"/android:screenOrientation="sensorPortrait"/g' \
+  -e 's/android:screenOrientation="landscape"/android:screenOrientation="portrait"/g' \
   -e 's/android:resizeableActivity="true"/android:resizeableActivity="false"/g' \
   android/build/src/main/AndroidManifest.xml \
   android/build/src/release/AndroidManifest.xml
-# (si exportaste también un build debug, el mismo sed aplica a
-# android/build/src/debug/AndroidManifest.xml)
+```
 
-# 3. Compilar con Gradle directamente (Godot ya no vuelve a tocar el
-#    manifest si no volvés a llamar --export-*), pasándole las mismas
-#    propiedades que usa internamente:
+### Compilar con Gradle directamente
+
+Solo hace falta si vas a parchear el manifest a mano como arriba (con la
+setting arreglada, un `--export-release` normal ya alcanza). Godot no
+vuelve a tocar el manifest mientras no llames de nuevo a `--export-*`:
+
+```bash
 cd android/build
 ./gradlew assembleRelease \
   -Pexport_package_name=com.invasionhuerto.game \
@@ -296,23 +322,10 @@ cd android/build
 # android/build/build/outputs/apk/standard/release/android_release.apk
 ```
 
-Para verificar que las tres cosas quedaron bien en el APK final (sin
-instalar nada, antes de repartirlo):
-
-```bash
-aapt2 dump badging android/build/build/outputs/apk/standard/release/android_release.apk | grep orientation
-# tiene que aparecer: uses-implied-feature: name='android.hardware.screen.portrait'
-
-grep -oE 'android:(screenOrientation|resizeableActivity)="[a-zA-Z]*"' \
-  android/build/build/intermediates/packaged_manifests/standardRelease/processStandardReleaseManifestForPackage/AndroidManifest.xml
-# tiene que decir screenOrientation="sensorPortrait" y resizeableActivity="false"
-```
-
-Si esto se corrige en una versión más nueva de Godot, o si exportar
-desde la UI del editor sí respeta la orientación (no lo pude probar acá,
-solo por CLI), este workaround dejará de hacer falta — probá primero un
-export normal y solo recurrí a este proceso si el APK te sigue saliendo
-en horizontal o con franjas negras.
+(Nota aparte: la opción `screen/orientation` que existía en
+`export_presets.cfg` en versiones viejas de Godot ya no existe en 4.7 —
+el exportador la ignora en silencio. La orientación se controla
+únicamente desde el project setting de arriba.)
 
 ## Qué falta
 

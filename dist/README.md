@@ -30,37 +30,29 @@ GitHub en el celular) y abrilo — Android va a pedir habilitar "instalar
 apps de orígenes desconocidos" para el navegador/gestor de archivos que
 uses.
 
-**Sobre el bug de orientación**: son en realidad TRES bugs de
-exportación de Godot 4.7.1 sobre Android, no uno — hace falta arreglar
-los tres o el juego arranca mal:
+**Sobre el bug de orientación** (arrastrado por varios builds, ya
+resuelto de raíz): no era un problema del manifest de Android ni una
+política de Samsung — era un **error de tipo en `project.godot`**.
 
-1. El manifest de Android empaqueta `screenOrientation="landscape"`
-   hardcodeado, ignorando la configuración del proyecto.
-2. Un manifest generado (`release/AndroidManifest.xml`) pisa
-   `resizeableActivity` a `"true"` vía un merge de Gradle
-   (`tools:replace`), aunque el manifest principal del proyecto ya pide
-   `"false"` — y una activity marcada como resizeable hace que Android
-   ignore el orientation lock del punto 1 en varios dispositivos, incluso
-   con el `screenOrientation` ya arreglado (el juego arranca de costado,
-   hay que rotar el celular para verlo).
-3. Ya con 1 y 2 arreglados y `screenOrientation="portrait"` (el valor
-   absoluto), en celulares/tablets de pantalla grande (confirmado en un
-   Galaxy S26 Ultra) Android igual mete el juego en un recuadro chico
-   con franjas negras a los costados — es "letterboxing para apps de
-   orientación fija y no-resizable en pantallas grandes", una política
-   real de Android 12+/One UI, no un bug nuestro, pero el resultado
-   visual es igual de malo. Se evita pidiendo `sensorPortrait` en vez de
-   `portrait` a secas (funcionalmente igual para quien juega — nunca
-   permite horizontal — pero Android no lo trata como "restrictivo" y no
-   dispara el letterbox).
+En Godot 3, `display/window/handheld/orientation` era un string
+(`"portrait"`); en **Godot 4 es un entero** (enum: `0`=Landscape,
+`1`=Portrait, …). El proyecto lo tenía como string, y Godot lo convertía
+silenciosamente a **0 = Landscape**. De ahí salía todo:
 
-Los tres hace falta parchearlos a mano en el manifest y compilar con
-Gradle directamente en vez de con el exportador de Godot por CLI. Está
-documentado paso a paso (con el comando para verificar que las tres
-cosas quedaron bien antes de repartir el APK) en el `README.md` de la
-raíz del repo, sección "Gotcha de exportación Android". Si volvés a
-generar este APK vos mismo, seguí esos pasos o te va a volver a salir
-mal.
+- Godot escribía `screenOrientation="landscape"` en el manifest generado
+  (parecía que "Godot hardcodea landscape", no era eso).
+- Parchear el manifest a mano **no arreglaba nada**, porque Godot llama a
+  `setRequestedOrientation()` al arrancar con ese mismo 0 y esa llamada
+  pisa el manifest. Estaba arreglando el lugar equivocado.
+- Las franjas negras a los costados no eran letterboxing de Android:
+  eran de Godot, encajando el contenido vertical (540×960) con
+  `stretch/aspect="keep"` dentro de una ventana horizontal.
+
+La corrección real es una línea: `window/handheld/orientation=1` (entero,
+sin comillas). Está explicado en detalle, con los comandos para
+verificar el **tipo** de la setting y el manifest binario del APK, en el
+`README.md` de la raíz, sección "Orientación en Android:
+`handheld/orientation` es un ENTERO, no un string".
 
 **Para un build completo** (con toda la música), corré la exportación
 vos mismo desde el editor de Godot — `export_presets.cfg` está limpio en
