@@ -1,9 +1,16 @@
 # ¡Invasión en el Huerto! 🐛
 
-Proyecto Godot 4.x implementado a partir de la guía `invasión_huerto_godot_guia.md`.
+Proyecto Godot 4.x implementado a partir de la guía [`invasión_huerto_godot_guia.md`](invasi%C3%B3n_huerto_godot_guia.md).
 El **capítulo 1 es jugable de punta a punta**: menú → nivel con spawner de
 insectos, tap para golpear, combos, insecto incógnito, fin de nivel, tienda
 y árbol de habilidades.
+
+> 🖼️ **[Ver la galería](GALERIA.md)** — capturas del juego andando y las
+> 42 imágenes del arte (insectos, armas, fondos, las 5 expresiones de Don
+> Beto y el ciclo de caminata), todo en una sola página.
+>
+> 📱 **[Bajar el APK de demo](dist/invasion_huerto_demo.apk)** — ver
+> [`dist/README.md`](dist/README.md) para qué trae y cómo instalarlo.
 
 ## Cómo probarlo
 
