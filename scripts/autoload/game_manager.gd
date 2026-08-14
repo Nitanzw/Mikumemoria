@@ -24,6 +24,12 @@ var skill_tree: Dictionary = {}
 # 9 niveles previos a cada múltiplo de 10 (ver LevelManager.has_mystery_bug).
 var mystery_progress: Dictionary = {}
 
+# --- Historia / narrativa ---
+var story_seen: bool = false
+var tutorial_seen: bool = false
+var seen_chapter_intros: Array = []   # capítulos (int) cuya intro ya se mostró
+var force_show_story: bool = false    # flag transitorio (no se guarda), para "ver de nuevo" desde el menú
+
 # --- Helpers internos (no son autoload, son instancias propias) ---
 var level_manager := LevelManager.new()
 var skill_system := SkillSystem.new()
@@ -51,6 +57,9 @@ func load_game_data() -> void:
 		equipped_weapon = data.get("equipped_weapon", "zapato_viejo")
 		skill_tree = data.get("skill_tree", {})
 		mystery_progress = data.get("mystery_progress", {})
+		story_seen = bool(data.get("story_seen", false))
+		tutorial_seen = bool(data.get("tutorial_seen", false))
+		seen_chapter_intros = data.get("seen_chapter_intros", [])
 	else:
 		print("[GameManager] Nuevo juego")
 		reset_game()
@@ -67,6 +76,9 @@ func reset_game() -> void:
 	equipped_weapon = "zapato_viejo"
 	skill_tree = {}
 	mystery_progress = {}
+	story_seen = false
+	tutorial_seen = false
+	seen_chapter_intros = []
 
 func start_level(level: int) -> void:
 	current_level = level
@@ -104,15 +116,7 @@ func on_level_complete() -> int:
 	current_level = min(finished_level + 1, level_manager.MAX_LEVEL)
 	current_chapter = level_manager.get_chapter_for_level(current_level)
 
-	SaveManager.save_game({
-		"current_level": current_level,
-		"coins": player_coins,
-		"unlocked_insects": unlocked_insects,
-		"unlocked_weapons": unlocked_weapons,
-		"equipped_weapon": equipped_weapon,
-		"skill_tree": skill_tree,
-		"mystery_progress": mystery_progress,
-	})
+	SaveManager.save_game(_build_save_dict())
 
 	level_completed.emit(finished_level)
 	return reward
@@ -152,6 +156,38 @@ func add_mystery_progress(index: int, amount: float) -> float:
 	var new_value: float = get_mystery_progress(index) + amount
 	mystery_progress[str(index)] = new_value
 	return new_value
+
+# --- Historia / narrativa ---
+
+func mark_story_seen() -> void:
+	story_seen = true
+	SaveManager.save_game(_build_save_dict())
+
+func mark_tutorial_seen() -> void:
+	tutorial_seen = true
+	SaveManager.save_game(_build_save_dict())
+
+func has_seen_chapter_intro(chapter: int) -> bool:
+	return chapter in seen_chapter_intros
+
+func mark_chapter_intro_seen(chapter: int) -> void:
+	if chapter not in seen_chapter_intros:
+		seen_chapter_intros.append(chapter)
+		SaveManager.save_game(_build_save_dict())
+
+func _build_save_dict() -> Dictionary:
+	return {
+		"current_level": current_level,
+		"coins": player_coins,
+		"unlocked_insects": unlocked_insects,
+		"unlocked_weapons": unlocked_weapons,
+		"equipped_weapon": equipped_weapon,
+		"skill_tree": skill_tree,
+		"mystery_progress": mystery_progress,
+		"story_seen": story_seen,
+		"tutorial_seen": tutorial_seen,
+		"seen_chapter_intros": seen_chapter_intros,
+	}
 
 # --- Armas ---
 

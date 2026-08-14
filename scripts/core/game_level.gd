@@ -6,6 +6,7 @@ extends Node2D
 
 const InsectScene := preload("res://scenes/insect.tscn")
 const MysteryBugScene := preload("res://scenes/mystery_bug.tscn")
+const DialogueBoxScene := preload("res://scenes/ui/dialogue_box.tscn")
 
 const MAX_INSECTS_ON_SCREEN := 9
 const SPAWN_MARGIN := 60.0
@@ -17,12 +18,15 @@ const SPAWN_MARGIN := 60.0
 @onready var level_complete_ui = $LevelComplete
 
 var level_config: Dictionary = {}
-var time_remaining: float = 60.0
+var time_remaining: float = 30.0
 var level_ended: bool = false
+var gameplay_started: bool = false
+var _entry_chapter: int = 1
 
 func _ready() -> void:
 	GameManager.start_level(GameManager.current_level)
 	level_config = GameManager.get_current_level_config()
+	_entry_chapter = GameManager.current_chapter
 
 	_play_chapter_music()
 	_setup_background()
@@ -43,15 +47,11 @@ func _ready() -> void:
 
 	spawn_timer.wait_time = level_config.get("spawn_rate", 2.0)
 	spawn_timer.timeout.connect(_on_spawn_timer_timeout)
-	spawn_timer.start()
 
-	if level_config.get("has_mystery_bug", false) and not GameManager.has_unlocked_insect(level_config.get("mystery_index", 0)):
-		await get_tree().create_timer(1.0).timeout
-		if not level_ended:
-			_spawn_mystery_bug()
+	_maybe_show_intros()
 
 func _process(delta: float) -> void:
-	if level_ended:
+	if level_ended or not gameplay_started:
 		return
 
 	time_remaining -= delta
@@ -59,6 +59,43 @@ func _process(delta: float) -> void:
 
 	if time_remaining <= 0.0:
 		_end_level()
+
+func _maybe_show_intros() -> void:
+	# Encadena: intro de capítulo (primera vez que se entra a ese
+	# capítulo) -> tutorial (solo nivel 1, primera vez) -> arranca el
+	# nivel. El tiempo del nivel no corre mientras se muestra un diálogo.
+	var chapter: int = GameManager.current_chapter
+	if not GameManager.has_seen_chapter_intro(chapter):
+		var lines: Array = StoryData.get_chapter_intro(chapter)
+		GameManager.mark_chapter_intro_seen(chapter)
+		if not lines.is_empty():
+			_show_dialogue(lines, _maybe_show_tutorial)
+			return
+	_maybe_show_tutorial()
+
+func _maybe_show_tutorial() -> void:
+	if GameManager.current_level == 1 and not GameManager.tutorial_seen:
+		GameManager.mark_tutorial_seen()
+		_show_dialogue(StoryData.TUTORIAL, _start_gameplay)
+		return
+	_start_gameplay()
+
+func _show_dialogue(lines: Array, on_finished: Callable) -> void:
+	var box := DialogueBoxScene.instantiate()
+	add_child(box)
+	box.finished.connect(on_finished)
+	box.show_dialogue(lines)
+
+func _start_gameplay() -> void:
+	if level_ended:
+		return
+	gameplay_started = true
+	spawn_timer.start()
+
+	if level_config.get("has_mystery_bug", false) and not GameManager.has_unlocked_insect(level_config.get("mystery_index", 0)):
+		await get_tree().create_timer(1.0).timeout
+		if not level_ended:
+			_spawn_mystery_bug()
 
 func _play_chapter_music() -> void:
 	# Cada capítulo puede tener su propio tema (generado con
@@ -130,7 +167,12 @@ func _end_level() -> void:
 	level_complete_ui.show_results(GameManager.player_score, GameManager.combo_max, reward)
 
 func _on_next_level_pressed() -> void:
-	get_tree().reload_current_scene()
+	if GameManager.current_chapter != _entry_chapter:
+		# Cruzó a un capítulo nuevo: mostrar el mapa de mundos en vez de
+		# saltar directo al siguiente nivel, para que se vea el avance.
+		get_tree().change_scene_to_file("res://scenes/menu/world_map.tscn")
+	else:
+		get_tree().reload_current_scene()
 
 func _on_menu_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/menu/main_menu.tscn")

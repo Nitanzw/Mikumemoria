@@ -1,0 +1,76 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/dialogue_box.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/ui/don_beto_portrait.tscn" id="2"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0.1, 0.09, 0.13, 0.96)
+border_width_top = 4
+border_color = Color(1, 0.8, 0.2, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+content_margin_left = 16
+content_margin_top = 14
+content_margin_right = 16
+content_margin_bottom = 14
+
+[node name="DialogueBox" type="CanvasLayer"]
+script = ExtResource("1")
+
+[node name="Dim" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.35)
+
+[node name="Panel" type="PanelContainer" parent="Dim"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -260.0
+offset_right = -16.0
+offset_bottom = -24.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="DonBetoPortrait" parent="Dim/Panel" instance=ExtResource("2")]
+position = Vector2(80, 118)
+scale = Vector2(0.35, 0.35)
+
+[node name="HBox" type="HBoxContainer" parent="Dim/Panel"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="PortraitSpacer" type="Control" parent="Dim/Panel/HBox"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Dim/Panel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="NameLabel" type="Label" parent="Dim/Panel/HBox/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+text = "Don Beto"
+
+[node name="TextLabel" type="Label" parent="Dim/Panel/HBox/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 22
+vertical_alignment = 0
+
+[node name="ContinueHint" type="Label" parent="Dim/Panel/HBox/VBox"]
+layout_mode = 2
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 0.8)
+text = "toca para continuar ▸"

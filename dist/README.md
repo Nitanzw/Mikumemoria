@@ -5,11 +5,14 @@ con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
 ~38.9MB, arquitectura arm64-v8a solamente.
 
-**Qué tiene**: capítulo 1 completo (menú → nivel → tienda → árbol de
+**Qué tiene**: capítulo 1 completo (intro con diálogo → menú → mapa de
+mundos → nivel con tutorial la primera vez → tienda → árbol de
 habilidades), con el arte y la música reales (no placeholders) de
 `assets/`. Orientación **fija en vertical** (ver más abajo — fue un bug
 real, ya corregido), HUD con fuente grande y contorno para que se lea
-bien, insectos con animación de balanceo/rebote, niveles de 30 segundos.
+bien, insectos con animación de balanceo/rebote, niveles de 30 segundos,
+historia narrada por Don Beto (con "emociones" simuladas por tinte de
+color, todavía sin sprites de expresión reales).
 
 **Qué le falta a propósito, para mantener el tamaño chico**: la música
 de los capítulos 2 a 10 (`level_theme_2.mp3` a `level_theme_10.mp3`) no

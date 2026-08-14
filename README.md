@@ -156,6 +156,30 @@ Notas importantes:
   celular real. Ver "Gotcha de exportación Android" abajo sobre la
   orientación: es un bug real de la plantilla de Godot 4.7, no solo
   configuración del proyecto.
+- **Historia y diálogo**: guión completo en `scripts/data/story_data.gd`
+  (intro, un gancho por capítulo, tutorial, final). `DialogueBox`
+  (`scripts/ui/dialogue_box.gd`) es un componente reutilizable con
+  retrato de Don Beto, texto tipo máquina de escribir y avance por tap.
+  Como no hay sprites de expresión todavía, las "emociones" (feliz,
+  triste, enojado, preocupado) se simulan sobre el único sprite
+  existente con tinte de color + un salto de énfasis, más un parpadeo
+  procedural periódico (`don_beto_portrait.gd`) — reemplazable por arte
+  real de expresiones sin tocar la API pública del componente.
+- **Intro estilo "cómic"** (`scenes/story/story_intro.tscn`): se muestra
+  la primera vez que se abre el juego (con botón "Saltar"), y se puede
+  volver a ver desde "Historia" en el menú principal.
+- **Tutorial del nivel 1**: Don Beto explica tap/burla/combo/incógnito
+  antes de que arranque el primer nivel jugado (una sola vez).
+- **Intro de capítulo**: la primera vez que se entra a cada capítulo
+  nuevo, un diálogo corto de Don Beto da contexto antes de que arranque
+  el timer del nivel.
+- **Mapa de mundos** (`scenes/menu/world_map.tscn`): reemplaza el
+  "Jugar" directo a nivel. Un nodo circular por capítulo (bloqueado,
+  actual con pulso, completado), con scroll animado hasta el capítulo
+  actual al entrar. Al completar un nivel que cruza a un capítulo nuevo,
+  vuelve al mapa (con el mismo scroll animado) en vez de saltar directo
+  al siguiente nivel; dentro del mismo capítulo sigue yendo directo,
+  para no interrumpir el ritmo.
 
 ## Bugs del documento original que se corrigieron
 
@@ -256,3 +280,11 @@ arriba) y la **música** (11 pistas por Suno, ver más arriba). Queda:
 - **Íconos de Android**: `icon.png` ya es arte generado (no geométrico),
   pero conviene revisar que se vea bien en las distintas resoluciones
   que pide un adaptive icon de Android antes de publicar.
+- **Expresiones reales de Don Beto**: hoy las emociones en el diálogo
+  (feliz/triste/enojado/preocupado) son un tinte de color + animación
+  sobre el único sprite que existe (ver "Historia y diálogo" arriba).
+  Se puede reemplazar por sprites de expresión reales (generados con
+  `generate_sprites_gemini.py`/`openrouter.py`, agregando esos assets al
+  diccionario `ASSETS`) sin tocar la lógica de `DialogueBox` ni
+  `DonBetoPortrait` — solo habría que cargar la textura correspondiente
+  en `set_emotion()` en vez de aplicar un tinte.
