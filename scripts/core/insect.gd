@@ -22,6 +22,18 @@ const WANDER_MAX := 1.4
 const LIFETIME := 7.0
 const SCREEN_MARGIN := 100.0
 
+const SplatEffectScene := preload("res://scenes/effects/splat_effect.tscn")
+
+## Color de la salpicadura por tipo de insecto (se usa al aplastarlo).
+## Si un tipo no está acá, cae en el verde genérico de SplatEffect.
+const SPLAT_COLORS := {
+	"hormiga_obrera": Color(0.42, 0.26, 0.13),
+	"cucaracha_electrica": Color(0.88, 0.78, 0.20),
+	"escarabajo_blindado": Color(0.34, 0.44, 0.55),
+	"mosca_pesada": Color(0.30, 0.30, 0.33),
+	"grillo_saltarin": Color(0.35, 0.65, 0.25),
+}
+
 @export var insect_type: String = "hormiga_obrera"
 @export var speed_mult: float = 1.0
 
@@ -153,9 +165,23 @@ func die() -> void:
 	is_dead = true
 	can_be_hit = false
 
+	spawn_splat()
+	AudioManager.play_sfx("splat")
 	play_death_animation()
 	GameManager.add_coins(coin_reward)
 	GameManager.on_insect_hit(self)
+
+## Salpicadura en el lugar donde murió. Se agrega a la escena actual (no
+## como hijo) porque el insecto se libera enseguida y se llevaría el
+## efecto con él.
+func spawn_splat() -> void:
+	var splat := SplatEffectScene.instantiate() as SplatEffect
+	var parent := get_tree().current_scene
+	if not parent:
+		return
+	parent.add_child(splat)
+	splat.global_position = global_position
+	splat.play(SPLAT_COLORS.get(insect_type, Color(0.45, 0.62, 0.22)), 1.6)
 
 func play_hit_animation() -> void:
 	if animation_player and animation_player.has_animation("hit"):

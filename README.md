@@ -161,8 +161,26 @@ Notas importantes:
   (balanceo + rebote procedural, encima de la animación de caminata real
   en `hormiga_obrera`, ver abajo) y un tema global con fuente más grande
   para que el HUD y los botones se vean bien en un celular real. Ver
-  "Gotcha de exportación Android" abajo sobre la orientación: es un bug
-  real de la plantilla de Godot 4.7, no solo configuración del proyecto.
+  "Orientación en Android" abajo: la causa real era un error de tipo en
+  `project.godot`, no configuración del manifest.
+- **Ajuste a pantalla**: `window/stretch/aspect="expand"`. Con `"keep"`
+  (lo que había antes) un celular 19.5:9 quedaba con franjas negras
+  arriba y abajo, porque el viewport de diseño es 540x960 (9:16). Con
+  `expand` el viewport crece en alto hasta la proporción real del
+  dispositivo, así que **el fondo y Don Beto no pueden vivir en
+  coordenadas fijas**: `game_level.gd::_setup_background()` escala el
+  fondo en modo "cover" contra `get_viewport_rect()` y reubica a Don
+  Beto contra el borde de abajo real. Si agregás más elementos fijos a
+  la escena de juego, acordate de posicionarlos igual.
+- **Feedback del golpe**: al tocar se instancia `WeaponStrike`
+  (`scenes/effects/weapon_strike.tscn`), que muestra el arma equipada
+  bajando, achatándose en el impacto y levantándose — el sprite sale de
+  `WeaponSystem.WEAPONS[...].sprite`, así que siempre se ve el arma que
+  está equipada de verdad, y su tamaño escala con el radio del arma. Al
+  morir un insecto, `SplatEffect`
+  (`scenes/effects/splat_effect.tscn`) dibuja una salpicadura con gotas
+  (todo con `_draw()`, sin sprites nuevos) del color definido en
+  `Insect.SPLAT_COLORS` para ese tipo, y suena el SFX `splat`.
 - **Historia y diálogo**: guión completo en `scripts/data/story_data.gd`
   (intro, un gancho por capítulo, tutorial, final). `DialogueBox`
   (`scripts/ui/dialogue_box.gd`) es un componente reutilizable con
@@ -337,8 +355,8 @@ caminata de 4 frames de `hormiga_obrera`, ver más arriba), la **música**
   [Kenney.nl](https://kenney.nl) (packs "Impact Sounds", "Interface
   Sounds" y "Music Jingles" — dominio público, no requieren atribución,
   descargados directo del sitio sin API key). Cubren todo lo que dispara
-  el código (`hit_<tipo_de_insecto>`, `taunt`, `mystery_revealed`,
-  `level_complete`, `unlock`). Los `.wav` sintetizados anteriores se
+  el código (`hit_<tipo_de_insecto>`, `splat`, `taunt`,
+  `mystery_revealed`, `level_complete`, `unlock`). Los `.wav` sintetizados anteriores se
   borraron. Para reemplazar alguno por otro distinto basta con soltar un
   `.ogg`/`.mp3`/`.wav` con el mismo nombre en esa carpeta — ver "Cómo
   reemplazar un asset" abajo.

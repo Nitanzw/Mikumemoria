@@ -8,6 +8,7 @@ const INSECT_LAYER_MASK := 1 << 1  # capa 2, ver insect.tscn / mystery_bug.tscn
 const TAUNT_RADIUS := 300.0
 
 const HitEffectScene := preload("res://scenes/effects/hit_effect.tscn")
+const WeaponStrikeScene := preload("res://scenes/effects/weapon_strike.tscn")
 
 var total_hits: int = 0
 var total_misses: int = 0
@@ -23,6 +24,7 @@ func handle_tap(tap_position: Vector2) -> void:
 	var damage := GameManager.get_weapon_damage()
 
 	spawn_hit_effect(tap_position, radius)
+	spawn_weapon_strike(tap_position, radius)
 
 	var results := _query_circle(tap_position, radius, INSECT_LAYER_MASK)
 
@@ -49,6 +51,15 @@ func spawn_hit_effect(tap_position: Vector2, radius: float) -> void:
 	get_tree().current_scene.add_child(effect)
 	effect.global_position = tap_position
 	effect.play(radius)
+
+## Muestra el arma equipada golpeando en el punto del tap. Se dispara en
+## todos los taps (acierte o no), así el golpe se siente físico incluso
+## cuando se falla.
+func spawn_weapon_strike(tap_position: Vector2, radius: float) -> void:
+	var strike := WeaponStrikeScene.instantiate() as WeaponStrike
+	get_tree().current_scene.add_child(strike)
+	strike.global_position = tap_position
+	strike.play(GameManager.equipped_weapon, radius)
 
 func _query_circle(pos: Vector2, radius: float, mask: int) -> Array:
 	var space_state := get_world_2d().direct_space_state

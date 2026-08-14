@@ -16,6 +16,7 @@ const SPAWN_MARGIN := 60.0
 @onready var spawn_timer: Timer = $SpawnTimer
 @onready var hud = $HUD
 @onready var level_complete_ui = $LevelComplete
+@onready var don_beto_sprite: Sprite2D = $Player/DonBetoSprite
 
 var level_config: Dictionary = {}
 var time_remaining: float = 30.0
@@ -108,9 +109,28 @@ func _play_chapter_music() -> void:
 		AudioManager.play_music("level_theme_1")
 
 func _setup_background() -> void:
+	# Con stretch/aspect="expand" el viewport real es más alto que los
+	# 540x960 de diseño (en un celular 19.5:9 son ~540x1170), así que el
+	# fondo y Don Beto no pueden quedar en coordenadas fijas: se escalan
+	# y reubican contra el tamaño real para que no queden huecos ni un
+	# Don Beto flotando en el medio de la pantalla.
 	var path: String = level_config.get("background", "")
 	if background and path != "" and ResourceLoader.exists(path):
 		background.texture = load(path)
+
+	var view_size := get_viewport_rect().size
+
+	if background and background.texture:
+		var tex_size := background.texture.get_size()
+		if tex_size.x > 0.0 and tex_size.y > 0.0:
+			# "cover": la escala más grande de las dos, así siempre tapa
+			# todo el viewport aunque sobre por un lado.
+			var cover: float = maxf(view_size.x / tex_size.x, view_size.y / tex_size.y)
+			background.scale = Vector2(cover, cover)
+		background.position = view_size / 2.0
+
+	if don_beto_sprite:
+		don_beto_sprite.position = Vector2(view_size.x / 2.0, view_size.y - 60.0)
 
 func _on_spawn_timer_timeout() -> void:
 	if level_ended:

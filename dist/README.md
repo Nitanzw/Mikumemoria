@@ -17,6 +17,14 @@ historia narrada por Don Beto con **retratos reales por emoción**
 de caminata animado real** de 4 frames; el resto de los insectos todavía
 usa un solo sprite estático con balanceo/rebote procedural.
 
+**Feedback del golpe**: al tocar la pantalla se ve el **arma equipada**
+(el zapato viejo de arranque, o la que tengas puesta) bajando, aplastando
+y levantándose en el punto del tap; al matar un insecto salta una
+**salpicadura** con gotas, del color de ese bicho, más un **sonido de
+aplastado**. La pantalla ahora **usa todo el alto** del celular — antes
+`stretch/aspect` estaba en `keep` y dejaba franjas negras arriba y abajo
+en pantallas 19.5:9, y el HUD se cortaba a los costados.
+
 **Qué le falta a propósito, para mantener el tamaño chico**: la música
 de los capítulos 2 a 10 (`level_theme_2.mp3` a `level_theme_10.mp3`) no
 está incluida en este build. En el juego esto no rompe nada:

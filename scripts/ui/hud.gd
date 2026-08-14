@@ -2,7 +2,7 @@ extends CanvasLayer
 
 ## HUD de la partida: nivel, puntuación, monedas, combo y tiempo restante.
 
-@onready var level_label: Label = $Margin/VBox/TopRow/LevelLabel
+@onready var level_label: Label = $Margin/VBox/LevelLabel
 @onready var score_label: Label = $Margin/VBox/TopRow/ScoreLabel
 @onready var coins_label: Label = $Margin/VBox/TopRow/CoinsLabel
 @onready var combo_label: Label = $Margin/VBox/ComboLabel
