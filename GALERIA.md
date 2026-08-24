@@ -1,4 +1,4 @@
-# 🖼️ Galería — ¡Invasión en el Huerto!
+# 🖼️ Galería — El Huerto de Sofía
 
 Todo el arte y las capturas del juego en un solo lugar. Las imágenes son
 los archivos reales del repo (no copias), así que si regenerás un asset
@@ -16,10 +16,9 @@ Capturas reales del build actual, corriendo a 540×1170 (la proporción
 
 <table>
 <tr>
-<td align="center" width="25%"><img src="docs/capturas/menu.png" width="200"><br><sub><b>Menú principal</b></sub></td>
-<td align="center" width="25%"><img src="docs/capturas/mapa.png" width="200"><br><sub><b>Mapa de mundos</b><br>capítulo actual en dorado, el resto con candado</sub></td>
-<td align="center" width="25%"><img src="docs/capturas/dialogo.jpg" width="200"><br><sub><b>Diálogo de Don Beto</b><br>retrato real por emoción</sub></td>
-<td align="center" width="25%"><img src="docs/capturas/partida.jpg" width="200"><br><sub><b>Partida</b><br>HUD, hormigas y contador</sub></td>
+<td align="center" width="33%"><img src="docs/capturas/menu.jpg" width="230"><br><sub><b>Menú principal</b><br>fondo ilustrado, logo y carteles de madera</sub></td>
+<td align="center" width="33%"><img src="docs/capturas/dialogo.jpg" width="230"><br><sub><b>Diálogo de Sofía</b><br>un retrato distinto por emoción</sub></td>
+<td align="center" width="33%"><img src="docs/capturas/partida.jpg" width="230"><br><sub><b>Partida</b><br>HUD, insectos y Sofía abajo</sub></td>
 </tr>
 </table>
 
@@ -33,34 +32,45 @@ contra el suelo en el impacto y levantándose.
 
 ---
 
-## 👨‍🌾 Don Beto
+## 👧 Sofía
 
-Cinco retratos reales, uno por emoción. El sistema de diálogo cambia la
-textura según la emoción de cada línea del guion (`StoryData`), en vez
-de teñir un único sprite como hacía antes.
+Seis retratos, uno por emoción. El sistema de diálogo cambia la textura
+según la emoción de cada línea del guion (`StoryData`). Están recortados
+a busto para que la cara se lea en la caja de diálogo, que es chica.
+
+<img src="docs/capturas/sofia_emociones.png" width="100%">
+
+<sub>neutral · feliz · triste · enojada · preocupada · sorprendida</sub>
+
+Y las dos de cuerpo entero: la de la partida (con el zapato en alto) y
+la del menú (saludando).
 
 <table>
 <tr>
-<td align="center"><img src="assets/sprites/character/don_beto_neutral.png" width="130"><br><sub><b>neutral</b></sub></td>
-<td align="center"><img src="assets/sprites/character/don_beto_happy.png" width="130"><br><sub><b>feliz</b></sub></td>
-<td align="center"><img src="assets/sprites/character/don_beto_sad.png" width="130"><br><sub><b>triste</b></sub></td>
-<td align="center"><img src="assets/sprites/character/don_beto_angry.png" width="130"><br><sub><b>enojado</b></sub></td>
-<td align="center"><img src="assets/sprites/character/don_beto_worried.png" width="130"><br><sub><b>preocupado</b></sub></td>
+<td align="center"><img src="assets/sprites/character/sofia.png" width="150"><br><sub><b>en la partida</b></sub></td>
+<td align="center"><img src="assets/sprites/character/sofia_menu.png" width="150"><br><sub><b>en el menú</b></sub></td>
 </tr>
 </table>
 
-Y el Don Beto de cuerpo entero, el que se ve abajo en la pantalla de
-juego:
+---
 
-<img src="assets/sprites/character/don_beto.png" width="120">
+## 🎬 Interfaz del menú
+
+<table>
+<tr>
+<td align="center"><img src="assets/sprites/ui/logo.png" width="300"><br><sub><b>Logo</b></sub></td>
+<td align="center"><img src="assets/sprites/ui/button_wood.png" width="240"><br><sub><b>Cartel de madera</b><br>una sola imagen, 9-slice, con el texto por código</sub></td>
+</tr>
+</table>
 
 ---
 
 ## 🐜 Ciclo de caminata
 
-Los 4 cuadros de la `hormiga_obrera`, generados como una sola grilla 2×2
-para que el bicho no cambie de forma entre cuadros, y después partidos
-en post-proceso:
+Los **5 insectos comunes** tienen ciclo de caminata de 4 cuadros. Cada
+uno se generó como una sola grilla 2×2 (así el bicho no cambia de forma
+entre cuadros) y después se partió con `tools/split_sheet.py`. Acá el de
+la `hormiga_obrera`:
 
 <table>
 <tr>
@@ -71,9 +81,9 @@ en post-proceso:
 </tr>
 </table>
 
-> Es el único insecto con caminata animada por ahora. El resto usa un
-> cuadro fijo con balanceo procedural. Para sumarle ciclo a otro, ver
-> "Más ciclos de caminata" en el README.
+> Los 10 insectos incógnito todavía usan un cuadro fijo con balanceo
+> procedural. Para sumarle ciclo a alguno: generá la grilla 2×2 y pasala
+> por `tools/chroma_key.py` y `tools/split_sheet.py`.
 
 ---
 
@@ -143,18 +153,18 @@ hasta el capítulo 1.
 
 <table>
 <tr>
-<td align="center"><img src="assets/sprites/backgrounds/chapter_1_huerto.png" width="120"><br><sub><b>1.</b> El Huerto<br>de Tomates</sub></td>
-<td align="center"><img src="assets/sprites/backgrounds/chapter_2_invernadero.png" width="120"><br><sub><b>2.</b> El Invernadero</sub></td>
-<td align="center"><img src="assets/sprites/backgrounds/chapter_3_cueva.png" width="120"><br><sub><b>3.</b> La Cueva<br>Subterránea</sub></td>
-<td align="center"><img src="assets/sprites/backgrounds/chapter_4_radiactivo.png" width="120"><br><sub><b>4.</b> El Cultivo<br>Radiactivo</sub></td>
-<td align="center"><img src="assets/sprites/backgrounds/chapter_5_pantano.png" width="120"><br><sub><b>5.</b> El Pantano</sub></td>
+<td align="center"><img src="assets/sprites/backgrounds/chapter_1_huerto.jpg" width="120"><br><sub><b>1.</b> El Huerto<br>de Tomates</sub></td>
+<td align="center"><img src="assets/sprites/backgrounds/chapter_2_invernadero.jpg" width="120"><br><sub><b>2.</b> El Invernadero</sub></td>
+<td align="center"><img src="assets/sprites/backgrounds/chapter_3_cueva.jpg" width="120"><br><sub><b>3.</b> La Cueva<br>Subterránea</sub></td>
+<td align="center"><img src="assets/sprites/backgrounds/chapter_4_radiactivo.jpg" width="120"><br><sub><b>4.</b> El Cultivo<br>Radiactivo</sub></td>
+<td align="center"><img src="assets/sprites/backgrounds/chapter_5_pantano.jpg" width="120"><br><sub><b>5.</b> El Pantano</sub></td>
 </tr>
 <tr>
-<td align="center"><img src="assets/sprites/backgrounds/chapter_6_lab.png" width="120"><br><sub><b>6.</b> Laboratorio<br>Mutante</sub></td>
-<td align="center"><img src="assets/sprites/backgrounds/chapter_7_fabrica.png" width="120"><br><sub><b>7.</b> La Fábrica</sub></td>
-<td align="center"><img src="assets/sprites/backgrounds/chapter_8_tuneles.png" width="120"><br><sub><b>8.</b> Los Túneles</sub></td>
-<td align="center"><img src="assets/sprites/backgrounds/chapter_9_bunker.png" width="120"><br><sub><b>9.</b> El Búnker</sub></td>
-<td align="center"><img src="assets/sprites/backgrounds/chapter_10_nucleo.png" width="120"><br><sub><b>10.</b> El Núcleo</sub></td>
+<td align="center"><img src="assets/sprites/backgrounds/chapter_6_lab.jpg" width="120"><br><sub><b>6.</b> Laboratorio<br>Mutante</sub></td>
+<td align="center"><img src="assets/sprites/backgrounds/chapter_7_fabrica.jpg" width="120"><br><sub><b>7.</b> La Fábrica</sub></td>
+<td align="center"><img src="assets/sprites/backgrounds/chapter_8_tuneles.jpg" width="120"><br><sub><b>8.</b> Los Túneles</sub></td>
+<td align="center"><img src="assets/sprites/backgrounds/chapter_9_bunker.jpg" width="120"><br><sub><b>9.</b> El Búnker</sub></td>
+<td align="center"><img src="assets/sprites/backgrounds/chapter_10_nucleo.jpg" width="120"><br><sub><b>10.</b> El Núcleo</sub></td>
 </tr>
 </table>
 
@@ -171,11 +181,12 @@ hasta el capítulo 1.
 | | Cantidad |
 |---|---|
 | Insectos | 16 (5 comunes + 1 silueta + 10 incógnitos) |
-| Cuadros de caminata | 4 (`hormiga_obrera`) |
-| Retratos de Don Beto | 5 emociones + 1 cuerpo entero |
+| Cuadros de caminata | 20 (4 × los 5 insectos comunes) |
+| Retratos de Sofía | 6 emociones + 2 de cuerpo entero |
 | Armas | 5 |
 | Fondos de capítulo | 10 |
 | Ícono | 1 |
-| **Total de imágenes** | **42** |
+| Interfaz del menú | 3 (fondo, logo, cartel) |
+| **Total de imágenes** | **68** |
 | Pistas de música | 11 (Suno) |
 | Efectos de sonido | 11 (CC0, Kenney.nl) |

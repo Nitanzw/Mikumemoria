@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/dialogue_box.gd" id="1"]
-[ext_resource type="PackedScene" path="res://scenes/ui/don_beto_portrait.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sofia_portrait.tscn" id="2"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
 bg_color = Color(0.1, 0.09, 0.13, 0.96)
@@ -37,7 +37,7 @@ offset_bottom = -24.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_1")
 
-[node name="DonBetoPortrait" parent="Dim/Panel" instance=ExtResource("2")]
+[node name="SofiaPortrait" parent="Dim/Panel" instance=ExtResource("2")]
 position = Vector2(80, 118)
 scale = Vector2(0.35, 0.35)
 
@@ -59,7 +59,7 @@ theme_override_constants/separation = 6
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
-text = "Don Beto"
+text = "Sofía"
 
 [node name="TextLabel" type="Label" parent="Dim/Panel/HBox/VBox"]
 layout_mode = 2

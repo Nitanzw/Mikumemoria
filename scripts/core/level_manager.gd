@@ -9,16 +9,16 @@ const LEVELS_PER_CHAPTER := 100
 const MYSTERY_BUG_PERIOD := 10
 
 var chapter_configs := {
-	1: {"name": "El Huerto de Tomates", "enemy_speed_mult": 1.0, "spawn_rate": 2.0, "background": "res://assets/sprites/backgrounds/chapter_1_huerto.png"},
-	2: {"name": "El Invernadero", "enemy_speed_mult": 1.2, "spawn_rate": 1.8, "background": "res://assets/sprites/backgrounds/chapter_2_invernadero.png"},
-	3: {"name": "La Cueva Subterránea", "enemy_speed_mult": 1.4, "spawn_rate": 1.6, "background": "res://assets/sprites/backgrounds/chapter_3_cueva.png"},
-	4: {"name": "El Cultivo Radiactivo", "enemy_speed_mult": 1.6, "spawn_rate": 1.5, "background": "res://assets/sprites/backgrounds/chapter_4_radiactivo.png"},
-	5: {"name": "El Pantano", "enemy_speed_mult": 1.7, "spawn_rate": 1.4, "background": "res://assets/sprites/backgrounds/chapter_5_pantano.png"},
-	6: {"name": "Laboratorio Mutante", "enemy_speed_mult": 1.8, "spawn_rate": 1.3, "background": "res://assets/sprites/backgrounds/chapter_6_lab.png"},
-	7: {"name": "Fábrica de Cascos", "enemy_speed_mult": 1.9, "spawn_rate": 1.2, "background": "res://assets/sprites/backgrounds/chapter_7_fabrica.png"},
-	8: {"name": "Red de Túneles Express", "enemy_speed_mult": 2.1, "spawn_rate": 1.1, "background": "res://assets/sprites/backgrounds/chapter_8_tuneles.png"},
-	9: {"name": "El Búnker Enemigo", "enemy_speed_mult": 2.3, "spawn_rate": 1.0, "background": "res://assets/sprites/backgrounds/chapter_9_bunker.png"},
-	10: {"name": "El Núcleo Reina", "enemy_speed_mult": 2.5, "spawn_rate": 0.9, "background": "res://assets/sprites/backgrounds/chapter_10_nucleo.png"},
+	1: {"name": "El Huerto de Tomates", "enemy_speed_mult": 1.0, "spawn_rate": 2.0, "background": "res://assets/sprites/backgrounds/chapter_1_huerto.jpg"},
+	2: {"name": "El Invernadero", "enemy_speed_mult": 1.2, "spawn_rate": 1.8, "background": "res://assets/sprites/backgrounds/chapter_2_invernadero.jpg"},
+	3: {"name": "La Cueva Subterránea", "enemy_speed_mult": 1.4, "spawn_rate": 1.6, "background": "res://assets/sprites/backgrounds/chapter_3_cueva.jpg"},
+	4: {"name": "El Cultivo Radiactivo", "enemy_speed_mult": 1.6, "spawn_rate": 1.5, "background": "res://assets/sprites/backgrounds/chapter_4_radiactivo.jpg"},
+	5: {"name": "El Pantano", "enemy_speed_mult": 1.7, "spawn_rate": 1.4, "background": "res://assets/sprites/backgrounds/chapter_5_pantano.jpg"},
+	6: {"name": "Laboratorio Mutante", "enemy_speed_mult": 1.8, "spawn_rate": 1.3, "background": "res://assets/sprites/backgrounds/chapter_6_lab.jpg"},
+	7: {"name": "Fábrica de Cascos", "enemy_speed_mult": 1.9, "spawn_rate": 1.2, "background": "res://assets/sprites/backgrounds/chapter_7_fabrica.jpg"},
+	8: {"name": "Red de Túneles Express", "enemy_speed_mult": 2.1, "spawn_rate": 1.1, "background": "res://assets/sprites/backgrounds/chapter_8_tuneles.jpg"},
+	9: {"name": "El Búnker Enemigo", "enemy_speed_mult": 2.3, "spawn_rate": 1.0, "background": "res://assets/sprites/backgrounds/chapter_9_bunker.jpg"},
+	10: {"name": "El Núcleo Reina", "enemy_speed_mult": 2.5, "spawn_rate": 0.9, "background": "res://assets/sprites/backgrounds/chapter_10_nucleo.jpg"},
 }
 
 # Cada tier queda disponible desde ese nivel en adelante (acumulativo).

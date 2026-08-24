@@ -1,7 +1,7 @@
 class_name DialogueBox
 extends CanvasLayer
 
-## Caja de diálogo reutilizable: retrato de Don Beto + nombre + texto con
+## Caja de diálogo reutilizable: retrato de Sofía + nombre + texto con
 ## efecto máquina de escribir. Se instancia dinámicamente donde haga
 ## falta (intro, tutorial) con DialogueBox.show_dialogue(lineas).
 ## Un tap mientras tipea completa la línea al toque; un tap con la línea
@@ -12,7 +12,7 @@ signal finished
 
 const CHARS_PER_SECOND := 38.0
 
-@onready var portrait: DonBetoPortrait = $Dim/Panel/DonBetoPortrait
+@onready var portrait: SofiaPortrait = $Dim/Panel/SofiaPortrait
 @onready var name_label: Label = $Dim/Panel/HBox/VBox/NameLabel
 @onready var text_label: Label = $Dim/Panel/HBox/VBox/TextLabel
 @onready var continue_hint: Label = $Dim/Panel/HBox/VBox/ContinueHint

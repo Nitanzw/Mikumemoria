@@ -1,4 +1,4 @@
-# ¡Invasión en el Huerto! 🐛
+# El Huerto de Sofía 🐛
 
 Proyecto Godot 4.x implementado a partir de la guía [`invasión_huerto_godot_guia.md`](invasi%C3%B3n_huerto_godot_guia.md).
 El **capítulo 1 es jugable de punta a punta**: menú → nivel con spawner de
@@ -6,22 +6,21 @@ insectos, tap para golpear, combos, insecto incógnito, fin de nivel, tienda
 y árbol de habilidades.
 
 > 🖼️ **[Ver la galería](GALERIA.md)** — capturas del juego andando y las
-> 42 imágenes del arte (insectos, armas, fondos, las 5 expresiones de Don
-> Beto y el ciclo de caminata), todo en una sola página.
+> 68 imágenes del arte (insectos, armas, fondos, las 6 expresiones de
+> Sofía y los 5 ciclos de caminata), todo en una sola página.
 >
 > 📱 **[Bajar el APK de demo](dist/invasion_huerto_demo.apk)** — ver
 > [`dist/README.md`](dist/README.md) para qué trae y cómo instalarlo.
 >
-> 🎨 **[Pedido de arte: El Huerto de Sofía](ARTE_PEDIDO.md)** — los 48
-> prompts para regenerar todo el arte con el personaje y el estilo
-> nuevos. **En curso**: el juego todavía corre con el arte de Don Beto
-> hasta que estén las imágenes nuevas.
+> 🎨 **[Pedido de arte](ARTE_PEDIDO.md)** — los 48 prompts con los que se
+> generó el arte actual (personaje, insectos, armas, fondos, menú), por
+> si querés regenerar alguno. **Ya está todo integrado.**
 
 ## Cómo probarlo
 
 1. Abre la carpeta del proyecto con **Godot 4.3+** (`project.godot` en la raíz).
-2. Al abrir por primera vez Godot reimportará todos los `.png` (son
-   placeholders generados por script, no arte final — ver abajo).
+2. Al abrir por primera vez, Godot va a reimportar todas las imágenes
+   (tarda un rato la primera vez, después queda cacheado).
 3. Ejecuta la escena principal (F5). Arranca en `scenes/story/story_intro.tscn`
    (la intro con la historia, solo la primera vez; después salta directo al
    menú — ver "Historia, diálogo y tutorial" más abajo).
@@ -66,83 +65,75 @@ Notas importantes:
   diccionario `TRACKS` al principio del script — se pueden ajustar y
   volver a correr para otra versión de la misma pista.
 
-## Generar sprites con Gemini o con OpenRouter
+## El arte: cómo se generó y cómo regenerarlo
 
-Ya generados y commiteados los 38 assets visuales (16 insectos, 5 armas,
-personaje + 5 retratos de expresión de Don Beto, 10 fondos de capítulo,
-ícono) más el ciclo de caminata de 4 frames de `hormiga_obrera`, con
-`tools/generate_sprites_openrouter.py` — el arte "final" actual del
-juego viene de ahí, no de los placeholders geométricos originales.
-Quedan dos scripts equivalentes por si querés regenerar algo (mismos
-prompts, mismo post-proceso, misma interfaz de línea de comandos):
+El arte actual (68 imágenes) se generó con **Nano Banana** (Gemini
+Image), a mano, a partir de los prompts de
+[`ARTE_PEDIDO.md`](ARTE_PEDIDO.md). Ese documento tiene, para cada
+asset, el prompt exacto, el tamaño y el nombre de archivo que espera el
+motor — si querés rehacer alguno, empezá por ahí.
 
-- `tools/generate_sprites_gemini.py` — llama **directo** a la API de
-  Google AI / Gemini, sin intermediario. Usalo si ya tenés cuenta de
-  Google AI paga (evita el margen de OpenRouter) *y* tenés facturación
-  habilitada en el proyecto de Cloud asociado a tu API key (ver
-  advertencia abajo — es un paso aparte de pagar Gemini como app).
-- `tools/generate_sprites_openrouter.py` — pasa por OpenRouter. Es el
-  que efectivamente se usó para generar el arte actual, con
-  `google/gemini-3.1-flash-lite-image` ("Nano Banana 2 Lite" — la
-  variante económica, ~$0.034 por sprite, $1.12 en total las 33).
+Dos cosas del proceso que conviene saber si vas a regenerar algo:
+
+**El personaje se mantiene igual entre imágenes gracias a una imagen de
+referencia.** Se genera un retrato primero, se itera hasta que cierra, y
+después ESE archivo se adjunta en cada prompt siguiente. Sin eso, cada
+imagen sale con otra cara. Lo mismo con los insectos: la hormiga
+aprobada es la referencia de estilo de los otros 15.
+
+**El fondo transparente se pide en verde, no en magenta.** Probado: con
+magenta el modelo no respeta el color exacto y encima les mete tonos
+rosados a las patas de los bichos marrones, que después el recorte se
+come.
+
+### Herramientas de post-proceso
+
+Las imágenes llegan con fondo verde y, en el caso de las caminatas, como
+una grilla 2×2. Dos scripts las dejan listas para el motor:
 
 ```bash
 pip install pillow numpy scipy
 
-# Opción directa (Gemini):
-export GEMINI_API_KEY="tu_clave"            # https://aistudio.google.com/apikey
-python3 tools/generate_sprites_gemini.py --asset hormiga_obrera   # probar UNO primero
-python3 tools/generate_sprites_gemini.py --all          # sin --skip-existing si querés regenerar todo
+# 1. Sacar el fondo croma (una imagen o una carpeta entera)
+python3 tools/chroma_key.py assets/sprites/insects/ --in-place
 
-# Opción por OpenRouter:
-export OPENROUTER_API_KEY="tu_clave"        # https://openrouter.ai/keys
-python3 tools/generate_sprites_openrouter.py --all
-
-# Ciclos de caminata (grid NxM en una sola llamada para que los frames
-# sean consistentes entre sí, después partido en post-proceso local):
-python3 tools/generate_sprites_openrouter.py --walk-sheet hormiga_obrera_walk
+# 2. Partir las grillas de caminata en los 4 cuadros que espera el motor
+python3 tools/split_sheet.py assets/sprites/insects/*_walk.png --grid 2x2 --size 128x128
 ```
 
-⚠️ Ojo con `--skip-existing`: como los 38 archivos ya existen (ya sea el
-arte generado o, antes, el placeholder geométrico), esa flag se los
-salteará a TODOS. Usala solo para completar assets puntuales que
-todavía no tengas; para regenerar algo que ya existe, corré sin ella o
-borrá el `.png` primero.
+`chroma_key.py` no borra "todo lo que se parezca al verde", porque hay
+sujetos verdes (el grillo, la malla del matamoscas). Samplea el color
+real del borde, hace flood-fill desde ahí para borrar **solo el fondo
+conectado al borde**, limpia aparte las manchas de fondo atrapadas
+dentro del sujeto con una tolerancia mucho más estricta, y hace despill
+para que no quede un halo verde en los contornos.
 
-⚠️ `generate_sprites_gemini.py`: confirmado que el endpoint
-`/v1beta/interactions` existe y funciona, pero solo acepta
-`mime_type: "image/jpeg"` (`image/png` da 400 — no importa, el
-post-proceso decodifica cualquier formato). Si te da 429 con
-`"free_tier_requests, limit: 0"`, no es por exceso de pedidos —
-significa que falta habilitar facturación en el proyecto de Cloud de
-esa API key (distinto de pagar Gemini como app), en
-console.cloud.google.com/billing.
+`split_sheet.py` escala los 4 cuadros con **el mismo factor** (el del
+cuadro más grande) en vez de encajar cada uno por separado: si no, el
+bicho cambiaría de tamaño entre cuadros y la caminata latiría.
 
-Cómo se logra el fondo transparente en insectos/armas/personaje (los
-fondos de capítulo y el ícono son opacos, no pasan por este paso): se le
-pide al modelo el sujeto "aislado sobre fondo magenta plano (#FF00FF)",
-pero en la práctica el modelo no siempre respeta ese color exacto (salió
-un lila apagado en las pruebas) — así que el post-proceso con
-Pillow/numpy/scipy NO asume un color fijo: samplea el color real del
-borde de la imagen y hace flood-fill (componentes conexas) desde ahí,
-volviendo transparente solo el fondo *conectado al borde* (con blur
-suave en el límite de la máscara). Esto evita agujerear el sujeto si por
-casualidad tiene un tono parecido en el medio, a costa de a veces dejar
-alguna manchita de fondo aislada que no toca el borde (se vio un caso
-chico en `zapato_viejo.png`, cosmético, no bloquea nada). Cada sprite se
-reencuadra después al tamaño exacto que ya esperan las escenas
-(`insect.tscn`/`mystery_bug.tscn` esperan 128×128, `main_game.tscn`
-espera el personaje en un lienzo ~200×320, fondos a 540×960).
+### Peso de las imágenes
 
-Notas importantes:
-- **Nunca commitees `OPENROUTER_API_KEY`.** Mismo mecanismo que
-  `SUNO_API_KEY`: variable de entorno o `.env` (gitignoreado).
-- Cada asset generado cuesta créditos de tu cuenta de OpenRouter; el
-  script imprime el costo reportado por request y el total al final. Usá
-  `--skip-existing` para no regenerar lo que ya está bien.
-- Los prompts de cada asset (uno por insecto/arma/fondo/etc., con un
-  sufijo de estilo compartido `STYLE_SUFFIX` para mantener consistencia
-  visual) están en el diccionario `ASSETS` al principio del script.
+Los 10 fondos de capítulo y el del menú son 1080×2340. En PNG pesaban
+41MB en total; se guardan como **JPG calidad 92** (7.8MB, diferencia
+media 1.4/255 — indistinguible) y se importan con `compress/mode=1`
+(lossy) en sus `.import`. Sin ese segundo paso el APK pasa de 38MB a
+59MB, porque Godot los empaqueta sin pérdida por defecto.
+
+### Scripts de generación por API (alternativa)
+
+Quedan `tools/generate_sprites_openrouter.py` y
+`tools/generate_sprites_gemini.py`, que generan por API en vez de a
+mano. Se usaron para la primera versión del arte. Siguen sirviendo si
+querés automatizar, pero los prompts que tienen adentro son los del
+estilo viejo — los buenos están en `ARTE_PEDIDO.md`.
+
+- **Nunca commitees las API keys.** Variable de entorno o `.env`
+  (gitignoreado).
+- `generate_sprites_gemini.py`: el endpoint `/v1beta/interactions` solo
+  acepta `mime_type: "image/jpeg"` (`image/png` da 400). Si da 429 con
+  `"free_tier_requests, limit: 0"`, no es exceso de pedidos: falta
+  habilitar facturación en el proyecto de Cloud de esa key.
 
 ## Qué está implementado
 
@@ -179,10 +170,10 @@ Notas importantes:
   (lo que había antes) un celular 19.5:9 quedaba con franjas negras
   arriba y abajo, porque el viewport de diseño es 540x960 (9:16). Con
   `expand` el viewport crece en alto hasta la proporción real del
-  dispositivo, así que **el fondo y Don Beto no pueden vivir en
+  dispositivo, así que **el fondo y Sofía no pueden vivir en
   coordenadas fijas**: `game_level.gd::_setup_background()` escala el
   fondo en modo "cover" contra `get_viewport_rect()` y reubica a Don
-  Beto contra el borde de abajo real. Si agregás más elementos fijos a
+  Sofía contra el borde de abajo real. Si agregás más elementos fijos a
   la escena de juego, acordate de posicionarlos igual.
 - **Feedback del golpe**: al tocar se instancia `WeaponStrike`
   (`scenes/effects/weapon_strike.tscn`), que muestra el arma equipada
@@ -196,15 +187,14 @@ Notas importantes:
 - **Historia y diálogo**: guión completo en `scripts/data/story_data.gd`
   (intro, un gancho por capítulo, tutorial, final). `DialogueBox`
   (`scripts/ui/dialogue_box.gd`) es un componente reutilizable con
-  retrato de Don Beto, texto tipo máquina de escribir y avance por tap.
-  Cada emoción (feliz, triste, enojado, preocupado, neutral) tiene su
-  propio sprite real (`assets/sprites/character/don_beto_<emocion>.png`,
-  generados con `tools/generate_sprites_openrouter.py`), con salto de
-  énfasis y parpadeo procedural periódico encima (`don_beto_portrait.gd`).
+  retrato de Sofía, texto tipo máquina de escribir y avance por tap.
+  Cada emoción (feliz, triste, enojada, preocupada, sorprendida, neutral) tiene su
+  propio sprite real (`assets/sprites/character/sofia_<emocion>.png`,
+  generados con Nano Banana, ver ARTE_PEDIDO.md), con salto de
+  énfasis y parpadeo procedural periódico encima (`sofia_portrait.gd`).
   Si a alguna emoción le faltara el archivo, cae a un tinte de color sobre
   el sprite neutral en vez de romperse.
-- **Insecto animado**: `hormiga_obrera` (el bicho del nivel 1 / tutorial)
-  tiene un ciclo de caminata real de 4 frames
+- **Insectos animados**: los 5 comunes tienen ciclo de caminata real de 4 frames
   (`assets/sprites/insects/hormiga_obrera_walk_0..3.png`, generado como un
   sprite-sheet 2x2 en una sola llamada a la API para que los frames sean
   consistentes entre sí, después partido en post-proceso). El resto de
@@ -215,10 +205,10 @@ Notas importantes:
 - **Intro estilo "cómic"** (`scenes/story/story_intro.tscn`): se muestra
   la primera vez que se abre el juego (con botón "Saltar"), y se puede
   volver a ver desde "Historia" en el menú principal.
-- **Tutorial del nivel 1**: Don Beto explica tap/burla/combo/incógnito
+- **Tutorial del nivel 1**: Sofía explica tap/burla/combo/incógnito
   antes de que arranque el primer nivel jugado (una sola vez).
 - **Intro de capítulo**: la primera vez que se entra a cada capítulo
-  nuevo, un diálogo corto de Don Beto da contexto antes de que arranque
+  nuevo, un diálogo corto de Sofía da contexto antes de que arranque
   el timer del nivel.
 - **Mapa de mundos** (`scenes/menu/world_map.tscn`): reemplaza el
   "Jugar" directo a nivel. Un nodo circular por capítulo (bloqueado,

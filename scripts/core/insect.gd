@@ -11,10 +11,30 @@ const INSECT_DATA := {
 		"res://assets/sprites/insects/hormiga_obrera_walk_2.png",
 		"res://assets/sprites/insects/hormiga_obrera_walk_3.png",
 	]},
-	"cucaracha_electrica": {"speed": 200.0, "health": 1, "points": 75, "coin_reward": 15, "sprite": "res://assets/sprites/insects/cucaracha_electrica.png"},
-	"escarabajo_blindado": {"speed": 50.0, "health": 3, "points": 150, "coin_reward": 30, "sprite": "res://assets/sprites/insects/escarabajo_blindado.png"},
-	"mosca_pesada": {"speed": 150.0, "health": 1, "points": 100, "coin_reward": 20, "sprite": "res://assets/sprites/insects/mosca_pesada.png"},
-	"grillo_saltarin": {"speed": 120.0, "health": 1, "points": 80, "coin_reward": 16, "sprite": "res://assets/sprites/insects/grillo_saltarin.png"},
+	"cucaracha_electrica": {"speed": 200.0, "health": 1, "points": 75, "coin_reward": 15, "sprite": "res://assets/sprites/insects/cucaracha_electrica.png", "walk_frames": [
+		"res://assets/sprites/insects/cucaracha_electrica_walk_0.png",
+		"res://assets/sprites/insects/cucaracha_electrica_walk_1.png",
+		"res://assets/sprites/insects/cucaracha_electrica_walk_2.png",
+		"res://assets/sprites/insects/cucaracha_electrica_walk_3.png",
+	]},
+	"escarabajo_blindado": {"speed": 50.0, "health": 3, "points": 150, "coin_reward": 30, "sprite": "res://assets/sprites/insects/escarabajo_blindado.png", "walk_frames": [
+		"res://assets/sprites/insects/escarabajo_blindado_walk_0.png",
+		"res://assets/sprites/insects/escarabajo_blindado_walk_1.png",
+		"res://assets/sprites/insects/escarabajo_blindado_walk_2.png",
+		"res://assets/sprites/insects/escarabajo_blindado_walk_3.png",
+	]},
+	"mosca_pesada": {"speed": 150.0, "health": 1, "points": 100, "coin_reward": 20, "sprite": "res://assets/sprites/insects/mosca_pesada.png", "walk_frames": [
+		"res://assets/sprites/insects/mosca_pesada_walk_0.png",
+		"res://assets/sprites/insects/mosca_pesada_walk_1.png",
+		"res://assets/sprites/insects/mosca_pesada_walk_2.png",
+		"res://assets/sprites/insects/mosca_pesada_walk_3.png",
+	]},
+	"grillo_saltarin": {"speed": 120.0, "health": 1, "points": 80, "coin_reward": 16, "sprite": "res://assets/sprites/insects/grillo_saltarin.png", "walk_frames": [
+		"res://assets/sprites/insects/grillo_saltarin_walk_0.png",
+		"res://assets/sprites/insects/grillo_saltarin_walk_1.png",
+		"res://assets/sprites/insects/grillo_saltarin_walk_2.png",
+		"res://assets/sprites/insects/grillo_saltarin_walk_3.png",
+	]},
 }
 
 const WANDER_MIN := 0.6
@@ -56,10 +76,11 @@ var taunt_timer: float = 0.0
 var wander_timer: float = 1.0
 var lifetime_timer: float = LIFETIME
 
-# Animación procedural (sin sprite-sheet): balanceo + rebote que simula una
-# caminata. Fase aleatoria para que no todos los insectos se muevan en
-# sincro. Velocidad de la oscilación ligada a la velocidad real, así un
-# insecto en "burla" (más rápido) se ve más agitado.
+# Balanceo + rebote que se suma ENCIMA del ciclo de caminata real, para
+# que el bicho no se vea rígido al desplazarse. Fase aleatoria para que
+# no todos se muevan en sincro. La velocidad de la oscilación va atada a
+# la velocidad real, así un insecto en "burla" (más rápido) se ve más
+# agitado.
 var _wiggle_phase: float = randf() * TAU
 const WIGGLE_ROTATION := 0.14
 const WIGGLE_BOB_PX := 3.0

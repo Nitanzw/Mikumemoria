@@ -1,6 +1,23 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/menu/main_menu.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/menu_background.jpg" id="2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/logo.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/button_wood.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/sprites/character/sofia_menu.png" id="5"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_stats"]
+bg_color = Color(0, 0, 0, 0.42)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_left = 14
+corner_radius_bottom_right = 14
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -9,65 +26,159 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource("1")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.16, 0.28, 0.16, 1)
+texture = ExtResource("2")
+expand_mode = 1
+stretch_mode = 6
+mouse_filter = 2
+
+[node name="Vignette" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.18)
+mouse_filter = 2
+
+[node name="Sofia" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -210.0
+offset_top = -320.0
+offset_right = -10.0
+offset_bottom = 0.0
+texture = ExtResource("5")
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
 
 [node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-theme_override_constants/margin_left = 40
-theme_override_constants/margin_top = 80
-theme_override_constants/margin_right = 40
-theme_override_constants/margin_bottom = 80
+mouse_filter = 2
+theme_override_constants/margin_left = 34
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 34
+theme_override_constants/margin_bottom = 40
 
 [node name="VBox" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 20
+mouse_filter = 2
+theme_override_constants/separation = 14
 
-[node name="Title" type="Label" parent="Margin/VBox"]
+[node name="Logo" type="TextureRect" parent="Margin/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 190)
+texture = ExtResource("3")
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="Stats" type="PanelContainer" parent="Margin/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_stats")
+
+[node name="StatsVBox" type="VBoxContainer" parent="Margin/VBox/Stats"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="LevelLabel" type="Label" parent="Margin/VBox/Stats/StatsVBox"]
 layout_mode = 2
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 34
-text = "¡Invasión en el Huerto!"
+mouse_filter = 2
+theme_override_font_sizes/font_size = 20
+theme_override_constants/outline_size = 5
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+text = "Nivel 1 / 1000"
 
-[node name="LevelLabel" type="Label" parent="Margin/VBox"]
+[node name="CollectionLabel" type="Label" parent="Margin/VBox/Stats/StatsVBox"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "Nivel actual: 1 / 1000"
-
-[node name="CollectionLabel" type="Label" parent="Margin/VBox"]
-layout_mode = 2
-horizontal_alignment = 1
-text = "Insectos incógnito descubiertos: 0 / 100"
+mouse_filter = 2
+theme_override_font_sizes/font_size = 18
+theme_override_constants/outline_size = 5
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_colors/font_color = Color(1, 0.87, 0.45, 1)
+text = "Incógnitos: 0 / 100"
 
 [node name="Spacer" type="Control" parent="Margin/VBox"]
-custom_minimum_size = Vector2(0, 20)
+custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
+mouse_filter = 2
 
-[node name="PlayButton" type="Button" parent="Margin/VBox"]
+[node name="Buttons" type="VBoxContainer" parent="Margin/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 56)
-theme_override_font_sizes/font_size = 22
+theme_override_constants/separation = 12
+
+[node name="PlayButton" type="Button" parent="Margin/VBox/Buttons"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 82)
+theme_override_font_sizes/font_size = 30
+theme_override_constants/outline_size = 6
+theme_override_colors/font_outline_color = Color(0.24, 0.13, 0.05, 1)
+theme_override_colors/font_color = Color(1, 0.98, 0.9, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.9, 0.6, 1)
+theme_override_styles/normal = SubResource("StyleBoxEmpty_1")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_1")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_1")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_1")
 text = "Jugar"
 
-[node name="ShopButton" type="Button" parent="Margin/VBox"]
+[node name="ShopButton" type="Button" parent="Margin/VBox/Buttons"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 48)
-text = "Tienda de Armas"
+custom_minimum_size = Vector2(0, 70)
+theme_override_font_sizes/font_size = 24
+theme_override_constants/outline_size = 6
+theme_override_colors/font_outline_color = Color(0.24, 0.13, 0.05, 1)
+theme_override_colors/font_color = Color(1, 0.98, 0.9, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.9, 0.6, 1)
+theme_override_styles/normal = SubResource("StyleBoxEmpty_1")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_1")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_1")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_1")
+text = "Tienda"
 
-[node name="SkillsButton" type="Button" parent="Margin/VBox"]
+[node name="SkillsButton" type="Button" parent="Margin/VBox/Buttons"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 48)
-text = "Árbol de Habilidades"
+custom_minimum_size = Vector2(0, 70)
+theme_override_font_sizes/font_size = 24
+theme_override_constants/outline_size = 6
+theme_override_colors/font_outline_color = Color(0.24, 0.13, 0.05, 1)
+theme_override_colors/font_color = Color(1, 0.98, 0.9, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.9, 0.6, 1)
+theme_override_styles/normal = SubResource("StyleBoxEmpty_1")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_1")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_1")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_1")
+text = "Habilidades"
 
-[node name="StoryButton" type="Button" parent="Margin/VBox"]
+[node name="StoryButton" type="Button" parent="Margin/VBox/Buttons"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 70)
+theme_override_font_sizes/font_size = 24
+theme_override_constants/outline_size = 6
+theme_override_colors/font_outline_color = Color(0.24, 0.13, 0.05, 1)
+theme_override_colors/font_color = Color(1, 0.98, 0.9, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.9, 0.6, 1)
+theme_override_styles/normal = SubResource("StyleBoxEmpty_1")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_1")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_1")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_1")
 text = "Historia"

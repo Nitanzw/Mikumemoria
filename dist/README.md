@@ -1,4 +1,4 @@
-# APK de demo
+# APK de demo — El Huerto de Sofía
 
 `invasion_huerto_demo.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
@@ -11,11 +11,10 @@ habilidades), con el arte, la música y los SFX reales (no placeholders)
 de `assets/` — los SFX son CC0 de Kenney.nl. Orientación **fija en
 vertical** (ver más abajo — fue un bug real, ya corregido), HUD con
 fuente grande y contorno para que se lea bien, niveles de 30 segundos,
-historia narrada por Don Beto con **retratos reales por emoción**
-(neutral/feliz/triste/enojado/preocupado, ya no es un tinte simulado).
-`hormiga_obrera` (el bicho del nivel 1 y del tutorial) tiene un **ciclo
-de caminata animado real** de 4 frames; el resto de los insectos todavía
-usa un solo sprite estático con balanceo/rebote procedural.
+historia narrada por **Sofía** con retratos reales por emoción
+(neutral/feliz/triste/enojada/preocupada/sorprendida). Los **5 insectos
+comunes** tienen ciclo de caminata animado de 4 cuadros; los 10
+incógnitos usan un cuadro fijo con balanceo procedural.
 
 **Feedback del golpe**: al tocar la pantalla se ve el **arma equipada**
 (el zapato viejo de arranque, o la que tengas puesta) bajando, aplastando

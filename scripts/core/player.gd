@@ -1,7 +1,7 @@
 class_name Player
 extends Node2D
 
-## Control de Don Beto: recibe el tap/click, golpea insectos en el área
+## Control de Sofía: recibe el tap/click, golpea insectos en el área
 ## y activa "burla" (taunt) en los insectos cercanos cuando falla.
 
 const INSECT_LAYER_MASK := 1 << 1  # capa 2, ver insect.tscn / mystery_bug.tscn
