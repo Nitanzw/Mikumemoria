@@ -1,13 +1,18 @@
 # APK de demo — El Huerto de Sofía
 
-`invasion_huerto_demo.apk` es un build de Android **release**, firmado
+`el_huerto_de_sofia.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-~39MB, arquitectura arm64-v8a solamente.
+Versión 0.4.0, ~87MB, arquitectura arm64-v8a solamente.
 
-**Qué tiene**: capítulo 1 completo (intro con diálogo → menú → mapa de
-mundos → nivel con tutorial la primera vez → tienda → árbol de
-habilidades), con el arte, la música y los SFX reales (no placeholders)
+Este build ya es **completo**: incluye la música de los 10 capítulos,
+que los builds anteriores dejaban afuera para no pasarse del límite de
+100MB por archivo de GitHub (ver "Sobre el tamaño" más abajo).
+
+**Qué tiene**: el recorrido completo (intro con diálogo → menú → mapa de
+mundos → selector de niveles → nivel con tutorial la primera vez →
+tienda → árbol de habilidades), con el arte, la música de los 10
+capítulos y los SFX reales (no placeholders)
 de `assets/` — los SFX son CC0 de Kenney.nl. Orientación **fija en
 vertical** (ver más abajo — fue un bug real, ya corregido), HUD con
 fuente grande y contorno para que se lea bien, niveles de 30 segundos,
@@ -48,13 +53,20 @@ aplastado**. La pantalla ahora **usa todo el alto** del celular — antes
 `stretch/aspect` estaba en `keep` y dejaba franjas negras arriba y abajo
 en pantallas 19.5:9, y el HUD se cortaba a los costados.
 
-**Qué le falta a propósito, para mantener el tamaño chico**: la música
-de los capítulos 2 a 10 (`level_theme_2.mp3` a `level_theme_10.mp3`) no
-está incluida en este build. En el juego esto no rompe nada:
-`game_level.gd` cae automáticamente a la música de `level_theme_1` si la
-del capítulo actual no está empaquetada (mismo mecanismo que usa cuando
-todavía no generaste la pista de un capítulo). Todos los sprites y
-fondos de los 10 capítulos SÍ están incluidos.
+**Sobre el tamaño**: antes este APK salía de 134MB y no entraba en
+GitHub. No era culpa de los assets: el Android Gradle Plugin, con
+`minSdk > 29`, empaqueta los `.so` **sin comprimir** (para poder mapear
+las páginas directo desde el APK). Así `libgodot_android.so` ocupaba
+67.8MB en vez de los 22.9MB que ocupa deflateado. Se arregla con una
+línea en `export_presets.cfg`:
+
+```ini
+gradle_build/compress_native_libraries=true
+```
+
+Con eso el APK bajó de 134MB a 87MB y ya entra toda la música. (No era
+un problema de símbolos de depuración: los `.so` de la plantilla ya
+vienen strippeados, `llvm-strip` no les saca ni un byte.)
 
 **Cómo instalar**: pasá el `.apk` al teléfono (o descargalo directo desde
 GitHub en el celular) y abrilo — Android va a pedir habilitar "instalar
@@ -85,7 +97,26 @@ verificar el **tipo** de la setting y el manifest binario del APK, en el
 `README.md` de la raíz, sección "Orientación en Android:
 `handheld/orientation` es un ENTERO, no un string".
 
-**Para un build completo** (con toda la música), corré la exportación
-vos mismo desde el editor de Godot — `export_presets.cfg` está limpio en
-el repo (sin `exclude_filter`), pero acordate de aplicar el fix de
-orientación de todos modos.
+**Menús rediseñados** (0.4.0): tienda, árbol de habilidades, mapa de
+mundos y selector de niveles ya no usan el tema por defecto de Godot.
+Comparten fondo ilustrado, botones de madera y tarjetas con
+`scripts/ui/ui_theme.gd`. De paso se arregló que en la tienda y en las
+habilidades los botones y los precios quedaban **cortados fuera de la
+pantalla**: el `ScrollContainer` permitía scroll horizontal y los textos
+largos empujaban la fila más ancha que los 540px del viewport.
+
+**Para exportar vos mismo**: `export_presets.cfg` está completo en el
+repo. La keystore no, obviamente — pasala por variables de entorno:
+
+```bash
+export GODOT_ANDROID_KEYSTORE_RELEASE_PATH=/ruta/a/tu.keystore
+export GODOT_ANDROID_KEYSTORE_RELEASE_USER=tu_alias
+export GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD=tu_password
+godot --headless --export-release "Android" dist/el_huerto_de_sofia.apk
+```
+
+Ojo con una trampa: si corrés `godot --import` sobre el proyecto, el
+editor entra a `android/build/res/` y le deja un `.import` al lado de
+cada `.webp`. Después `aapt2` corta el build con *"The file name must
+end with .xml or .png"*. Por eso `android/.gdignore` está en el repo:
+le dice al editor que no toque el proyecto de gradle.

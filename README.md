@@ -7,9 +7,11 @@ y árbol de habilidades.
 
 > 🖼️ **[Ver la galería](GALERIA.md)** — capturas del juego andando y las
 > 68 imágenes del arte (insectos, armas, fondos, las 6 expresiones de
-> Sofía y los 5 ciclos de caminata), todo en una sola página.
+> Sofía y los 5 ciclos de caminata) más las capturas de los 4 menús,
+> todo en una sola página.
 >
-> 📱 **[Bajar el APK de demo](dist/invasion_huerto_demo.apk)** — ver
+> 📱 **[Bajar el APK](dist/el_huerto_de_sofia.apk)** — v0.4.0, build
+> completo (los 10 capítulos con su música). Ver
 > [`dist/README.md`](dist/README.md) para qué trae y cómo instalarlo.
 >
 > 🎨 **[Pedido de arte](ARTE_PEDIDO.md)** — los 48 prompts con los que se
@@ -394,6 +396,51 @@ cd android/build
 `export_presets.cfg` en versiones viejas de Godot ya no existe en 4.7 —
 el exportador la ignora en silencio. La orientación se controla
 únicamente desde el project setting de arriba.)
+
+### Dos trampas del build de Android que cuestan MB y tiempo
+
+**1. El APK sale 3x más grande de lo que debería.** Con `minSdk > 29` el
+Android Gradle Plugin empaqueta los `.so` **sin comprimir**, para poder
+mapear las páginas directo desde el APK. `libgodot_android.so` pasa a
+ocupar 67.8MB en vez de los 22.9MB que ocupa deflateado, y el APK se va
+a 134MB (arriba del límite de 100MB por archivo de GitHub). La solución
+es una línea en `export_presets.cfg`:
+
+```ini
+gradle_build/compress_native_libraries=true
+```
+
+No pierdas tiempo buscando símbolos de depuración: los `.so` de la
+plantilla oficial ya vienen strippeados, `llvm-strip --strip-unneeded`
+no les saca ni un byte. Es puramente cómo se guardan en el zip.
+
+**2. `godot --import` rompe el build de Android.** El editor escanea
+todo el proyecto, entra a `android/build/res/` y le deja un `.import` al
+lado de cada `.webp` (los íconos y el splash). Después `aapt2` corta el
+build con:
+
+```
+res/mipmap-xxhdpi-v4/icon.webp.import: Error: The file name must end with .xml or .png
+```
+
+Por eso hay un **`android/.gdignore`** commiteado: le dice al editor que
+no toque el proyecto de gradle. Si ya te pasó:
+
+```bash
+find android -name "*.import" -delete
+```
+
+### Firmar sin commitear la keystore
+
+El exportador lee la keystore de release de variables de entorno, así no
+hay que ponerla en `export_presets.cfg`:
+
+```bash
+export GODOT_ANDROID_KEYSTORE_RELEASE_PATH=/ruta/a/tu.keystore
+export GODOT_ANDROID_KEYSTORE_RELEASE_USER=tu_alias
+export GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD=tu_password
+godot --headless --export-release "Android" dist/el_huerto_de_sofia.apk
+```
 
 ## Qué falta
 

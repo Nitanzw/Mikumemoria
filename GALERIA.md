@@ -22,6 +22,20 @@ Capturas reales del build actual, corriendo a 540×1170 (la proporción
 </tr>
 </table>
 
+### Los menús
+
+Las cuatro pantallas de menú comparten fondo ilustrado, carteles de
+madera y tarjetas, todo desde `scripts/ui/ui_theme.gd`.
+
+<table>
+<tr>
+<td align="center" width="25%"><img src="docs/capturas/tienda.jpg" width="180"><br><sub><b>Tienda</b><br>tarjeta por arma, con ícono y precio</sub></td>
+<td align="center" width="25%"><img src="docs/capturas/habilidades.jpg" width="180"><br><sub><b>Habilidades</b><br>5 casilleros por rama en vez de una barra</sub></td>
+<td align="center" width="25%"><img src="docs/capturas/mapa.jpg" width="180"><br><sub><b>Mapa de mundos</b><br>pergamino con los 10 capítulos en zigzag</sub></td>
+<td align="center" width="25%"><img src="docs/capturas/niveles.jpg" width="180"><br><sub><b>Selector de niveles</b><br>💀 son jefes; se puede rejugar</sub></td>
+</tr>
+</table>
+
 ### Efectos de golpe
 
 Capturado cuadro a cuadro desde adentro de Godot. Izquierda: la
@@ -61,7 +75,17 @@ la del menú (saludando).
 <td align="center"><img src="assets/sprites/ui/logo.png" width="300"><br><sub><b>Logo</b></sub></td>
 <td align="center"><img src="assets/sprites/ui/button_wood.png" width="240"><br><sub><b>Cartel de madera</b><br>una sola imagen, 9-slice, con el texto por código</sub></td>
 </tr>
+<tr>
+<td align="center"><img src="assets/sprites/ui/panel_card.png" width="240"><br><sub><b>Tarjeta</b><br>fila de la tienda y del árbol de habilidades</sub></td>
+<td align="center"><img src="assets/sprites/ui/coin.png" width="90"><br><sub><b>Moneda</b><br>reemplaza el emoji 🪙 del contador</sub></td>
+</tr>
 </table>
+
+Las dos imágenes de 9-slice están **recortadas al bbox de su parte
+opaca**. Salieron del generador con muchísimo margen transparente
+alrededor (el cartel era 512×160 con 468×96 de madera real); sin
+recortar, el 9-slice estira ese vacío y la madera queda corrida
+respecto del texto que va encima.
 
 ---
 
