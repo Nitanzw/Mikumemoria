@@ -11,11 +11,13 @@ extends Control
 const COLUMNS := 5
 const CELL := Vector2(84, 84)
 
-const COLOR_DONE := Color(0.30, 0.62, 0.32)
-const COLOR_CURRENT := Color(1.0, 0.78, 0.20)
-const COLOR_LOCKED := Color(0.26, 0.26, 0.30)
-const COLOR_BOSS := Color(0.72, 0.22, 0.28)
-const COLOR_BOSS_DONE := Color(0.45, 0.30, 0.42)
+## Paleta en tonos tierra/madera para que los casilleros no parezcan
+## botones de formulario pegados encima del pergamino dibujado.
+const COLOR_DONE := Color(0.36, 0.55, 0.26)
+const COLOR_CURRENT := Color(0.98, 0.74, 0.22)
+const COLOR_LOCKED := Color(0.35, 0.29, 0.22)
+const COLOR_BOSS := Color(0.66, 0.24, 0.22)
+const COLOR_BOSS_DONE := Color(0.44, 0.28, 0.30)
 
 @onready var title: Label = $Margin/VBox/Title
 @onready var subtitle: Label = $Margin/VBox/Subtitle
@@ -25,6 +27,12 @@ const COLOR_BOSS_DONE := Color(0.45, 0.30, 0.42)
 var chapter: int = 1
 
 func _ready() -> void:
+	UITheme.style_title(title, 26)
+	UITheme.style_body(subtitle, 17)
+	subtitle.add_theme_color_override("font_color", Color(0.93, 0.88, 0.75))
+	UITheme.style_wood_button(back_button)
+	back_button.custom_minimum_size = Vector2(0, 62)
+
 	chapter = GameManager.selected_chapter
 	back_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/menu/world_map.tscn"))
 
@@ -58,7 +66,8 @@ func _build_cell(level: int) -> Button:
 	button.custom_minimum_size = CELL
 	button.add_theme_font_size_override("font_size", 20 if level < 100 else 17)
 	button.add_theme_constant_override("outline_size", 5)
-	button.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	button.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	button.add_theme_color_override("font_color", Color(1, 0.98, 0.92))
 
 	var style := StyleBoxFlat.new()
 	style.corner_radius_top_left = 14
@@ -67,6 +76,17 @@ func _build_cell(level: int) -> Button:
 	style.corner_radius_bottom_right = 14
 	style.content_margin_left = 4.0
 	style.content_margin_right = 4.0
+	# Sobre el pergamino, sin borde y sombra los casilleros se pierden
+	# contra el dibujo del mapa.
+	style.shadow_color = Color(0, 0, 0, 0.4)
+	style.shadow_size = 4
+	# Un borde oscuro en todos los casilleros los hace leer como fichas
+	# apoyadas sobre el mapa y no como rectángulos de color plano.
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_color = Color(0.16, 0.10, 0.05, 0.75)
 
 	if not unlocked:
 		style.bg_color = COLOR_BOSS.darkened(0.55) if is_boss else COLOR_LOCKED
@@ -80,13 +100,15 @@ func _build_cell(level: int) -> Button:
 			style.bg_color = COLOR_DONE if completed else COLOR_CURRENT
 			button.text = str(level)
 		if completed:
-			style.border_width_top = 3
-			style.border_width_bottom = 3
-			style.border_width_left = 3
-			style.border_width_right = 3
-			style.border_color = Color(1, 1, 1, 0.35)
+			style.border_color = Color(1, 0.96, 0.85, 0.4)
 		button.pressed.connect(_on_level_pressed.bind(level))
 		if level == GameManager.max_level_unlocked:
+			# El nivel al que toca entrar: borde dorado grueso + latido.
+			style.border_width_top = 4
+			style.border_width_bottom = 4
+			style.border_width_left = 4
+			style.border_width_right = 4
+			style.border_color = Color(1, 0.92, 0.55)
 			_pulse(button)
 
 	button.add_theme_stylebox_override("normal", style)

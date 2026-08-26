@@ -20,10 +20,17 @@ const COLOR_DONE := Color(0.4, 0.75, 0.4)
 @onready var scroll: ScrollContainer = $ScrollContainer
 @onready var map_area: Control = $ScrollContainer/MapArea
 @onready var back_button: Button = $BackButton
+@onready var title: Label = $TitlePanel/Title
+@onready var title_panel: PanelContainer = $TitlePanel
 
 var _chapter_nodes: Dictionary = {}
 
 func _ready() -> void:
+	title_panel.add_theme_stylebox_override("panel", UITheme.scrim_style(0.5))
+	UITheme.style_title(title, 26)
+	UITheme.style_wood_button(back_button)
+	back_button.add_theme_font_size_override("font_size", 22)
+	back_button.custom_minimum_size = Vector2(0, 60)
 	back_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/menu/main_menu.tscn"))
 	_build_map()
 	await get_tree().process_frame
@@ -54,6 +61,8 @@ func _build_chapter_node(chapter: int, total_height: int) -> Control:
 	button.position = Vector2(center_x + zigzag - NODE_SIZE / 2.0, 0.0)
 	button.text = str(chapter)
 	button.add_theme_font_size_override("font_size", 30)
+	button.add_theme_constant_override("outline_size", 6)
+	button.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 
 	var name_label := Label.new()
 	name_label.text = GameManager.level_manager.get_chapter_name(chapter)
@@ -61,8 +70,18 @@ func _build_chapter_node(chapter: int, total_height: int) -> Control:
 	name_label.position = Vector2(center_x - 90.0, NODE_SIZE + 4.0)
 	name_label.custom_minimum_size = Vector2(180, 40)
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	UITheme.style_body(name_label, 18)
 
 	var style := StyleBoxFlat.new()
+	# Borde claro alrededor del nodo: sobre el pergamino ilustrado, sin
+	# borde los círculos se confunden con el dibujo del mapa.
+	style.border_width_top = 4
+	style.border_width_bottom = 4
+	style.border_width_left = 4
+	style.border_width_right = 4
+	style.border_color = Color(0.98, 0.94, 0.84, 0.9)
+	style.shadow_color = Color(0, 0, 0, 0.45)
+	style.shadow_size = 6
 	style.corner_radius_top_left = int(NODE_SIZE / 2.0)
 	style.corner_radius_top_right = int(NODE_SIZE / 2.0)
 	style.corner_radius_bottom_left = int(NODE_SIZE / 2.0)

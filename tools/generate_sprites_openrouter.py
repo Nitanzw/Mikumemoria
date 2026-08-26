@@ -79,12 +79,26 @@ TRANSPARENT_BG_INSTRUCTION = (
     ", isolated on a solid flat magenta background (#FF00FF), no shadow, "
     "no gradient, no other objects, no floor"
 )
+## Estilo del arte ACTUAL del juego (el que se generó con Nano Banana a
+## partir de ARTE_PEDIDO.md). STYLE_SUFFIX de arriba es el estilo viejo,
+## plano; se conserva solo para no romper los prompts originales.
+POLISHED_STYLE = (
+    ", polished mobile game art, soft cel shading with rim light, subtle "
+    "gradients, painterly texture, rich saturated palette, clean readable "
+    "composition, no text, no watermark, no signature, no logo, high detail"
+)
+
 GREEN_SCREEN_BG_INSTRUCTION = (
     ", isolated on a solid flat chroma-key green background (#00FF00), no "
     "shadow, no gradient, no other objects, no floor"
 )
 
 CATEGORY_DEFAULTS = {
+    # Pantallas de menú (tienda, habilidades, mapa). Opacas y verticales.
+    "ui_background": {"dir": "ui", "size": (1080, 1920), "transparent": False, "aspect_ratio": "9:16"},
+    # Piezas de interfaz recortadas (paneles, íconos).
+    "ui_panel": {"dir": "ui", "size": (512, 256), "transparent": True, "aspect_ratio": "2:1"},
+    "ui_icon": {"dir": "ui", "size": (128, 128), "transparent": True, "aspect_ratio": "1:1"},
     "insect": {"dir": "insects", "size": (128, 128), "transparent": True, "aspect_ratio": "1:1"},
     "weapon": {"dir": "weapons", "size": (128, 128), "transparent": True, "aspect_ratio": "1:1"},
     "character": {"dir": "character", "size": (200, 320), "transparent": True, "aspect_ratio": "9:16"},
@@ -131,6 +145,11 @@ ASSETS: dict[str, tuple[str, str]] = {
     "don_beto_angry": ("character", "portrait of a cartoon farmer character named Don Beto, older man with a mustache, straw hat, green overalls, furrowed angry eyebrows, gritted teeth, red flushed cheeks, waist-up, front view, video game character portrait"),
     "don_beto_worried": ("character", "portrait of a cartoon farmer character named Don Beto, older man with a mustache, straw hat, green overalls, wide anguished eyes, sweat drop, biting lip, nervous expression, waist-up, front view, video game character portrait"),
 
+    # --- Pantallas de menú ---
+    "shop_background": ("ui_background", "the cozy interior of a garden potting shed seen from the front, wooden shelves lined with terracotta pots, coiled hose, hanging hand tools, seed packets and twine, warm afternoon light through a dusty window, inviting and tidy, vertical mobile game shop background, large uncluttered area in the middle for a list of items"),
+    "skills_background": ("ui_background", "an open gardening journal lying on a wooden table seen from directly above, both pages COMPLETELY BLANK aged cream paper with no writing whatsoever, no letters, no words, no handwriting, no printed title, only pressed leaves and small botanical sketches in the outer margins, a pencil and a few seeds resting on the table beside it, warm soft light, vertical mobile game background"),
+    "map_background": ("ui_background", "a hand-drawn treasure-map style illustration of a countryside on aged parchment, a winding dirt path going from the bottom to the top past a vegetable garden, a greenhouse, a cave mouth, a swamp and distant mountains, compass rose in a corner, soft sepia and green tones, no text and no labels, vertical mobile game world map background"),
+
     # --- Fondos de capitulo (LevelManager.chapter_configs) ---
     "chapter_1_huerto": ("background", "a sunny cheerful vegetable garden with tomato plants, wooden fences and blue sky, mobile game background, portrait orientation, no characters"),
     "chapter_2_invernadero": ("background", "the warm humid interior of a glass greenhouse full of tropical plants, soft light rays, mobile game background, portrait orientation, no characters"),
@@ -142,6 +161,12 @@ ASSETS: dict[str, tuple[str, str]] = {
     "chapter_8_tuneles": ("background", "a fast underground tunnel network with speed motion lines and warning stripes, mobile game background, portrait orientation, no characters"),
     "chapter_9_bunker": ("background", "a tense military bunker interior with metal walls, red alert lights and crates, mobile game background, portrait orientation, no characters"),
     "chapter_10_nucleo": ("background", "an epic glowing alien queen's core chamber, purple and gold energy, dramatic final-boss atmosphere, mobile game background, portrait orientation, no characters"),
+}
+
+# Piezas sueltas de interfaz
+UI_PIECES = {
+    "panel_card": ("ui_panel", "a horizontal wooden signboard panel for a game list row, warm sanded wood planks with visible grain, rounded corners, a thin darker carved border and small iron nails in the four corners, completely empty surface with no text and no carving, even flat lighting, front view"),
+    "coin": ("ui_icon", "a single shiny gold coin seen at a slight three-quarter angle, thick rim with a small embossed leaf on its face, warm metallic highlights, game currency icon, readable at small size"),
 }
 
 # El icono vive en la raiz del repo, no en assets/sprites/
@@ -247,10 +272,15 @@ def _dest_path(name: str, category: str) -> str:
     return os.path.join(SPRITES_DIR, subdir, f"{name}.png")
 
 
-def _build_prompt(base_prompt: str, transparent: bool) -> str:
-    prompt = base_prompt + STYLE_SUFFIX
+def _build_prompt(base_prompt: str, transparent: bool, category: str = "") -> str:
+    # Las piezas de menú son nuevas y usan el estilo actual del juego; el
+    # resto conserva el estilo plano original para no cambiarles la pinta
+    # a los assets ya generados si alguien los regenera.
+    prompt = base_prompt + (POLISHED_STYLE if category.startswith("ui_") else STYLE_SUFFIX)
     if transparent:
-        prompt += TRANSPARENT_BG_INSTRUCTION
+        # Verde y no magenta: con magenta el modelo tiñe de rosa las
+        # partes cálidas del sujeto y el recorte se las come.
+        prompt += GREEN_SCREEN_BG_INSTRUCTION
     return prompt
 
 
@@ -342,7 +372,7 @@ def generate_asset(name: str, category: str, base_prompt: str, api_key: str, mod
         print(f"[{name}] ya existe, se salta (--skip-existing)")
         return 0.0
 
-    prompt = _build_prompt(base_prompt, defaults["transparent"])
+    prompt = _build_prompt(base_prompt, defaults["transparent"], category)
     print(f"[{name}] generando con {model}...")
 
     result = _call_images_api(api_key, model, prompt, defaults.get("aspect_ratio"))
@@ -377,6 +407,8 @@ def generate_asset(name: str, category: str, base_prompt: str, api_key: str, mod
 def _all_items() -> list[tuple[str, str, str]]:
     items = [(name, cat, prompt) for name, (cat, prompt) in ASSETS.items()]
     items.append(("icon", ICON_ASSET[0], ICON_ASSET[1]))
+    for name, (cat, prompt) in UI_PIECES.items():
+        items.append((name, cat, prompt))
     return items
 
 
