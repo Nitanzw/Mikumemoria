@@ -5,6 +5,7 @@ extends CharacterBody2D
 ## para que el spawner también pueda consultarlos sin instanciar la escena.
 
 const INSECT_DATA := {
+	# --- Los 5 básicos, con ciclo de caminata animado ---
 	"hormiga_obrera": {"speed": 100.0, "health": 1, "points": 50, "coin_reward": 10, "sprite": "res://assets/sprites/insects/hormiga_obrera.png", "walk_frames": [
 		"res://assets/sprites/insects/hormiga_obrera_walk_0.png",
 		"res://assets/sprites/insects/hormiga_obrera_walk_1.png",
@@ -35,6 +36,20 @@ const INSECT_DATA := {
 		"res://assets/sprites/insects/grillo_saltarin_walk_2.png",
 		"res://assets/sprites/insects/grillo_saltarin_walk_3.png",
 	]},
+
+	# --- Variantes avanzadas. Reusan el arte de los incógnitos, que hasta
+	# ahora solo se veía al revelarlos. Cubren el rango completo: desde
+	# tanques lentísimos de 8 de vida hasta bichos de un solo golpe que
+	# cruzan la pantalla volando.
+	"mutante_volador": {"speed": 210.0, "health": 2, "points": 160, "coin_reward": 34, "sprite": "res://assets/sprites/insects/mutante_volador.png"},
+	"hormiga_ladrona": {"speed": 180.0, "health": 2, "points": 140, "coin_reward": 40, "sprite": "res://assets/sprites/insects/hormiga_ladrona.png"},
+	"lombriz_gigante": {"speed": 55.0, "health": 4, "points": 190, "coin_reward": 42, "sprite": "res://assets/sprites/insects/lombriz_gigante.png"},
+	"abejorro_pinata": {"speed": 140.0, "health": 3, "points": 175, "coin_reward": 46, "sprite": "res://assets/sprites/insects/abejorro_pinata.png"},
+	"mantis_cronometro": {"speed": 130.0, "health": 3, "points": 180, "coin_reward": 38, "sprite": "res://assets/sprites/insects/mantis_cronometro.png"},
+	"escarabajo_radiactivo": {"speed": 70.0, "health": 5, "points": 240, "coin_reward": 52, "sprite": "res://assets/sprites/insects/escarabajo_radiactivo.png"},
+	"centella_blindada": {"speed": 110.0, "health": 5, "points": 260, "coin_reward": 56, "sprite": "res://assets/sprites/insects/centella_blindada.png"},
+	"rayo_insecto": {"speed": 320.0, "health": 1, "points": 220, "coin_reward": 48, "sprite": "res://assets/sprites/insects/rayo_insecto.png"},
+	"coraza_antigua": {"speed": 45.0, "health": 8, "points": 320, "coin_reward": 70, "sprite": "res://assets/sprites/insects/coraza_antigua.png"},
 }
 
 const WANDER_MIN := 0.6
@@ -52,10 +67,25 @@ const SPLAT_COLORS := {
 	"escarabajo_blindado": Color(0.34, 0.44, 0.55),
 	"mosca_pesada": Color(0.30, 0.30, 0.33),
 	"grillo_saltarin": Color(0.35, 0.65, 0.25),
+	"mutante_volador": Color(0.55, 0.35, 0.68),
+	"hormiga_ladrona": Color(0.78, 0.62, 0.20),
+	"lombriz_gigante": Color(0.88, 0.55, 0.60),
+	"abejorro_pinata": Color(0.92, 0.55, 0.18),
+	"mantis_cronometro": Color(0.28, 0.62, 0.58),
+	"escarabajo_radiactivo": Color(0.45, 0.85, 0.25),
+	"centella_blindada": Color(0.30, 0.50, 0.80),
+	"rayo_insecto": Color(0.95, 0.88, 0.30),
+	"coraza_antigua": Color(0.45, 0.52, 0.35),
 }
 
 @export var insect_type: String = "hormiga_obrera"
 @export var speed_mult: float = 1.0
+
+# Cada insecto que aparece toma un factor propio dentro de este rango, así
+# dos bichos del mismo tipo no se mueven calcados. Es sutil a propósito:
+# más rango que esto y el jugador deja de poder anticipar al enemigo.
+const SPEED_VARIANCE_MIN := 0.82
+const SPEED_VARIANCE_MAX := 1.18
 
 @onready var sprite: AnimatedSprite2D = $Sprite2D
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
@@ -100,7 +130,7 @@ func _process(delta: float) -> void:
 
 func initialize_by_type() -> void:
 	var data: Dictionary = INSECT_DATA.get(insect_type, INSECT_DATA["hormiga_obrera"])
-	base_speed = float(data["speed"]) * speed_mult
+	base_speed = float(data["speed"]) * speed_mult * randf_range(SPEED_VARIANCE_MIN, SPEED_VARIANCE_MAX)
 	speed = base_speed
 	health = int(data["health"])
 	current_health = health

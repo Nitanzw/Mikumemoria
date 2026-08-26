@@ -8,6 +8,9 @@ extends Node
 # --- Progreso del jugador ---
 var current_level: int = 1
 var current_chapter: int = 1
+## Nivel más alto desbloqueado. Se separa de current_level para poder
+## rejugar uno viejo sin perder el avance (ver el selector de niveles).
+var max_level_unlocked: int = 1
 var player_coins: int = 0
 var player_score: int = 0
 var combo_hits: int = 0
@@ -24,11 +27,25 @@ var skill_tree: Dictionary = {}
 # 9 niveles previos a cada múltiplo de 10 (ver LevelManager.has_mystery_bug).
 var mystery_progress: Dictionary = {}
 
+# --- Vidas ---
+# Solo se gastan al perder una pelea de jefe. Regeneran solas con el paso
+# del tiempo real (no del tiempo de juego): se guarda el timestamp Unix
+# de la última regeneración y al cargar se calcula cuántas corresponden,
+# así también suma el tiempo con el juego cerrado.
+const MAX_LIVES := 3
+const LIFE_REGEN_SECONDS := 600  # 10 minutos por vida
+const REFILL_LIVES_COST := 150   # recargar todas pagando monedas
+
+var player_lives: int = MAX_LIVES
+var lives_timestamp: int = 0     # Unix time de la última vez que se contaron
+
 # --- Historia / narrativa ---
 var story_seen: bool = false
 var tutorial_seen: bool = false
 var seen_chapter_intros: Array = []   # capítulos (int) cuya intro ya se mostró
 var force_show_story: bool = false    # flag transitorio (no se guarda), para "ver de nuevo" desde el menú
+## Capítulo que el mapa de mundos pasa al selector de niveles. Transitorio.
+var selected_chapter: int = 1
 
 # --- Helpers internos (no son autoload, son instancias propias) ---
 var level_manager := LevelManager.new()
@@ -41,6 +58,7 @@ signal insect_unlocked(index: int, insect_name: String)
 signal score_changed(new_score: int)
 signal coins_changed(new_coins: int)
 signal combo_changed(combo: int)
+signal lives_changed(lives: int)
 
 func _ready() -> void:
 	print("[GameManager] Inicializando...")
@@ -60,6 +78,10 @@ func load_game_data() -> void:
 		story_seen = bool(data.get("story_seen", false))
 		tutorial_seen = bool(data.get("tutorial_seen", false))
 		seen_chapter_intros = data.get("seen_chapter_intros", [])
+		max_level_unlocked = int(data.get("max_level_unlocked", current_level))
+		player_lives = int(data.get("player_lives", MAX_LIVES))
+		lives_timestamp = int(data.get("lives_timestamp", Time.get_unix_time_from_system()))
+		_regenerate_lives()
 	else:
 		print("[GameManager] Nuevo juego")
 		reset_game()
@@ -79,6 +101,9 @@ func reset_game() -> void:
 	story_seen = false
 	tutorial_seen = false
 	seen_chapter_intros = []
+	max_level_unlocked = 1
+	player_lives = MAX_LIVES
+	lives_timestamp = Time.get_unix_time_from_system()
 
 func start_level(level: int) -> void:
 	current_level = level
@@ -113,6 +138,9 @@ func on_level_complete() -> int:
 	var reward := calculate_level_reward()
 	add_coins(reward)
 
+	# Al rejugar un nivel viejo no se pisa el avance: solo se empuja el
+	# tope si el que se acaba de ganar era el más alto alcanzado.
+	max_level_unlocked = max(max_level_unlocked, min(finished_level + 1, level_manager.MAX_LEVEL))
 	current_level = min(finished_level + 1, level_manager.MAX_LEVEL)
 	current_chapter = level_manager.get_chapter_for_level(current_level)
 
@@ -187,7 +215,91 @@ func _build_save_dict() -> Dictionary:
 		"story_seen": story_seen,
 		"tutorial_seen": tutorial_seen,
 		"seen_chapter_intros": seen_chapter_intros,
+		"max_level_unlocked": max_level_unlocked,
+		"player_lives": player_lives,
+		"lives_timestamp": lives_timestamp,
 	}
+
+# --- Vidas ---
+
+## Suma las vidas que correspondan por el tiempo transcurrido desde la
+## última cuenta. Se llama al cargar y cada vez que alguien consulta.
+func _regenerate_lives() -> void:
+	if player_lives >= MAX_LIVES:
+		lives_timestamp = int(Time.get_unix_time_from_system())
+		return
+	var now := int(Time.get_unix_time_from_system())
+	var elapsed: int = maxi(now - lives_timestamp, 0)
+	var earned: int = int(elapsed / LIFE_REGEN_SECONDS)
+	if earned <= 0:
+		return
+	player_lives = mini(player_lives + earned, MAX_LIVES)
+	# Solo consume el tiempo que se usó, no el sobrante: si faltaban 2
+	# minutos para la próxima vida, esos 2 minutos siguen contando.
+	lives_timestamp += earned * LIFE_REGEN_SECONDS
+	if player_lives >= MAX_LIVES:
+		lives_timestamp = now
+	lives_changed.emit(player_lives)
+
+func get_lives() -> int:
+	_regenerate_lives()
+	return player_lives
+
+func has_lives() -> bool:
+	return get_lives() > 0
+
+## Segundos que faltan para la próxima vida, o 0 si están llenas.
+func seconds_until_next_life() -> int:
+	_regenerate_lives()
+	if player_lives >= MAX_LIVES:
+		return 0
+	var now := int(Time.get_unix_time_from_system())
+	var elapsed: int = maxi(now - lives_timestamp, 0)
+	return maxi(LIFE_REGEN_SECONDS - elapsed, 0)
+
+func lose_life() -> int:
+	_regenerate_lives()
+	if player_lives == MAX_LIVES:
+		# Recién ahora empieza a correr el reloj de regeneración.
+		lives_timestamp = int(Time.get_unix_time_from_system())
+	player_lives = maxi(player_lives - 1, 0)
+	lives_changed.emit(player_lives)
+	SaveManager.save_game(_build_save_dict())
+	return player_lives
+
+## Recarga todas las vidas pagando monedas. Devuelve false si no alcanza
+## o si ya estaban llenas.
+func refill_lives_with_coins() -> bool:
+	_regenerate_lives()
+	if player_lives >= MAX_LIVES:
+		return false
+	if player_coins < REFILL_LIVES_COST:
+		return false
+	player_coins -= REFILL_LIVES_COST
+	player_lives = MAX_LIVES
+	lives_timestamp = int(Time.get_unix_time_from_system())
+	coins_changed.emit(player_coins)
+	lives_changed.emit(player_lives)
+	SaveManager.save_game(_build_save_dict())
+	return true
+
+## Se llama al perder una pelea de jefe. No toca el progreso de niveles.
+func on_level_failed() -> int:
+	return lose_life()
+
+# --- Consultas de nivel ---
+
+func is_level_unlocked(level: int) -> bool:
+	return level <= max_level_unlocked
+
+func is_boss_level(level: int) -> bool:
+	return level_manager.is_boss_level(level)
+
+## Capítulo más alto al que se puede entrar. Se calcula del tope
+## desbloqueado y NO de current_chapter, porque al rejugar un nivel viejo
+## current_chapter retrocede y si no se bloquearían capítulos ya ganados.
+func get_max_chapter_unlocked() -> int:
+	return level_manager.get_chapter_for_level(max_level_unlocked)
 
 # --- Armas ---
 

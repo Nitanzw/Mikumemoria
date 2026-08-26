@@ -68,13 +68,15 @@ func _build_chapter_node(chapter: int, total_height: int) -> Control:
 	style.corner_radius_bottom_left = int(NODE_SIZE / 2.0)
 	style.corner_radius_bottom_right = int(NODE_SIZE / 2.0)
 
-	if chapter < GameManager.current_chapter:
+	if chapter < GameManager.get_max_chapter_unlocked():
+		# Los capítulos ya superados quedan entrables: es la única forma
+		# de volver a jugar sus niveles desde el selector.
 		style.bg_color = COLOR_DONE
 		button.text = "✓"
-		button.disabled = true
-	elif chapter == GameManager.current_chapter:
+		button.pressed.connect(_on_chapter_pressed.bind(chapter))
+	elif chapter == GameManager.get_max_chapter_unlocked():
 		style.bg_color = COLOR_CURRENT
-		button.pressed.connect(_on_play_pressed)
+		button.pressed.connect(_on_chapter_pressed.bind(chapter))
 		_pulse(button)
 	else:
 		style.bg_color = COLOR_LOCKED
@@ -96,12 +98,15 @@ func _pulse(node: Control) -> void:
 	tween.tween_property(node, "scale", Vector2(1.0, 1.0), 0.6).set_trans(Tween.TRANS_SINE)
 
 func _scroll_to_current() -> void:
-	var node: Control = _chapter_nodes.get(GameManager.current_chapter)
+	var node: Control = _chapter_nodes.get(GameManager.get_max_chapter_unlocked())
 	if not node:
 		return
 	var target: int = clampi(int(node.position.y - scroll.size.y / 2.0), 0, map_area.custom_minimum_size.y)
 	var tween := create_tween()
 	tween.tween_property(scroll, "scroll_vertical", target, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
-func _on_play_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/main_game.tscn")
+## Entrar a un capítulo abre su selector de niveles, no el nivel directo:
+## así se puede elegir cuál jugar o rejugar.
+func _on_chapter_pressed(chapter: int) -> void:
+	GameManager.selected_chapter = chapter
+	get_tree().change_scene_to_file("res://scenes/menu/level_select.tscn")

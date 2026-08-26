@@ -218,6 +218,44 @@ estilo viejo — los buenos están en `ARTE_PEDIDO.md`.
   al siguiente nivel; dentro del mismo capítulo sigue yendo directo,
   para no interrumpir el ritmo.
 
+## Jefes, vidas y selector de niveles
+
+- **Pelea de jefe cada 5 niveles** (`LevelManager.is_boss_level`). Dos
+  barras: la del jefe y la de Sofía (`PLAYER_MAX_HP`), y 90 segundos en
+  vez de 30. Si se acaba el tiempo con el jefe vivo, se pierde igual.
+- **10 arquetipos de jefe** en `scripts/data/boss_data.gd`, que se
+  recorren en orden y al completar la vuelta reaparecen escalados
+  (`get_boss_config(id, cycle)`). Lo que los distingue no es la vida:
+  son las **habilidades** (`scripts/core/boss.gd`).
+  - `summon` invoca refuerzos y **mientras haya uno vivo el jefe no
+    recibe daño** — hay que limpiar la pantalla primero. Es la mecánica
+    de "invocar insectos que impidan pegarle".
+  - `shield` aguanta 4 golpes seguidos; `burrow` lo hace invulnerable y
+    lo reubica; `dash` embiste a Sofía (con aviso previo para que sea
+    esquivable); `spit` tira proyectiles, que se destruyen tocándolos;
+    `steal` te roba monedas al pegarte; `split` crea copias que mueren
+    de un golpe; `heal` lo cura si lo dejás tranquilo; `haste` lo
+    acelera; `enrage` se activa bajo el 30% de vida.
+  - Cuando el jefe no puede recibir daño se pone semitransparente y su
+    barra se tiñe de azul, para que se entienda que pegarle ahí no sirve.
+- **Vidas** (`GameManager`): 3, se gastan solo al perder contra un jefe.
+  Regeneran una cada 10 minutos de tiempo **real** — se guarda el
+  timestamp Unix y al cargar se calcula cuántas corresponden, así
+  también suma el tiempo con el juego cerrado. Se pueden recargar
+  pagando monedas desde el menú.
+- **Selector de niveles** (`scenes/menu/level_select.tscn`): el mapa de
+  mundos ahora entra a una grilla con los 100 niveles del capítulo, con
+  su estado y los de jefe marcados. Permite **rejugar** cualquiera ya
+  superado. Para que rejugar no borre el avance, el progreso vive en
+  `max_level_unlocked`, separado de `current_level`; el mapa se basa en
+  `get_max_chapter_unlocked()` y no en `current_chapter`, que retrocede
+  al rejugar.
+- **14 tipos de insecto** con rangos amplios de vida (1 a 8) y velocidad
+  (45 a 320), y variación por spawn (`SPEED_VARIANCE_MIN/MAX`) para que
+  dos bichos del mismo tipo no se muevan idénticos. Las variantes
+  avanzadas reusan el arte de los incógnitos, que antes solo se veía al
+  revelarlos.
+
 ## Bugs del documento original que se corrigieron
 
 - `class_name` de los scripts autoload (`GameManager`, `SaveManager`,
@@ -234,6 +272,16 @@ estilo viejo — los buenos están en `ARTE_PEDIDO.md`.
 - `on_level_complete()` guardaba `current_level + 1` en el archivo pero
   nunca actualizaba `current_level` en memoria, así que "siguiente nivel"
   no avanzaba realmente sin recargar el guardado.
+- **`SaveManager.save_game()` descartaba casi todo lo que se le pasaba.**
+  Tenía una lista blanca de 7 campos y copiaba uno por uno; cualquier
+  cosa que `GameManager` agregara al diccionario se perdía en silencio,
+  sin error. Por eso `story_seen`, `tutorial_seen`,
+  `seen_chapter_intros` y `mystery_progress` no sobrevivían a cerrar el
+  juego: la intro y el tutorial reaparecían en cada arranque y el
+  progreso de revelación de los incógnitos se reseteaba. Ahora el
+  esquema lo define `GameManager._build_save_dict()` y SaveManager
+  guarda el diccionario completo, así sumar un campo no requiere tocar
+  las dos puntas.
 
 ## ⚠️ Orientación en Android: `handheld/orientation` es un ENTERO, no un string
 

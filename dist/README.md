@@ -3,7 +3,7 @@
 `invasion_huerto_demo.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-~38MB, arquitectura arm64-v8a solamente.
+~39MB, arquitectura arm64-v8a solamente.
 
 **Qué tiene**: capítulo 1 completo (intro con diálogo → menú → mapa de
 mundos → nivel con tutorial la primera vez → tienda → árbol de
@@ -15,6 +15,30 @@ historia narrada por **Sofía** con retratos reales por emoción
 (neutral/feliz/triste/enojada/preocupada/sorprendida). Los **5 insectos
 comunes** tienen ciclo de caminata animado de 4 cuadros; los 10
 incógnitos usan un cuadro fijo con balanceo procedural.
+
+**Jefes cada 5 niveles**: los niveles múltiplo de 5 son pelea de jefe,
+con **dos barras de vida** (la del jefe arriba, la de Sofía abajo) y 90
+segundos. Hay 10 jefes con habilidades propias: invocar refuerzos que lo
+escudan y hay que limpiar antes de poder tocarlo, enterrarse, levantar
+escudo, embestir a Sofía, escupir proyectiles (que se revientan
+tocándolos), robarte monedas, dividirse en copias falsas, curarse si lo
+dejás tranquilo y enfurecerse con poca vida. Cuando el jefe está
+protegido su barra se pone azul. Al terminar la vuelta de 10 vuelven a
+aparecer más fuertes.
+
+**Vidas**: 3 corazones, se pierde uno solo al perder una pelea de jefe.
+Regeneran una cada 10 minutos de tiempo real (también con el juego
+cerrado) o se recargan pagando 150 monedas tocando los corazones en el
+menú.
+
+**Selector de niveles**: entrar a un capítulo abre una grilla con sus 100
+niveles, marcando cuáles están completados y cuáles son de jefe (💀).
+Se puede **rejugar** cualquiera ya superado sin perder el avance.
+
+**Más variedad de insectos**: 14 tipos, de un tanque de 8 de vida que
+camina lentísimo a uno de un solo golpe que cruza la pantalla volando.
+Además cada bicho que aparece toma su propia velocidad dentro de un
+rango, así dos del mismo tipo no se mueven calcados.
 
 **Feedback del golpe**: al tocar la pantalla se ve el **arma equipada**
 (el zapato viejo de arranque, o la que tengas puesta) bajando, aplastando

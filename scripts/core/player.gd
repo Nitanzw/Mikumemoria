@@ -5,6 +5,8 @@ extends Node2D
 ## y activa "burla" (taunt) en los insectos cercanos cuando falla.
 
 const INSECT_LAYER_MASK := 1 << 1  # capa 2, ver insect.tscn / mystery_bug.tscn
+const BOSS_LAYER_MASK := 1 << 2    # capa 4, ver boss.tscn
+const HITTABLE_MASK := INSECT_LAYER_MASK | BOSS_LAYER_MASK
 const TAUNT_RADIUS := 300.0
 
 const HitEffectScene := preload("res://scenes/effects/hit_effect.tscn")
@@ -26,18 +28,27 @@ func handle_tap(tap_position: Vector2) -> void:
 	spawn_hit_effect(tap_position, radius)
 	spawn_weapon_strike(tap_position, radius)
 
-	var results := _query_circle(tap_position, radius, INSECT_LAYER_MASK)
+	# Los proyectiles del jefe se revientan tocándolos: es la forma de
+	# defenderse, y hace que la pelea no sea solo aguantar.
+	var popped := _pop_projectiles_at(tap_position, radius)
+
+	var results := _query_circle(tap_position, radius, HITTABLE_MASK)
 
 	if results.is_empty():
-		total_misses += 1
-		_trigger_nearby_taunts(tap_position)
+		if popped:
+			total_hits += 1
+		else:
+			total_misses += 1
+			_trigger_nearby_taunts(tap_position)
 	else:
 		var already_hit: Dictionary = {}
 		for result in results:
-			var insect := result.collider as Insect
-			if insect and not already_hit.has(insect.get_instance_id()):
-				already_hit[insect.get_instance_id()] = true
-				insect.take_damage(damage)
+			var target = result.collider
+			# El jefe y los insectos comunes son clases distintas, pero
+			# los dos exponen take_damage(int).
+			if target and (target is Insect or target is Boss) and not already_hit.has(target.get_instance_id()):
+				already_hit[target.get_instance_id()] = true
+				target.take_damage(damage)
 		if not already_hit.is_empty():
 			total_hits += 1
 		else:
@@ -60,6 +71,16 @@ func spawn_weapon_strike(tap_position: Vector2, radius: float) -> void:
 	get_tree().current_scene.add_child(strike)
 	strike.global_position = tap_position
 	strike.play(GameManager.equipped_weapon, radius)
+
+## Revienta los escupitajos del jefe que caigan dentro del radio del
+## golpe. Devuelve true si reventó alguno.
+func _pop_projectiles_at(tap_position: Vector2, radius: float) -> bool:
+	var any := false
+	for projectile in get_tree().get_nodes_in_group("boss_projectiles"):
+		if is_instance_valid(projectile) and projectile.global_position.distance_to(tap_position) <= radius + 18.0:
+			projectile.pop()
+			any = true
+	return any
 
 func _query_circle(pos: Vector2, radius: float, mask: int) -> Array:
 	var space_state := get_world_2d().direct_space_state

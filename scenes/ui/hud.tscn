@@ -1,6 +1,27 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="SB_bosstrack"]
+bg_color = Color(0.08, 0.05, 0.07, 0.75)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+
+[sub_resource type="StyleBoxFlat" id="SB_bossfill"]
+bg_color = Color(0.85, 0.2, 0.25, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+
+[sub_resource type="StyleBoxFlat" id="SB_hpfill"]
+bg_color = Color(0.35, 0.8, 0.35, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1")
@@ -68,6 +89,43 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
 theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
 text = "Combo x2"
 
+[node name="BossBox" type="VBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+visible = false
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="BossName" type="Label" parent="Margin/VBox/BossBox"]
+layout_mode = 2
+horizontal_alignment = 1
+mouse_filter = 2
+theme_override_font_sizes/font_size = 20
+theme_override_constants/outline_size = 6
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_colors/font_color = Color(1, 0.55, 0.55, 1)
+text = "Jefe"
+
+[node name="BossBar" type="ProgressBar" parent="Margin/VBox/BossBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 22)
+mouse_filter = 2
+show_percentage = false
+theme_override_styles/background = SubResource("SB_bosstrack")
+theme_override_styles/fill = SubResource("SB_bossfill")
+value = 100.0
+
+[node name="Announce" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+mouse_filter = 2
+autowrap_mode = 2
+visible = false
+theme_override_font_sizes/font_size = 20
+theme_override_constants/outline_size = 6
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
+text = ""
+
 [node name="TimeLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2
 mouse_filter = 2
@@ -76,3 +134,35 @@ theme_override_font_sizes/font_size = 32
 theme_override_constants/outline_size = 7
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
 text = "01:00"
+
+[node name="PlayerHPBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+size_flags_vertical = 8
+visible = false
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="PlayerHPLabel" type="Label" parent="Margin/PlayerHPBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 18
+theme_override_constants/outline_size = 5
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+text = "Sofía"
+
+[node name="PlayerBar" type="ProgressBar" parent="Margin/PlayerHPBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 22)
+mouse_filter = 2
+show_percentage = false
+theme_override_styles/background = SubResource("SB_bosstrack")
+theme_override_styles/fill = SubResource("SB_hpfill")
+value = 100.0
+
+[node name="DamageFlash" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(1, 0, 0, 0)
+mouse_filter = 2

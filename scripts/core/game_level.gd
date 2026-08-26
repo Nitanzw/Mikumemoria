@@ -7,9 +7,19 @@ extends Node2D
 const InsectScene := preload("res://scenes/insect.tscn")
 const MysteryBugScene := preload("res://scenes/mystery_bug.tscn")
 const DialogueBoxScene := preload("res://scenes/ui/dialogue_box.tscn")
+const BossScene := preload("res://scenes/boss.tscn")
+const BossProjectileScene := preload("res://scenes/effects/boss_projectile.tscn")
 
 const MAX_INSECTS_ON_SCREEN := 9
 const SPAWN_MARGIN := 60.0
+
+## Vida de Sofía en las peleas de jefe. Se muestra como barra propia y,
+## al llegar a 0, se pierde una de las 3 vidas del sistema global.
+const PLAYER_MAX_HP := 5
+## Cuando un minion invocado llega hasta Sofía, le saca esto.
+const MINION_CONTACT_DAMAGE := 1
+## Radio alrededor de Sofía donde un proyectil o minion cuenta como golpe.
+const PLAYER_HURT_RADIUS := 85.0
 
 @onready var background: Sprite2D = $Background
 @onready var insect_container: Node2D = $InsectContainer
@@ -23,6 +33,14 @@ var time_remaining: float = 30.0
 var level_ended: bool = false
 var gameplay_started: bool = false
 var _entry_chapter: int = 1
+
+# --- Estado de pelea de jefe ---
+var is_boss_level: bool = false
+var boss: Boss = null
+var boss_config: Dictionary = {}
+var player_hp: int = PLAYER_MAX_HP
+var _projectiles: Array = []
+var _boss_minions: Array = []
 
 func _ready() -> void:
 	GameManager.start_level(GameManager.current_level)
@@ -45,9 +63,17 @@ func _ready() -> void:
 
 	level_complete_ui.next_level_pressed.connect(_on_next_level_pressed)
 	level_complete_ui.menu_pressed.connect(_on_menu_pressed)
+	level_complete_ui.retry_pressed.connect(_on_retry_pressed)
 
 	spawn_timer.wait_time = level_config.get("spawn_rate", 2.0)
 	spawn_timer.timeout.connect(_on_spawn_timer_timeout)
+
+	is_boss_level = bool(level_config.get("is_boss", false))
+	if is_boss_level:
+		var boss_id: int = int(level_config.get("boss_id", 1))
+		var cycle: int = GameManager.level_manager.get_boss_cycle(GameManager.current_level)
+		boss_config = BossData.get_boss_config(boss_id, cycle)
+		hud.setup_boss_bars(PLAYER_MAX_HP, str(boss_config.get("name", "Jefe")))
 
 	_maybe_show_intros()
 
@@ -58,8 +84,15 @@ func _process(delta: float) -> void:
 	time_remaining -= delta
 	hud.set_time(max(time_remaining, 0.0))
 
+	if is_boss_level:
+		_process_boss_fight(delta)
+
 	if time_remaining <= 0.0:
-		_end_level()
+		if is_boss_level:
+			# Se acabó el tiempo con el jefe vivo: se pierde una vida.
+			_lose_boss_fight("Se acabó el tiempo")
+		else:
+			_end_level()
 
 func _maybe_show_intros() -> void:
 	# Encadena: intro de capítulo (primera vez que se entra a ese
@@ -91,12 +124,145 @@ func _start_gameplay() -> void:
 	if level_ended:
 		return
 	gameplay_started = true
+
+	if is_boss_level:
+		# En la pelea de jefe el spawner normal no corre: los únicos
+		# insectos que aparecen son los que invoca el jefe.
+		_spawn_boss()
+		return
+
 	spawn_timer.start()
 
 	if level_config.get("has_mystery_bug", false) and not GameManager.has_unlocked_insect(level_config.get("mystery_index", 0)):
 		await get_tree().create_timer(1.0).timeout
 		if not level_ended:
 			_spawn_mystery_bug()
+
+# --- Pelea de jefe ---
+
+func _spawn_boss() -> void:
+	player_hp = PLAYER_MAX_HP
+	hud.set_player_hp(player_hp, PLAYER_MAX_HP)
+
+	boss = BossScene.instantiate() as Boss
+	insect_container.add_child(boss)
+	boss.global_position = Vector2(get_viewport_rect().size.x / 2.0, 200.0)
+	boss.setup(boss_config)
+
+	boss.health_changed.connect(hud.set_boss_hp)
+	boss.shield_changed.connect(hud.set_boss_shield)
+	boss.ability_announced.connect(hud.announce)
+	boss.died.connect(_on_boss_died)
+	boss.wants_summon.connect(_on_boss_wants_summon)
+	boss.wants_projectile.connect(_on_boss_wants_projectile)
+	boss.hit_player.connect(_damage_player)
+	boss.stole_coins.connect(_on_boss_stole_coins)
+
+	hud.announce(str(boss_config.get("taunt", "")))
+
+func _process_boss_fight(_delta: float) -> void:
+	if not is_instance_valid(boss):
+		return
+
+	var player_pos := _player_position()
+	boss.set_player_position(player_pos)
+
+	# Proyectiles que llegan a Sofía
+	for projectile in _projectiles.duplicate():
+		if not is_instance_valid(projectile):
+			_projectiles.erase(projectile)
+			continue
+		if projectile.distance_to_point(player_pos) < PLAYER_HURT_RADIUS:
+			projectile.pop()
+			_projectiles.erase(projectile)
+			_damage_player(1)
+
+	# Minions que llegan abajo, donde está Sofía
+	for minion in _boss_minions.duplicate():
+		if not is_instance_valid(minion):
+			_boss_minions.erase(minion)
+			if is_instance_valid(boss):
+				boss.on_minion_died()
+			continue
+		if minion.global_position.distance_to(player_pos) < PLAYER_HURT_RADIUS:
+			_damage_player(MINION_CONTACT_DAMAGE)
+			_boss_minions.erase(minion)
+			minion.queue_free()
+			if is_instance_valid(boss):
+				boss.on_minion_died()
+
+func _player_position() -> Vector2:
+	if sofia_sprite:
+		return sofia_sprite.global_position
+	var view := get_viewport_rect().size
+	return Vector2(view.x / 2.0, view.y - 60.0)
+
+func _on_boss_wants_summon(count: int) -> void:
+	if count <= 0:
+		_spawn_boss_decoys()
+		return
+	for i in range(count):
+		var types: Array = BossData.SUMMON_POOL
+		var minion := InsectScene.instantiate() as Insect
+		minion.insect_type = types[randi() % types.size()]
+		minion.speed_mult = 1.1
+		insect_container.add_child(minion)
+		var view := get_viewport_rect().size
+		minion.global_position = boss.global_position + Vector2(randf_range(-120.0, 120.0), randf_range(20.0, 90.0))
+		# Los minions van derecho hacia Sofía: son una amenaza, no adorno.
+		minion.direction = (_player_position() - minion.global_position).normalized()
+		_boss_minions.append(minion)
+
+## Copias de `split`: mismo sprite, mueren de un golpe, y confunden cuál
+## es el jefe real.
+func _spawn_boss_decoys() -> void:
+	if not is_instance_valid(boss):
+		return
+	var view := get_viewport_rect().size
+	for i in range(2):
+		var decoy := BossScene.instantiate() as Boss
+		insect_container.add_child(decoy)
+		decoy.global_position = Vector2(randf_range(120.0, view.x - 120.0), boss.global_position.y + randf_range(-40.0, 40.0))
+		decoy.setup(boss_config)
+		decoy.is_decoy = true
+
+func _on_boss_wants_projectile(from: Vector2) -> void:
+	var projectile := BossProjectileScene.instantiate()
+	add_child(projectile)
+	projectile.launch(from, _player_position())
+	_projectiles.append(projectile)
+
+func _on_boss_stole_coins(amount: int) -> void:
+	GameManager.add_coins(-mini(amount, GameManager.player_coins))
+	hud.announce("¡Te robó %d monedas!" % amount)
+
+func _damage_player(amount: int) -> void:
+	if level_ended:
+		return
+	player_hp = maxi(player_hp - amount, 0)
+	hud.set_player_hp(player_hp, PLAYER_MAX_HP)
+	hud.flash_damage()
+	AudioManager.play_sfx("taunt")
+
+	if player_hp <= 0:
+		_lose_boss_fight("Sofía no aguantó")
+
+func _on_boss_died() -> void:
+	if level_ended:
+		return
+	hud.announce("¡Lo venciste!")
+	_end_level()
+
+func _lose_boss_fight(reason: String) -> void:
+	if level_ended:
+		return
+	level_ended = true
+	spawn_timer.stop()
+	for child in insect_container.get_children():
+		child.queue_free()
+
+	var lives_left := GameManager.on_level_failed()
+	level_complete_ui.show_defeat(reason, lives_left)
 
 func _play_chapter_music() -> void:
 	# Cada capítulo puede tener su propio tema (generado con
@@ -193,6 +359,9 @@ func _on_next_level_pressed() -> void:
 		get_tree().change_scene_to_file("res://scenes/menu/world_map.tscn")
 	else:
 		get_tree().reload_current_scene()
+
+func _on_retry_pressed() -> void:
+	get_tree().reload_current_scene()
 
 func _on_menu_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/menu/main_menu.tscn")

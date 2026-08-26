@@ -7,24 +7,29 @@ extends Node
 const SAVE_PATH := "user://invasion_huerto_save.json"
 const SAVE_VERSION := 1
 
+## Guarda TODO lo que le pase GameManager.
+##
+## Antes esta función tenía una lista blanca de campos y copiaba uno por
+## uno; cualquier cosa nueva que GameManager agregara al diccionario se
+## descartaba en silencio, sin error ni aviso. Eso hacía que
+## `story_seen`, `tutorial_seen`, `seen_chapter_intros` y
+## `mystery_progress` no sobrevivieran a cerrar el juego: la intro y el
+## tutorial volvían a aparecer en cada arranque y el progreso de
+## revelación de los incógnitos se perdía.
+##
+## Ahora el esquema lo define GameManager._build_save_dict() y acá solo
+## se agregan los metadatos del archivo. Si mañana se suma un campo, se
+## guarda solo.
 func save_game(data: Dictionary) -> bool:
-	var save_data := {
-		"version": SAVE_VERSION,
-		"current_level": data.get("current_level", 1),
-		"coins": data.get("coins", 0),
-		"unlocked_insects": data.get("unlocked_insects", []),
-		"unlocked_weapons": data.get("unlocked_weapons", ["zapato_viejo"]),
-		"equipped_weapon": data.get("equipped_weapon", "zapato_viejo"),
-		"skill_tree": data.get("skill_tree", {}),
-		"timestamp": Time.get_unix_time_from_system(),
-	}
+	var save_data := data.duplicate(true)
+	save_data["version"] = SAVE_VERSION
+	save_data["timestamp"] = Time.get_unix_time_from_system()
 
 	var json_string := JSON.stringify(save_data)
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 
 	if file:
 		file.store_string(json_string)
-		print("[SaveManager] Juego guardado en: %s" % SAVE_PATH)
 		return true
 
 	push_warning("[SaveManager] Error al guardar: no se pudo abrir el archivo")
