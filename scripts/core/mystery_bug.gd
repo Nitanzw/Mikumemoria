@@ -51,9 +51,12 @@ func _ready() -> void:
 	points = 20
 	coin_reward = 0  # las monedas grandes se entregan solo al revelar
 
-	var sprite_path: String = insect_data.get("sprite", "")
-	if sprite and sprite_path != "" and ResourceLoader.exists(sprite_path):
-		_apply_static_texture(sprite, load(sprite_path))
+	# Mismo camino que Insect: si están los <tipo>_walk_N.png, el incógnito
+	# camina animado igual que los comunes; si no, queda el sprite fijo.
+	# Antes acá se forzaba el sprite fijo, así que los 10 incógnitos nunca
+	# animaban por más que existiera su ciclo.
+	if sprite:
+		_apply_sprite_data(sprite, insect_data, String(insect_data.get("type", "")))
 	if mystery_sprite:
 		mystery_sprite.texture = load("res://assets/sprites/insects/mystery_bug_silueta.png")
 

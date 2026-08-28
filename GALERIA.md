@@ -91,10 +91,18 @@ respecto del texto que va encima.
 
 ## 🐜 Ciclo de caminata
 
-Los **5 insectos comunes** tienen ciclo de caminata de 4 cuadros. Cada
-uno se generó como una sola grilla 2×2 (así el bicho no cambia de forma
-entre cuadros) y después se partió con `tools/split_sheet.py`. Acá el de
-la `hormiga_obrera`:
+**Los 15 insectos** tienen ciclo de caminata de 4 cuadros. Cada uno se
+generó como una sola hoja 2×2 (así el bicho no cambia de forma entre
+cuadros) y después se partió en post-proceso local.
+
+<img src="docs/capturas/ciclos.jpg" width="330">
+
+<sub>Los 5 comunes arriba, los 10 incógnitos abajo. El movimiento se le
+pide distinto a cada uno: la lombriz se enrosca, al rayo le cambian los
+arcos, a los alados les mueven las alas. Pidiéndoles a todos "mové las
+patas", los que no tienen patas salían con los 4 cuadros calcados.</sub>
+
+Acá el de la `hormiga_obrera`, cuadro por cuadro:
 
 <table>
 <tr>

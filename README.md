@@ -105,10 +105,31 @@ El "más de uno" importa: si se armara el `SpriteFrames` con cero cuadros
 cargados, el insecto quedaría **invisible** en vez de caer al sprite
 fijo. Por eso primero se juntan las texturas y recién ahí se decide.
 
-Hoy tienen ciclo los **5 comunes**. Los **10 incógnitos** siguen con
-sprite fijo (más el balanceo procedural que tienen todos): sus prompts ya
-están cargados en `WALK_SHEETS`, falta correr el generador con una API
-key viva.
+Los **15 insectos** (5 comunes + 10 incógnitos) tienen ciclo. Los
+incógnitos animan tanto cuando aparecen como incógnita (`mystery_bug.gd`)
+como cuando reaparecen de tipo avanzado (`insect.gd`): las dos escenas
+pasan por el mismo `_apply_sprite_data`.
+
+Dos cosas que costaron y quedaron resueltas en el generador:
+
+**No pidas líneas de grilla.** El prompt pedía "a thin black grid line
+dividing it into 4 cells" y el modelo las dibujaba donde quería: en la
+hoja de `hormiga_obrera` puso líneas cada 1/4 del ancho, pero cada bicho
+ocupaba 2 columnas. Aun cortando en el lugar correcto quedaba una línea
+cruzando el medio de cada cuadro. Ahora se piden las 4 poses separadas
+por **fondo vacío** y el corte se hace en el medio de ese hueco, que no
+deja nada que borrar.
+
+**Sacá el croma por celda, no sobre la hoja.** El recorte borra el fondo
+*conectado al borde*; las líneas de la grilla partían el fondo en
+regiones que no tocaban ese borde, así que sobrevivían como bloques de
+verde vivo adentro del cuadro (le pasó a `mantis_cronometro`, que quedó
+con 54% de transparencia en vez de 72%). Recortando cada celda ya
+separada, su fondo toca su propio borde y sale entero.
+
+La hoja cruda de cada sheet se guarda en `assets/sprites/_sheets_raw/`
+(gitignoreada): partirla y recortarla es post-proceso local, así que se
+puede reajustar el corte sin volver a pagar la generación.
 
 ### Herramientas de post-proceso
 
@@ -450,6 +471,17 @@ no toque el proyecto de gradle. Si ya te pasó:
 
 ```bash
 find android -name "*.import" -delete
+```
+
+**3. Todo lo que esté dentro del proyecto viaja al APK.** Godot importa
+cualquier carpeta de `res://`, use el juego esos archivos o no. Estaban
+entrando las hojas crudas de los sprite sheets y las capturas del README:
+11.4MB de peso muerto, más caché huérfana de assets ya borrados. Por eso
+hay un `.gdignore` en `docs/` y en `assets/sprites/_sheets_raw/`. Si
+sospechás que hay basura empaquetada:
+
+```bash
+rm -rf .godot/imported          # se regenera sola en el próximo --import
 ```
 
 ### Firmar sin commitear la keystore

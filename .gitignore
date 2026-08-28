@@ -26,3 +26,10 @@ build/
 # Python (tools/)
 __pycache__/
 *.pyc
+
+# Hojas crudas de los sprite sheets, antes de partir y recortar. Sirven
+# para volver a partirlas sin regenerar; no hacen falta en el repo.
+assets/sprites/_sheets_raw/
+
+# docs/ tiene .gdignore: Godot no la importa, así que no hay .import que versionar
+docs/capturas/*.import

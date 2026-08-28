@@ -51,7 +51,13 @@ import urllib.request
 try:
     import numpy as np
     from PIL import Image
-    from scipy import ndimage
+
+    # El recorte de croma bueno vive en chroma_key.py: samplea el color
+    # con la mediana de un anillo metido hacia adentro, limpia las manchas
+    # de fondo atrapadas dentro del sujeto y corrige el halo verde. Acá
+    # había una copia más floja que se comía solo el fondo pegado al borde.
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from chroma_key import key_out, _border_color
 except ImportError:
     sys.exit("Faltan dependencias: pip install pillow numpy scipy")
 
@@ -67,8 +73,12 @@ USER_AGENT = (
     "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 )
 
-BG_COLOR_TOLERANCE = 65.0  # distancia RGB al color de fondo sampleado del borde
-BG_FEATHER_SIGMA = 2.0  # blur (px) del borde de la máscara, evita contorno duro
+
+# Margen que se descarta a cada lado de un corte, como fracción del lado
+# de la hoja: tira la línea divisoria y su antialiasing.
+GRID_LINE_PAD = 0.02
+# Misma tolerancia que usa chroma_key para decidir qué es fondo.
+CHROMA_TOLERANCE = 100.0
 
 STYLE_SUFFIX = (
     ", flat cartoon vector game-icon art style, bold clean black outline, "
@@ -179,12 +189,13 @@ ICON_ASSET = ("icon", "a bold cute app icon: a cartoon shoe squashing an angry c
 WALK_SHEETS: dict[str, dict] = {
         "hormiga_obrera_walk": {
         "prompt": (
-            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
-            "4 equal square cells, each cell shows the exact same cute cartoon "
+            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
+            "lines, NO borders and NO frames between them, the poses clearly "
+            "separated by wide empty background, each pose shows the exact same cute cartoon "
             "worker ant character (solid brown color all over, including legs "
             "and joints, big round eyes, three-quarter view) in a different leg "
             "position of a walking cycle, identical character design, size, "
-            "color and camera angle in all 4 cells, only the legs move between "
+            "color and camera angle in all 4 poses, only the legs move between "
             "cells, no pink or magenta color anywhere on the ant's body or legs"
         ),
         "grid": (2, 2),
@@ -195,10 +206,12 @@ WALK_SHEETS: dict[str, dict] = {
 
     "hormiga_ladrona_walk": {
         "prompt": (
-            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
-            "4 equal square cells, each cell shows the exact same cute cartoon golden ant wearing a black bandit eye mask, clutching a tiny sparkling blue diamond in its front legs, sly grin, small loot sack on its back, "
-            "identical character design, size, color and camera angle in all 4 cells, "
-            "only the legs move between cells, in a different position of a walking cycle"
+            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
+            "lines, NO borders and NO frames between them, the poses clearly "
+            "separated by wide empty background, each pose shows the exact same cute cartoon golden ant wearing a black bandit eye mask, clutching a tiny sparkling blue diamond in its front legs, sly grin, small loot sack on its back, "
+            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
+            "the character fills each pose the same amount, same color, "
+            "only the legs move between poses, in a different position of a walking cycle"
         ),
         "grid": (2, 2),
         "frame_size": (128, 128),
@@ -207,10 +220,12 @@ WALK_SHEETS: dict[str, dict] = {
     },
     "abejorro_pinata_walk": {
         "prompt": (
-            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
-            "4 equal square cells, each cell shows the exact same cute cartoon bumblebee whose body is made of a colorful layered paper pinata, orange and black crepe-paper fringe, tiny paper wings, festive party look, "
-            "identical character design, size, color and camera angle in all 4 cells, "
-            "only the wings and the paper fringe move between cells"
+            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
+            "lines, NO borders and NO frames between them, the poses clearly "
+            "separated by wide empty background, each pose shows the exact same cute cartoon bumblebee whose body is made of a colorful layered paper pinata, orange and black crepe-paper fringe, tiny paper wings, festive party look, "
+            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
+            "the character fills each pose the same amount, same color, "
+            "only the wings and the paper fringe move between poses"
         ),
         "grid": (2, 2),
         "frame_size": (128, 128),
@@ -219,10 +234,12 @@ WALK_SHEETS: dict[str, dict] = {
     },
     "mantis_cronometro_walk": {
         "prompt": (
-            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
-            "4 equal square cells, each cell shows the exact same cute cartoon praying mantis, teal-green body, with a real analog stopwatch embedded in its chest showing visible clock hands, raised scythe arms, focused stare, "
-            "identical character design, size, color and camera angle in all 4 cells, "
-            "only the legs move between cells, in a different position of a walking cycle"
+            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
+            "lines, NO borders and NO frames between them, the poses clearly "
+            "separated by wide empty background, each pose shows the exact same cute cartoon praying mantis, teal-green body, with a real analog stopwatch embedded in its chest showing visible clock hands, raised scythe arms, focused stare, "
+            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
+            "the character fills each pose the same amount, same color, "
+            "only the legs move between poses, in a different position of a walking cycle"
         ),
         "grid": (2, 2),
         "frame_size": (128, 128),
@@ -231,10 +248,12 @@ WALK_SHEETS: dict[str, dict] = {
     },
     "escarabajo_radiactivo_walk": {
         "prompt": (
-            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
-            "4 equal square cells, each cell shows the exact same cute cartoon beetle glowing toxic neon green, radioactive trefoil symbol markings on its shell, dripping glowing green ooze, faint green light from the seams, "
-            "identical character design, size, color and camera angle in all 4 cells, "
-            "only the legs move between cells, in a different position of a walking cycle"
+            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
+            "lines, NO borders and NO frames between them, the poses clearly "
+            "separated by wide empty background, each pose shows the exact same cute cartoon beetle glowing toxic neon green, radioactive trefoil symbol markings on its shell, dripping glowing green ooze, faint green light from the seams, "
+            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
+            "the character fills each pose the same amount, same color, "
+            "only the legs move between poses, in a different position of a walking cycle"
         ),
         "grid": (2, 2),
         "frame_size": (128, 128),
@@ -243,10 +262,12 @@ WALK_SHEETS: dict[str, dict] = {
     },
     "lombriz_gigante_walk": {
         "prompt": (
-            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
-            "4 equal square cells, each cell shows the exact same cute cartoon giant earthworm, thick pink segmented glossy body, small simple friendly face at one end, damp soil crumbs stuck to its skin, "
-            "identical character design, size, color and camera angle in all 4 cells, "
-            "only the body coils and stretches between cells, like an earthworm crawling forward, the head stays the same"
+            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
+            "lines, NO borders and NO frames between them, the poses clearly "
+            "separated by wide empty background, each pose shows the exact same cute cartoon giant earthworm, thick pink segmented glossy body, small simple friendly face at one end, damp soil crumbs stuck to its skin, "
+            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
+            "the character fills each pose the same amount, same color, "
+            "only the body coils and stretches between poses, like an earthworm crawling forward, the head stays the same"
         ),
         "grid": (2, 2),
         "frame_size": (128, 128),
@@ -255,10 +276,12 @@ WALK_SHEETS: dict[str, dict] = {
     },
     "mutante_volador_walk": {
         "prompt": (
-            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
-            "4 equal square cells, each cell shows the exact same cute cartoon mutant flying insect with four translucent purple wings, an extra pair of asymmetric eyes on its forehead, slightly lumpy mutated body, "
-            "identical character design, size, color and camera angle in all 4 cells, "
-            "only the four wings change position between cells"
+            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
+            "lines, NO borders and NO frames between them, the poses clearly "
+            "separated by wide empty background, each pose shows the exact same cute cartoon mutant flying insect with a reddish-brown body, four purple wings, an extra pair of asymmetric eyes on its forehead, slightly lumpy mutated body, brown and purple color scheme, no green body, "
+            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
+            "the character fills each pose the same amount, same color, "
+            "only the four wings change position between poses"
         ),
         "grid": (2, 2),
         "frame_size": (128, 128),
@@ -267,10 +290,12 @@ WALK_SHEETS: dict[str, dict] = {
     },
     "centella_blindada_walk": {
         "prompt": (
-            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
-            "4 equal square cells, each cell shows the exact same cute cartoon insect encased in riveted blue electric armor plating, arcs of white-blue energy sparking between the plates, glowing seams, heavy stance, "
-            "identical character design, size, color and camera angle in all 4 cells, "
-            "only the legs and the energy arcs move between cells"
+            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
+            "lines, NO borders and NO frames between them, the poses clearly "
+            "separated by wide empty background, each pose shows the exact same cute cartoon insect encased in riveted blue electric armor plating, arcs of white-blue energy sparking between the plates, glowing seams, heavy stance, "
+            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
+            "the character fills each pose the same amount, same color, "
+            "only the legs and the energy arcs move between poses"
         ),
         "grid": (2, 2),
         "frame_size": (128, 128),
@@ -279,10 +304,12 @@ WALK_SHEETS: dict[str, dict] = {
     },
     "rayo_insecto_walk": {
         "prompt": (
-            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
-            "4 equal square cells, each cell shows the exact same cute cartoon insect whose entire body is made of bright yellow lightning bolts and crackling energy, semi-transparent glowing form, extremely fast look, "
-            "identical character design, size, color and camera angle in all 4 cells, "
-            "only the lightning arcs and the energy streaks change shape between cells, the silhouette stays the same"
+            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
+            "lines, NO borders and NO frames between them, the poses clearly "
+            "separated by wide empty background, each pose shows the exact same cute cartoon insect with a SOLID OPAQUE bright yellow and white body shaped from lightning bolts, sharp zigzag edges, crackling electric arcs around it, fully opaque with a clear dark outline, no transparency anywhere, no green tones, "
+            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
+            "the character fills each pose the same amount, same color, "
+            "only the lightning arcs and the energy streaks change shape between poses, the silhouette stays the same"
         ),
         "grid": (2, 2),
         "frame_size": (128, 128),
@@ -291,10 +318,12 @@ WALK_SHEETS: dict[str, dict] = {
     },
     "coraza_antigua_walk": {
         "prompt": (
-            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
-            "4 equal square cells, each cell shows the exact same cute cartoon insect wearing weathered ancient bronze beetle-shell armor with green patina, engraved tribal glyphs on the plates, chipped edges, "
-            "identical character design, size, color and camera angle in all 4 cells, "
-            "only the legs move between cells, in a different position of a walking cycle"
+            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
+            "lines, NO borders and NO frames between them, the poses clearly "
+            "separated by wide empty background, each pose shows the exact same cute cartoon insect wearing weathered ancient bronze beetle-shell armor, the metal heavily oxidized to a blue-green verdigris patina over dark bronze, engraved tribal glyphs on the plates, chipped edges, teal-and-bronze color scheme, not brown, "
+            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
+            "the character fills each pose the same amount, same color, "
+            "only the legs move between poses, in a different position of a walking cycle"
         ),
         "grid": (2, 2),
         "frame_size": (128, 128),
@@ -303,10 +332,12 @@ WALK_SHEETS: dict[str, dict] = {
     },
     "reina_primordial_walk": {
         "prompt": (
-            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
-            "4 equal square cells, each cell shows the exact same majestic cartoon insect queen, large regal body in deep purple and gold, ornate crown-like antennae, layered iridescent wings, glowing amber eyes, commanding pose, "
-            "identical character design, size, color and camera angle in all 4 cells, "
-            "only the wings and the legs move between cells"
+            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
+            "lines, NO borders and NO frames between them, the poses clearly "
+            "separated by wide empty background, each pose shows the exact same majestic cartoon insect queen, large regal body in deep purple and gold, ornate crown-like antennae, layered iridescent wings, glowing amber eyes, commanding pose, "
+            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
+            "the character fills each pose the same amount, same color, "
+            "only the wings and the legs move between poses"
         ),
         "grid": (2, 2),
         "frame_size": (128, 128),
@@ -316,22 +347,79 @@ WALK_SHEETS: dict[str, dict] = {
 }
 
 
+def _find_dividers(rgb: "np.ndarray", key: "np.ndarray", count: int, axis: int) -> list[int]:
+    """Posiciones donde cortar la hoja: el centro del hueco de fondo que
+    separa una fila/columna de poses de la siguiente.
+
+    Antes se pedía una línea de grilla dibujada y se cortaba sobre ella.
+    Mal negocio: el modelo dibuja la grilla donde quiere y de más — en la
+    hoja de hormiga_obrera puso líneas cada 1/4 de ancho pero cada bicho
+    ocupaba 2 columnas, así que aun cortando bien quedaba una línea
+    cruzando el medio de cada cuadro. Ahora se pide fondo vacío entre las
+    poses y se corta en el medio de ese vacío, que no deja nada que borrar.
+    """
+    length = rgb.shape[axis]
+    dist = np.sqrt(((rgb - key) ** 2).sum(axis=-1))
+    # Fracción de fondo por fila (axis=0) o por columna (axis=1).
+    empty = (dist < CHROMA_TOLERANCE).mean(axis=1 - axis) > 0.985
+
+    positions = []
+    for i in range(1, count + 1):
+        center = int(length * i / (count + 1))
+        window = max(int(length * 0.18), 4)
+        lo, hi = max(center - window, 1), min(center + window, length - 1)
+
+        # Corrida más larga de fondo dentro de la ventana; se corta al medio.
+        best_len = best_mid = 0
+        run_start = None
+        for pos in range(lo, hi):
+            if empty[pos]:
+                if run_start is None:
+                    run_start = pos
+            elif run_start is not None:
+                if pos - run_start > best_len:
+                    best_len, best_mid = pos - run_start, (run_start + pos) // 2
+                run_start = None
+        if run_start is not None and hi - run_start > best_len:
+            best_len, best_mid = hi - run_start, (run_start + hi) // 2
+
+        # Sin hueco claro se cae al centro teórico, que es mejor que nada.
+        positions.append(best_mid if best_len >= 2 else center)
+    return positions
+
+
 def split_walk_sheet(img: "Image.Image", cols: int, rows: int, frame_size: tuple[int, int]) -> list["Image.Image"]:
-    """Parte una imagen en una grilla cols x rows, escalando cada celda a
-    frame_size. Recorta un pequeño margen interno por celda para evitar
-    que la línea de grilla que pidió el prompt quede pegada al sujeto."""
-    w, h = img.size
-    cell_w, cell_h = w / cols, h / rows
-    trim = 0.04  # 4% de margen interno por celda
+    """Parte una hoja en una grilla cols x rows y devuelve los cuadros ya
+    recortados de fondo y escalados a frame_size.
+
+    Dos cosas que no son obvias:
+
+    1. Los cortes se hacen en las divisorias **detectadas**, no al 50%
+       teórico (ver _find_dividers). Además se descarta un margen a cada
+       lado del corte para tirar la línea misma.
+
+    2. El croma se saca **por celda ya recortada**, no sobre la hoja
+       entera: las líneas de la grilla parten el fondo en regiones que no
+       tocan el borde de la hoja, así que un flood-fill desde ese borde no
+       las alcanza y quedaban bloques de verde vivos dentro del cuadro
+       (le pasó a mantis_cronometro). Recortando primero, el fondo de cada
+       celda toca su propio borde y sale entero.
+    """
+    rgb = np.asarray(img.convert("RGB")).astype(np.float32)
+    key = _border_color(rgb)
+    x_cuts = [0] + _find_dividers(rgb, key, cols - 1, 1) + [img.width]
+    y_cuts = [0] + _find_dividers(rgb, key, rows - 1, 0) + [img.height]
+
+    pad = max(int(min(img.size) * GRID_LINE_PAD), 2)
     frames = []
     for row in range(rows):
         for col in range(cols):
-            left = (col + trim) * cell_w
-            top = (row + trim) * cell_h
-            right = (col + 1 - trim) * cell_w
-            bottom = (row + 1 - trim) * cell_h
-            cell = img.crop((int(left), int(top), int(right), int(bottom)))
-            frames.append(fit_transparent(cell, frame_size))
+            left = x_cuts[col] + (pad if col > 0 else pad)
+            right = x_cuts[col + 1] - pad
+            top = y_cuts[row] + (pad if row > 0 else pad)
+            bottom = y_cuts[row + 1] - pad
+            cell = img.crop((left, top, right, bottom))
+            frames.append(fit_transparent(key_out(cell), frame_size))
     return frames
 
 
@@ -361,7 +449,15 @@ def generate_walk_sheet(name: str, api_key: str, model: str, skip_existing: bool
         raise RuntimeError(f"[{name}] la respuesta no trae b64_json: {items[0]}")
 
     img = Image.open(io.BytesIO(base64.b64decode(b64)))
-    img = remove_chroma_key(img)
+
+    # La hoja cruda se guarda: partirla y recortarla es post-proceso local,
+    # y si hay que ajustar el corte no hace falta volver a pagar la
+    # generación. .gitignore la deja afuera del repo.
+    raw_dir = os.path.join(REPO_ROOT, "assets", "sprites", "_sheets_raw")
+    os.makedirs(raw_dir, exist_ok=True)
+    img.save(os.path.join(raw_dir, f"{name}.png"), "PNG")
+
+    # Ojo: acá NO se saca el croma. split_walk_sheet lo hace por celda.
     frames = split_walk_sheet(img, cols, rows, spec["frame_size"])
 
     os.makedirs(dest_dir, exist_ok=True)
@@ -430,32 +526,9 @@ def _call_images_api(api_key: str, model: str, prompt: str, aspect_ratio: str | 
 
 
 def remove_chroma_key(img: "Image.Image") -> "Image.Image":
-    """Quita el fondo sin asumir un color fijo: samplea el color real del
-    borde de la imagen y hace flood-fill (componentes conexas) desde ese
-    borde, así solo se borra lo que está *conectado* a él (evita agujeros
-    si el sujeto tiene, por casualidad, un tono parecido en el medio)."""
-    img = img.convert("RGBA")
-    arr = np.array(img).astype(np.float32)
-    rgb = arr[..., :3]
-    h, w = rgb.shape[:2]
-
-    border_mask = np.zeros((h, w), dtype=bool)
-    border_mask[0, :] = border_mask[-1, :] = True
-    border_mask[:, 0] = border_mask[:, -1] = True
-    key_color = rgb[border_mask].mean(axis=0)
-
-    dist = np.sqrt(((rgb - key_color) ** 2).sum(axis=-1))
-    bg_candidate = dist < BG_COLOR_TOLERANCE
-
-    labeled, _ = ndimage.label(bg_candidate)
-    border_labels = set(labeled[border_mask].tolist()) - {0}
-    connected_bg = np.isin(labeled, list(border_labels)) if border_labels else np.zeros((h, w), dtype=bool)
-
-    alpha = np.where(connected_bg, 0.0, 255.0)
-    alpha = ndimage.gaussian_filter(alpha, sigma=BG_FEATHER_SIGMA)
-    arr[..., 3] = np.minimum(arr[..., 3], alpha)
-
-    return Image.fromarray(arr.astype(np.uint8), mode="RGBA")
+    """Saca el fondo croma. Delega en chroma_key.key_out para que los
+    sprites sueltos y los sprite sheets se recorten con el mismo criterio."""
+    return key_out(img)
 
 
 def fit_transparent(img: "Image.Image", size: tuple[int, int]) -> "Image.Image":

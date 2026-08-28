@@ -18,8 +18,8 @@ vertical** (ver más abajo — fue un bug real, ya corregido), HUD con
 fuente grande y contorno para que se lea bien, niveles de 30 segundos,
 historia narrada por **Sofía** con retratos reales por emoción
 (neutral/feliz/triste/enojada/preocupada/sorprendida). Los **5 insectos
-comunes** tienen ciclo de caminata animado de 4 cuadros; los 10
-incógnitos usan un cuadro fijo con balanceo procedural.
+comunes** y los **10 incógnitos** tienen ciclo de caminata animado de 4
+cuadros, más el balanceo procedural que llevan todos.
 
 **Jefes cada 5 niveles**: los niveles múltiplo de 5 son pelea de jefe,
 con **dos barras de vida** (la del jefe arriba, la de Sofía abajo) y 90
@@ -52,6 +52,14 @@ y levantándose en el punto del tap; al matar un insecto salta una
 aplastado**. La pantalla ahora **usa todo el alto** del celular — antes
 `stretch/aspect` estaba en `keep` y dejaba franjas negras arriba y abajo
 en pantallas 19.5:9, y el HUD se cortaba a los costados.
+
+**Lo que NO tiene que entrar al APK**: cualquier carpeta dentro del
+proyecto que no se use en runtime igual la importa Godot y viaja
+empaquetada. Estaban entrando las **hojas crudas** de los sprite sheets
+(7.5MB, insumo de generación) y las **capturas del README** (3.9MB), más
+12.5MB de caché huérfana de assets viejos. Un `.gdignore` en cada carpeta
+y borrar `.godot/imported` para regenerarla limpia: las texturas pasaron
+de 34.8MB a 11.1MB y el APK de 97.6MB a 82MB, con más arte que antes.
 
 **Sobre el tamaño**: antes este APK salía de 134MB y no entraba en
 GitHub. No era culpa de los assets: el Android Gradle Plugin, con
