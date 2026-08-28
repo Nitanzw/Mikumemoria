@@ -15,6 +15,20 @@ const BOSS_COUNT := 10
 const CYCLE_HEALTH_MULT := 1.6
 const CYCLE_SPEED_MULT := 1.12
 
+## Cuánta vida extra por escalón de dificultad del nivel (cada 10 niveles).
+const TIER_HEALTH_STEP := 0.18
+
+## Umbrales de vida (fracción) donde el jefe cambia de fase.
+const PHASE_2_HP := 0.6
+const PHASE_3_HP := 0.3
+
+## Segundos entre ataques, por fase. En la fase 3 ataca casi al doble.
+const PHASE_COOLDOWNS := [
+	Vector2(2.2, 3.2),
+	Vector2(1.5, 2.4),
+	Vector2(0.9, 1.6),
+]
+
 # --- Habilidades ---
 #
 # summon    : invoca minions. Mientras haya minions vivos el jefe queda
@@ -32,96 +46,148 @@ const CYCLE_SPEED_MULT := 1.12
 # heal      : si pasás demasiado tiempo sin pegarle, se cura.
 # haste     : se acelera a sí mismo y a sus minions por un rato.
 # enrage    : bajo el 30% de vida, se pone mucho más rápido y agresivo.
+#
+# --- Movimiento ---
+#
+# Antes todos los jefes patrullaban de izquierda a derecha a su
+# velocidad, así que se peleaban todos igual. Ahora cada uno tiene su
+# forma de moverse, que es la mitad de lo que lo hace difícil:
+#
+# patrol    : izquierda-derecha clásico.
+# zigzag    : cruza en diagonal rebotando arriba y abajo.
+# swoop     : baja en picada hacia Sofía y vuelve arriba.
+# strafe    : ráfagas laterales rápidas con pausas cortas.
+# blink     : desaparece y reaparece en otro lado.
+# orbit     : gira en círculo alrededor del centro.
+# pendulum  : va y viene acelerando en el medio, como un péndulo.
+# erratic   : cambia de rumbo de golpe, impredecible.
+# advance   : baja de a poco hacia Sofía; te obliga a apurarte.
+#
+# --- Fases ---
+#
+# Cada jefe tiene 3 fases por vida (100-60%, 60-30%, <30%). En cada
+# fase ataca más seguido y suma una habilidad. Antes sorteaba una
+# habilidad al azar cada 3-5s toda la pelea, y por eso se sentía plano.
 
 const BOSSES := {
 	1: {
 		"name": "Hormiga Ladrona de Diamantes",
 		"title": "la que te vacía los bolsillos",
 		"sprite": "res://assets/sprites/insects/hormiga_ladrona.png",
-		"health": 18,
-		"speed": 170.0,
+		"health": 20,
+		"speed": 175.0,
 		"abilities": ["steal", "summon"],
+		"movement": "strafe",
+		"pattern": ["summon", "dash", "dash"],
+		"phase_unlocks": ["", "dash", "haste"],
 		"taunt": "¡Eh! ¡Esas monedas son mías!",
 	},
 	2: {
 		"name": "Abejorro Piñata",
 		"title": "el que explota en bichos",
 		"sprite": "res://assets/sprites/insects/abejorro_pinata.png",
-		"health": 22,
-		"speed": 150.0,
+		"health": 26,
+		"speed": 165.0,
 		"abilities": ["summon", "haste"],
+		"movement": "zigzag",
+		"pattern": ["summon", "haste", "summon"],
+		"phase_unlocks": ["", "spit", "dash"],
 		"taunt": "Cada golpe le saca más bichos de adentro.",
 	},
 	3: {
 		"name": "Mantis Cronómetro",
 		"title": "la que te roba el tiempo",
 		"sprite": "res://assets/sprites/insects/mantis_cronometro.png",
-		"health": 26,
-		"speed": 140.0,
+		"health": 30,
+		"speed": 160.0,
 		"abilities": ["haste", "dash", "summon"],
+		"movement": "blink",
+		"pattern": ["dash", "haste", "summon", "dash"],
+		"phase_unlocks": ["", "spit", "split"],
 		"taunt": "El reloj corre más rápido cuando ella quiere.",
 	},
 	4: {
 		"name": "Escarabajo Radiactivo",
 		"title": "el que no se deja tocar",
 		"sprite": "res://assets/sprites/insects/escarabajo_radiactivo.png",
-		"health": 32,
-		"speed": 80.0,
+		"health": 36,
+		"speed": 95.0,
 		"abilities": ["shield", "spit"],
+		"movement": "advance",
+		"pattern": ["shield", "spit", "spit", "summon"],
+		"phase_unlocks": ["", "spit", "enrage"],
 		"taunt": "Ese caparazón aguanta. Pegale seguido, sin aflojar.",
 	},
 	5: {
 		"name": "Lombriz Gigante",
 		"title": "la que se hunde y aparece",
 		"sprite": "res://assets/sprites/insects/lombriz_gigante.png",
-		"health": 30,
-		"speed": 70.0,
+		"health": 34,
+		"speed": 85.0,
 		"abilities": ["burrow", "heal", "summon"],
+		"movement": "blink",
+		"pattern": ["burrow", "summon", "heal", "burrow"],
+		"phase_unlocks": ["", "spit", "haste"],
 		"taunt": "Si la perdés de vista, se cura.",
 	},
 	6: {
 		"name": "Mutagénesis Voladora",
 		"title": "la que se multiplica",
 		"sprite": "res://assets/sprites/insects/mutante_volador.png",
-		"health": 28,
-		"speed": 220.0,
+		"health": 32,
+		"speed": 235.0,
 		"abilities": ["split", "dash"],
+		"movement": "erratic",
+		"pattern": ["split", "dash", "dash"],
+		"phase_unlocks": ["", "haste", "summon"],
 		"taunt": "Solo una de todas esas es la de verdad.",
 	},
 	7: {
 		"name": "Centella Blindada",
 		"title": "la que carga y embiste",
 		"sprite": "res://assets/sprites/insects/centella_blindada.png",
-		"health": 38,
-		"speed": 130.0,
+		"health": 42,
+		"speed": 145.0,
 		"abilities": ["shield", "dash", "haste"],
+		"movement": "swoop",
+		"pattern": ["shield", "dash", "haste", "dash"],
+		"phase_unlocks": ["", "summon", "enrage"],
 		"taunt": "Blindada y con ganas de chocarte.",
 	},
 	8: {
 		"name": "Rayo Insecto",
 		"title": "el que no vas a poder seguir",
 		"sprite": "res://assets/sprites/insects/rayo_insecto.png",
-		"health": 26,
-		"speed": 380.0,
+		"health": 30,
+		"speed": 400.0,
 		"abilities": ["haste", "split", "enrage"],
+		"movement": "erratic",
+		"pattern": ["haste", "split", "dash"],
+		"phase_unlocks": ["", "dash", "enrage"],
 		"taunt": "Es rapidísimo. Anticipá, no persigas.",
 	},
 	9: {
 		"name": "Coraza Antigua",
 		"title": "el que trae guardias",
 		"sprite": "res://assets/sprites/insects/coraza_antigua.png",
-		"health": 48,
-		"speed": 60.0,
+		"health": 54,
+		"speed": 75.0,
 		"abilities": ["summon", "shield", "heal"],
+		"movement": "pendulum",
+		"pattern": ["summon", "shield", "heal", "summon"],
+		"phase_unlocks": ["", "spit", "dash"],
 		"taunt": "No te va a dejar acercarte solo.",
 	},
 	10: {
 		"name": "Reina Primordial",
 		"title": "la que empezó todo",
 		"sprite": "res://assets/sprites/insects/reina_primordial.png",
-		"health": 60,
-		"speed": 110.0,
+		"health": 68,
+		"speed": 125.0,
 		"abilities": ["summon", "shield", "spit", "heal", "enrage"],
+		"movement": "orbit",
+		"pattern": ["summon", "shield", "spit", "dash", "summon", "spit"],
+		"phase_unlocks": ["", "split", "enrage"],
 		"taunt": "Todo lo que aprendiste, junto. Suerte.",
 	},
 }
@@ -133,13 +199,39 @@ const SUMMON_POOL := ["hormiga_obrera", "cucaracha_electrica", "mosca_pesada", "
 ## Devuelve la config de un jefe ya escalada según la vuelta al roster.
 ## cycle 0 son los primeros 10 jefes (niveles 5 a 50); cycle 1 son los
 ## siguientes 10 (55 a 100), con más vida y velocidad, y así.
-static func get_boss_config(boss_id: int, cycle: int = 0) -> Dictionary:
+## `tier` es el escalón de dificultad del nivel (LevelManager). Sin él,
+## la vida del jefe queda fija mientras el daño del jugador crece hasta
+## 7x entre el arma, el árbol y los guantes: la Reina Primordial se caía
+## en 10 golpes con un equipo completo. Con el escalón, el jefe acompaña
+## la progresión y la pelea sigue durando lo mismo.
+static func get_boss_config(boss_id: int, cycle: int = 0, tier: int = 0) -> Dictionary:
 	var base: Dictionary = BOSSES.get(boss_id, BOSSES[1])
 	var config := base.duplicate(true)
+
+	# `abilities` se arma con todo lo que el jefe realmente puede llegar a
+	# hacer: lo declarado más lo que usa su patrón y lo que desbloquea por
+	# fase. Si no, has_ability() miente — el robo, la curación y el enrage
+	# se consultan por ahí y no se dispararían nunca para un jefe que los
+	# tiene en el patrón pero no en la lista.
+	var all_abilities: Array = config.get("abilities", []).duplicate()
+	for ability in config.get("pattern", []):
+		if ability != "" and not (ability in all_abilities):
+			all_abilities.append(ability)
+	for ability in config.get("phase_unlocks", []):
+		if ability != "" and not (ability in all_abilities):
+			all_abilities.append(ability)
+	config["abilities"] = all_abilities
+
+	var health := float(base["health"])
+	var speed := float(base["speed"])
 	if cycle > 0:
-		config["health"] = int(round(float(base["health"]) * pow(CYCLE_HEALTH_MULT, cycle)))
-		config["speed"] = float(base["speed"]) * pow(CYCLE_SPEED_MULT, cycle)
+		health *= pow(CYCLE_HEALTH_MULT, cycle)
+		speed *= pow(CYCLE_SPEED_MULT, cycle)
 		config["name"] = "%s +%d" % [base["name"], cycle]
+
+	health *= 1.0 + float(maxi(tier, 0)) * TIER_HEALTH_STEP
+	config["health"] = int(round(health))
+	config["speed"] = speed
 	return config
 
 static func has_ability(config: Dictionary, ability: String) -> bool:

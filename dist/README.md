@@ -32,6 +32,22 @@ dejás tranquilo y enfurecerse con poca vida. Cuando el jefe está
 protegido su barra se pone azul. Al terminar la vuelta de 10 vuelven a
 aparecer más fuertes.
 
+**Los jefes ya no son un insecto grande que va de izquierda a derecha.**
+Cada uno tiene su forma de moverse (baja en picada, reaparece lejos,
+gira en círculo, se acerca de a poco) y un **patrón de ataque en orden**
+que se puede aprender. Al 60% y al 30% de vida cambian de fase: atacan
+casi al doble de rápido, invocan más refuerzos y desbloquean una
+habilidad nueva. Los refuerzos ahora van al doble de velocidad.
+
+**La dificultad sube cada 10 niveles** y Sofía lo avisa: los bichos van
+más rápido, salen más seguido y aguantan más. La vida de los jefes
+también escala, porque antes te mejorabas hasta hacer 7 veces más daño y
+el jefe seguía igual: la Reina Primordial caía en 10 golpes.
+
+**Objetos en la tienda**: mejoras pasivas que no hay que equipar —
+guantes (+daño), botiquín (+corazones en las peleas de jefe), delantal
+(bloquea golpes) y repelente (frena a los refuerzos).
+
 **Vidas**: 3 corazones, se pierde uno solo al perder una pelea de jefe.
 Regeneran una cada 10 minutos de tiempo real (también con el juego
 cerrado) o se recargan pagando 150 monedas tocando los corazones en el

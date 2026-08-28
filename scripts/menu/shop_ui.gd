@@ -1,7 +1,11 @@
 extends Control
 
-## Tienda de armas: genera una fila por arma en WeaponSystem.WEAPONS
-## y permite comprar/equipar contra el mismo estado que usa Player.
+## Tienda: dos secciones.
+##
+## **Armas** (WeaponSystem): se compran una vez y se equipan; solo una a
+## la vez. **Objetos** (ItemSystem): mejoras pasivas por niveles que
+## hacen efecto solas, pensadas para aguantar las peleas de jefe —
+## corazones extra, bloquear golpes, frenar a los refuerzos.
 ##
 ## Sobre el layout: la versión anterior se salía de la pantalla a la
 ## derecha (aparecía scroll horizontal y los botones quedaban cortados).
@@ -34,8 +38,90 @@ func _refresh() -> void:
 	for child in list.get_children():
 		child.queue_free()
 
+	list.add_child(_build_section("Armas"))
 	for weapon_name in WeaponSystem.get_all_weapon_names():
 		list.add_child(_build_row(weapon_name))
+
+	list.add_child(_build_section("Objetos"))
+	for item_id in ItemSystem.get_all_item_ids():
+		list.add_child(_build_item_row(item_id))
+
+## Separador con el nombre de la sección: sin esto, armas y objetos
+## quedaban mezclados en una sola lista larga y no se entendía qué era qué.
+func _build_section(title: String) -> Control:
+	var label := Label.new()
+	label.text = title
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UITheme.style_title(label, 24)
+	label.custom_minimum_size = Vector2(0, 44)
+	return label
+
+## Fila de objeto pasivo. Igual que la de arma, pero muestra el nivel
+## comprado sobre el máximo, porque son mejoras acumulables.
+func _build_item_row(item_id: String) -> Control:
+	var data := ItemSystem.get_item(item_id)
+	var level := ItemSystem.get_level(GameManager.items, item_id)
+	var max_level := ItemSystem.get_max_level(item_id)
+
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UITheme.card_style())
+
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	card.add_child(box)
+
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 12)
+
+	var icon_path: String = data.get("icon", "")
+	if icon_path != "" and ResourceLoader.exists(icon_path):
+		var icon := TextureRect.new()
+		icon.texture = load(icon_path)
+		icon.custom_minimum_size = Vector2(56, 56)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		top.add_child(icon)
+
+	var info := VBoxContainer.new()
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.add_theme_constant_override("separation", 2)
+
+	var name_label := Label.new()
+	name_label.text = "%s  ·  %d/%d" % [data.get("display_name", item_id), level, max_level]
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UITheme.style_body(name_label, 21)
+	info.add_child(name_label)
+
+	var desc := Label.new()
+	desc.text = str(data.get("description", ""))
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UITheme.style_body(desc, 16)
+	desc.add_theme_color_override("font_color", Color(0.92, 0.88, 0.78))
+	info.add_child(desc)
+
+	top.add_child(info)
+	box.add_child(top)
+
+	var button := Button.new()
+	button.custom_minimum_size = Vector2(0, 54)
+	button.add_theme_font_size_override("font_size", 20)
+	UITheme.style_wood_button(button)
+
+	var cost := ItemSystem.get_cost(GameManager.items, item_id)
+	if cost < 0:
+		button.text = "Al máximo"
+		button.disabled = true
+	else:
+		button.text = ("Comprar · %d" % cost) if level == 0 else ("Mejorar · %d" % cost)
+		button.disabled = GameManager.player_coins < cost
+		button.pressed.connect(func():
+			if GameManager.purchase_item(item_id):
+				AudioManager.play_sfx("unlock")
+				_refresh()
+		)
+
+	box.add_child(button)
+	return card
 
 func _build_row(weapon_name: String) -> Control:
 	var data := WeaponSystem.get_weapon_data(weapon_name)

@@ -280,6 +280,76 @@ estilo viejo — los buenos están en `ARTE_PEDIDO.md`.
   al siguiente nivel; dentro del mismo capítulo sigue yendo directo,
   para no interrumpir el ritmo.
 
+## Dificultad: por qué el juego se volvía más fácil al avanzar
+
+Tres cosas se arreglaron juntas, porque el problema era el mismo: **el
+jugador se hacía más fuerte y el juego no**.
+
+**1. No había escalado dentro del capítulo.** `enemy_speed_mult` venía
+solo de la config del capítulo, y un capítulo son **100 niveles**. Ibas
+comprando armas y subiendo el árbol mientras los bichos del nivel 99
+eran idénticos a los del 1. Ahora la dificultad sube por **escalones de
+10 niveles** (`LevelManager.get_difficulty_tier`): +8% de velocidad, los
+bichos salen un 6% más seguido y suman +1 de vida cada 3 escalones. En
+cada escalón nuevo Sofía lo dice en voz alta, una sola vez por escalón
+(rejugar el nivel 10 no repite el cartel).
+
+**2. La vida de los jefes era fija.** Entre el arma, la rama Fuerza y los
+guantes, el daño del jugador llega a **7x** el inicial; la vida del jefe
+solo iba de 20 a 68. Con equipo completo la Reina Primordial caía en 10
+golpes. Ahora la vida del jefe escala con el escalón del nivel
+(`BossData.TIER_HEALTH_STEP`), y las peleas quedan en 20-44 golpes sobre
+los 90 segundos — un golpe cada 2 a 4.5 segundos, contando las ventanas
+en que el jefe es invulnerable.
+
+**3. Los jefes se peleaban todos igual.** Ver abajo.
+
+## Jefes: movimiento y patrones
+
+Antes **todos** los jefes hacían lo mismo: patrullar de izquierda a
+derecha a la altura fija `TOP_MARGIN`, y sortear una habilidad al azar
+cada 3-5 segundos. Cambiaba el sprite y la vida, no la pelea.
+
+**Movimiento**: cada jefe tiene el suyo (`movement` en `BossData`) —
+`zigzag`, `swoop` (baja en picada y vuelve), `strafe` (ráfagas laterales
+con pausas), `blink` (reaparece lejos), `orbit`, `pendulum` (frena en las
+puntas, y ahí es cuando le pegás), `erratic`, `advance` (baja de a poco
+hacia Sofía a medida que pierde vida) y el `patrol` de siempre.
+
+**Patrón de ataque**: la lista `pattern` se recorre **en orden y en
+bucle**, no al azar. Eso es lo que hace que la pelea se pueda aprender:
+sabés que después de la invocación viene la embestida. Si el ataque que
+toca no se puede usar ahora (ya hay minions, ya hay escudo), pasa al
+siguiente en vez de perder el turno.
+
+**Fases**: al 60% y al 30% de vida el jefe cambia de fase. En cada una
+ataca más seguido (`PHASE_COOLDOWNS`: de 2.2-3.2s a 0.9-1.6s), se acelera
+un 18%, invoca un refuerzo más y **desbloquea una habilidad nueva**
+(`phase_unlocks`). Lo anuncia, así se entiende que se puso peor.
+
+**Los minions** iban a 1.1x de velocidad y llegaban tardísimo: daba
+tiempo de limpiarlos sin despeinarse. Ahora van a 2x, y más en las
+vueltas siguientes al roster.
+
+## Objetos pasivos (`ItemSystem`)
+
+La tienda tiene dos secciones. Las **armas** se equipan de a una; los
+**objetos** son mejoras por niveles que hacen efecto solas y están
+pensadas para aguantar las peleas de jefe:
+
+| Objeto | Qué hace |
+|---|---|
+| Guantes de Trabajo | +1 de daño plano por nivel |
+| Botiquín de la Abuela | +2 corazones en las peleas de jefe |
+| Delantal Reforzado | Bloquea 1 de cada N golpes recibidos |
+| Repelente Casero | Los refuerzos del jefe vienen más lentos |
+
+El daño de los guantes se suma **después** del multiplicador del árbol, a
+propósito: si se sumara antes, la rama Fuerza lo escalaría y dos mejoras
+baratas juntas se volverían enormes. Y el Delantal cuenta golpes en vez
+de tirar al azar, para que se pueda confiar en cuándo te toca aguantar
+uno.
+
 ## Jefes, vidas y selector de niveles
 
 - **Pelea de jefe cada 5 niveles** (`LevelManager.is_boss_level`). Dos

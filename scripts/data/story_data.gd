@@ -87,6 +87,38 @@ const ENDING := [
 	{"speaker": "Sofía", "emotion": "happy", "text": "No hace falta que sepa el resto. Igual, por las dudas, el zapato me lo guardo cerca."},
 ]
 
+## Aviso de escalón de dificultad: sale cada 10 niveles, cuando los
+## insectos se ponen más rápidos y aguantan más. Va rotando para que no
+## sea siempre el mismo cartel.
+const DIFFICULTY_WARNINGS := [
+	[
+		{"speaker": "Sofía", "emotion": "surprised", "text": "Pará... estos vienen más rápido que los de antes."},
+		{"speaker": "Sofía", "emotion": "worried", "text": "Y aguantan más. Con el zapato solo no me alcanza mucho más."},
+		{"speaker": "Sofía", "emotion": "neutral", "text": "Mejor paso por la tienda antes del próximo. Algo que pegue más fuerte."},
+	],
+	[
+		{"speaker": "Sofía", "emotion": "worried", "text": "Cada tanda que pasa son más duros. Ya no caen de un golpe."},
+		{"speaker": "Sofía", "emotion": "neutral", "text": "Si me estanco acá, el próximo jefe me pasa por arriba."},
+		{"speaker": "Sofía", "emotion": "happy", "text": "Con lo que junté puedo mejorar algo. Fuerza, o algún objeto de esos."},
+	],
+	[
+		{"speaker": "Sofía", "emotion": "angry", "text": "¿En serio? Ahora salen de a montones y encima más rápido."},
+		{"speaker": "Sofía", "emotion": "neutral", "text": "Esto no se gana a los manotazos. Se gana mejorando."},
+		{"speaker": "Sofía", "emotion": "happy", "text": "Tienda, habilidades, objetos. Después seguimos."},
+	],
+	[
+		{"speaker": "Sofía", "emotion": "surprised", "text": "Los de esta tanda ya casi no se inmutan cuando les pego."},
+		{"speaker": "Sofía", "emotion": "worried", "text": "Y para los jefes esto se va a poner feo si no me preparo."},
+		{"speaker": "Sofía", "emotion": "neutral", "text": "Un botiquín, un delantal... algo que me aguante los golpes."},
+	],
+]
+
+## Elige el aviso según el escalón, rotando por la lista.
+static func get_difficulty_warning(tier: int) -> Array:
+	if DIFFICULTY_WARNINGS.is_empty():
+		return []
+	return DIFFICULTY_WARNINGS[(maxi(tier, 1) - 1) % DIFFICULTY_WARNINGS.size()]
+
 ## Devuelve las líneas de intro del capítulo pedido, o un array vacío si
 ## ese capítulo no tiene intro definida.
 static func get_chapter_intro(chapter: int) -> Array:

@@ -21,6 +21,8 @@ var unlocked_insects: Array = []          # índices de insectos incógnito reve
 var unlocked_weapons: Array = ["zapato_viejo"]
 var equipped_weapon: String = "zapato_viejo"
 var skill_tree: Dictionary = {}
+## Objetos pasivos comprados: {id: nivel}. Ver ItemSystem.
+var items: Dictionary = {}
 
 # Progreso de revelación de cada incógnito (índice -> puntos acumulados).
 # Persiste entre niveles porque un mismo incógnito aparece durante los
@@ -43,6 +45,9 @@ var lives_timestamp: int = 0     # Unix time de la última vez que se contaron
 var story_seen: bool = false
 var tutorial_seen: bool = false
 var seen_chapter_intros: Array = []   # capítulos (int) cuya intro ya se mostró
+## Escalones de dificultad (int) cuyo aviso ya se mostró. Se guarda para
+## que rejugar el nivel 10 no repita el mismo cartel cada vez.
+var seen_difficulty_tiers: Array = []
 var force_show_story: bool = false    # flag transitorio (no se guarda), para "ver de nuevo" desde el menú
 ## Capítulo que el mapa de mundos pasa al selector de niveles. Transitorio.
 var selected_chapter: int = 1
@@ -74,10 +79,12 @@ func load_game_data() -> void:
 		unlocked_weapons = data.get("unlocked_weapons", ["zapato_viejo"])
 		equipped_weapon = data.get("equipped_weapon", "zapato_viejo")
 		skill_tree = data.get("skill_tree", {})
+		items = data.get("items", {})
 		mystery_progress = data.get("mystery_progress", {})
 		story_seen = bool(data.get("story_seen", false))
 		tutorial_seen = bool(data.get("tutorial_seen", false))
 		seen_chapter_intros = data.get("seen_chapter_intros", [])
+		seen_difficulty_tiers = data.get("seen_difficulty_tiers", [])
 		max_level_unlocked = int(data.get("max_level_unlocked", current_level))
 		player_lives = int(data.get("player_lives", MAX_LIVES))
 		lives_timestamp = int(data.get("lives_timestamp", Time.get_unix_time_from_system()))
@@ -97,10 +104,12 @@ func reset_game() -> void:
 	unlocked_weapons = ["zapato_viejo"]
 	equipped_weapon = "zapato_viejo"
 	skill_tree = {}
+	items = {}
 	mystery_progress = {}
 	story_seen = false
 	tutorial_seen = false
 	seen_chapter_intros = []
+	seen_difficulty_tiers = []
 	max_level_unlocked = 1
 	player_lives = MAX_LIVES
 	lives_timestamp = Time.get_unix_time_from_system()
@@ -203,6 +212,14 @@ func mark_chapter_intro_seen(chapter: int) -> void:
 		seen_chapter_intros.append(chapter)
 		SaveManager.save_game(_build_save_dict())
 
+func has_seen_difficulty_warning(tier: int) -> bool:
+	return tier in seen_difficulty_tiers
+
+func mark_difficulty_warning_seen(tier: int) -> void:
+	if tier not in seen_difficulty_tiers:
+		seen_difficulty_tiers.append(tier)
+		SaveManager.save_game(_build_save_dict())
+
 func _build_save_dict() -> Dictionary:
 	return {
 		"current_level": current_level,
@@ -211,10 +228,12 @@ func _build_save_dict() -> Dictionary:
 		"unlocked_weapons": unlocked_weapons,
 		"equipped_weapon": equipped_weapon,
 		"skill_tree": skill_tree,
+		"items": items,
 		"mystery_progress": mystery_progress,
 		"story_seen": story_seen,
 		"tutorial_seen": tutorial_seen,
 		"seen_chapter_intros": seen_chapter_intros,
+		"seen_difficulty_tiers": seen_difficulty_tiers,
 		"max_level_unlocked": max_level_unlocked,
 		"player_lives": player_lives,
 		"lives_timestamp": lives_timestamp,
@@ -305,11 +324,30 @@ func get_max_chapter_unlocked() -> int:
 
 func get_weapon_damage() -> int:
 	var base_damage := int(WeaponSystem.get_weapon_data(equipped_weapon).get("damage", 1))
-	return int(round(base_damage * skill_system.get_damage_multiplier(skill_tree)))
+	var scaled := base_damage * skill_system.get_damage_multiplier(skill_tree)
+	# Los guantes suman daño PLANO y se aplican después del multiplicador
+	# del árbol: si se sumaran antes, la rama Fuerza los escalaría y dos
+	# mejoras baratas se volverían enormes juntas.
+	return int(round(scaled)) + ItemSystem.get_bonus_damage(items)
 
 func get_weapon_radius() -> float:
 	var base_radius := float(WeaponSystem.get_weapon_data(equipped_weapon).get("radius", 50.0))
 	return base_radius + skill_system.get_radius_bonus(skill_tree)
+
+## Compra (o sube un nivel de) un objeto pasivo. Devuelve si se pudo.
+func purchase_item(item_id: String) -> bool:
+	var cost := ItemSystem.get_cost(items, item_id)
+	if cost < 0 or player_coins < cost:
+		return false
+	player_coins -= cost
+	items[item_id] = ItemSystem.get_level(items, item_id) + 1
+	coins_changed.emit(player_coins)
+	SaveManager.save_game(_build_save_dict())
+	return true
+
+## Corazones en las peleas de jefe: los base más los del botiquín.
+func get_boss_max_hp(base_hp: int) -> int:
+	return base_hp + ItemSystem.get_bonus_hearts(items)
 
 func purchase_weapon(weapon_name: String) -> bool:
 	if weapon_name in unlocked_weapons:

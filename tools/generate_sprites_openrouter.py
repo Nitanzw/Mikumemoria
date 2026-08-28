@@ -177,6 +177,11 @@ ASSETS: dict[str, tuple[str, str]] = {
 UI_PIECES = {
     "panel_card": ("ui_panel", "a horizontal wooden signboard panel for a game list row, warm sanded wood planks with visible grain, rounded corners, a thin darker carved border and small iron nails in the four corners, completely empty surface with no text and no carving, even flat lighting, front view"),
     "coin": ("ui_icon", "a single shiny gold coin seen at a slight three-quarter angle, thick rim with a small embossed leaf on its face, warm metallic highlights, game currency icon, readable at small size"),
+    # Iconos de los objetos pasivos de la tienda (ver ItemSystem).
+    "item_guantes": ("ui_icon", "a pair of sturdy brown leather gardening work gloves, thick reinforced knuckles, worn and used, stacked one over the other, game item icon, readable at small size"),
+    "item_botiquin": ("ui_icon", "a small cream-colored first aid tin box with a red cross on the lid, slightly open showing bandages, homemade and worn, game item icon, readable at small size"),
+    "item_delantal": ("ui_icon", "a thick padded green gardening apron with reinforced stitching and a front pocket, folded neatly, sturdy protective look, game item icon, readable at small size"),
+    "item_repelente": ("ui_icon", "a homemade glass spray bottle filled with cloudy green herbal liquid, cork and hand-tied label, a few leaves at its base, game item icon, readable at small size"),
 }
 
 # El icono vive en la raiz del repo, no en assets/sprites/

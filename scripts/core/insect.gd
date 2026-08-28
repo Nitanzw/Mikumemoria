@@ -66,6 +66,10 @@ const SPLAT_COLORS := {
 # Cada insecto que aparece toma un factor propio dentro de este rango, así
 # dos bichos del mismo tipo no se mueven calcados. Es sutil a propósito:
 # más rango que esto y el jugador deja de poder anticipar al enemigo.
+## Vida extra que le suma el escalón de dificultad del nivel. La setea
+## el spawner antes de agregar el insecto al árbol.
+var health_bonus: int = 0
+
 const SPEED_VARIANCE_MIN := 0.82
 const SPEED_VARIANCE_MAX := 1.18
 
@@ -114,7 +118,7 @@ func initialize_by_type() -> void:
 	var data: Dictionary = INSECT_DATA.get(insect_type, INSECT_DATA["hormiga_obrera"])
 	base_speed = float(data["speed"]) * speed_mult * randf_range(SPEED_VARIANCE_MIN, SPEED_VARIANCE_MAX)
 	speed = base_speed
-	health = int(data["health"])
+	health = int(data["health"]) + health_bonus
 	current_health = health
 	points = int(data["points"])
 	coin_reward = int(data["coin_reward"])

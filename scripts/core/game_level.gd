@@ -18,6 +18,8 @@ const SPAWN_MARGIN := 60.0
 const PLAYER_MAX_HP := 5
 ## Cuando un minion invocado llega hasta Sofía, le saca esto.
 const MINION_CONTACT_DAMAGE := 1
+const MINION_SPEED_MULT := 2.0
+const MINION_CYCLE_SPEED := 1.1
 ## Radio alrededor de Sofía donde un proyectil o minion cuenta como golpe.
 const PLAYER_HURT_RADIUS := 85.0
 
@@ -39,6 +41,10 @@ var is_boss_level: bool = false
 var boss: Boss = null
 var boss_config: Dictionary = {}
 var player_hp: int = PLAYER_MAX_HP
+## Máximo real de la pelea: PLAYER_MAX_HP más los corazones del botiquín.
+var player_max_hp: int = PLAYER_MAX_HP
+## Golpes recibidos en la pelea, para el bloqueo del Delantal Reforzado.
+var _hits_taken: int = 0
 var _projectiles: Array = []
 var _boss_minions: Array = []
 
@@ -72,8 +78,9 @@ func _ready() -> void:
 	if is_boss_level:
 		var boss_id: int = int(level_config.get("boss_id", 1))
 		var cycle: int = GameManager.level_manager.get_boss_cycle(GameManager.current_level)
-		boss_config = BossData.get_boss_config(boss_id, cycle)
-		hud.setup_boss_bars(PLAYER_MAX_HP, str(boss_config.get("name", "Jefe")))
+		var tier: int = GameManager.level_manager.get_difficulty_tier(GameManager.current_level)
+		boss_config = BossData.get_boss_config(boss_id, cycle, tier)
+		hud.setup_boss_bars(GameManager.get_boss_max_hp(PLAYER_MAX_HP), str(boss_config.get("name", "Jefe")))
 
 	_maybe_show_intros()
 
@@ -110,9 +117,30 @@ func _maybe_show_intros() -> void:
 func _maybe_show_tutorial() -> void:
 	if GameManager.current_level == 1 and not GameManager.tutorial_seen:
 		GameManager.mark_tutorial_seen()
-		_show_dialogue(StoryData.TUTORIAL, _start_gameplay)
+		_show_dialogue(StoryData.TUTORIAL, _maybe_warn_difficulty)
 		return
-	_start_gameplay()
+	_maybe_warn_difficulty()
+
+## Cada 10 niveles, Sofía avisa que los bichos se pusieron más duros y que
+## conviene ir a mejorar. Se muestra una sola vez por escalón: rejugar el
+## nivel 10 no repite el cartel.
+func _maybe_warn_difficulty() -> void:
+	var level: int = GameManager.current_level
+	if not GameManager.level_manager.is_difficulty_step(level):
+		_start_gameplay()
+		return
+
+	var tier: int = GameManager.level_manager.get_difficulty_tier(level)
+	if GameManager.has_seen_difficulty_warning(tier):
+		_start_gameplay()
+		return
+
+	GameManager.mark_difficulty_warning_seen(tier)
+	var lines: Array = StoryData.get_difficulty_warning(tier)
+	if lines.is_empty():
+		_start_gameplay()
+		return
+	_show_dialogue(lines, _start_gameplay)
 
 func _show_dialogue(lines: Array, on_finished: Callable) -> void:
 	var box := DialogueBoxScene.instantiate()
@@ -141,8 +169,10 @@ func _start_gameplay() -> void:
 # --- Pelea de jefe ---
 
 func _spawn_boss() -> void:
-	player_hp = PLAYER_MAX_HP
-	hud.set_player_hp(player_hp, PLAYER_MAX_HP)
+	player_max_hp = GameManager.get_boss_max_hp(PLAYER_MAX_HP)
+	player_hp = player_max_hp
+	_hits_taken = 0
+	hud.set_player_hp(player_hp, player_max_hp)
 
 	boss = BossScene.instantiate() as Boss
 	insect_container.add_child(boss)
@@ -201,11 +231,18 @@ func _on_boss_wants_summon(count: int) -> void:
 	if count <= 0:
 		_spawn_boss_decoys()
 		return
+	# Los minions iban a 1.1x y llegaban tardísimo: daban tiempo de sobra
+	# para limpiarlos sin despeinarse, que era buena parte de por qué la
+	# pelea se sentía fácil. Ahora van rápido de verdad, y más todavía en
+	# las vueltas siguientes al roster de jefes.
+	var cycle: int = GameManager.level_manager.get_boss_cycle(GameManager.current_level)
+	var minion_speed: float = MINION_SPEED_MULT * pow(MINION_CYCLE_SPEED, cycle)
+	minion_speed *= ItemSystem.get_minion_slow(GameManager.items)
 	for i in range(count):
 		var types: Array = BossData.SUMMON_POOL
 		var minion := InsectScene.instantiate() as Insect
 		minion.insect_type = types[randi() % types.size()]
-		minion.speed_mult = 1.1
+		minion.speed_mult = minion_speed
 		insect_container.add_child(minion)
 		var view := get_viewport_rect().size
 		minion.global_position = boss.global_position + Vector2(randf_range(-120.0, 120.0), randf_range(20.0, 90.0))
@@ -239,8 +276,19 @@ func _on_boss_stole_coins(amount: int) -> void:
 func _damage_player(amount: int) -> void:
 	if level_ended:
 		return
+
+	# Delantal Reforzado: bloquea uno de cada N golpes. Se cuentan los
+	# golpes recibidos, no se tira al azar, para que el jugador pueda
+	# confiar en cuándo le toca aguantar uno.
+	var block_every := ItemSystem.get_block_every(GameManager.items)
+	_hits_taken += 1
+	if block_every > 0 and _hits_taken % block_every == 0:
+		hud.announce("¡El delantal te salvó!")
+		hud.flash_damage()
+		return
+
 	player_hp = maxi(player_hp - amount, 0)
-	hud.set_player_hp(player_hp, PLAYER_MAX_HP)
+	hud.set_player_hp(player_hp, player_max_hp)
 	hud.flash_damage()
 	AudioManager.play_sfx("taunt")
 
@@ -314,6 +362,7 @@ func _spawn_random_insect() -> void:
 	var insect := InsectScene.instantiate() as Insect
 	insect.insect_type = insect_type
 	insect.speed_mult = level_config.get("enemy_speed_mult", 1.0)
+	insect.health_bonus = int(level_config.get("enemy_health_bonus", 0))
 
 	insect_container.add_child(insect)
 	var spawn_pos := _random_edge_position()

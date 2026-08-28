@@ -10,6 +10,13 @@ const MYSTERY_BUG_PERIOD := 10
 
 ## Cada cuántos niveles toca pelea de jefe (5, 10, 15, ...).
 const BOSS_PERIOD := 5
+
+## Cada cuántos niveles sube la dificultad, y cuánto sube.
+const DIFFICULTY_PERIOD := 10
+const TIER_SPEED_STEP := 0.08     # +8% de velocidad por escalón
+const TIER_SPAWN_MULT := 0.94     # los bichos salen un 6% más seguido
+const MIN_SPAWN_RATE := 0.55      # piso, para que no sea imposible
+const TIERS_PER_EXTRA_HP := 3     # +1 de vida cada 3 escalones
 ## Los jefes duran hasta que cae uno de los dos, pero con un techo: si se
 ## acaba el tiempo y el jefe sigue vivo, se pierde una vida.
 const BOSS_TIME_LIMIT := 90
@@ -55,13 +62,22 @@ func get_level_config(level: int) -> Dictionary:
 	var chapter := get_chapter_for_level(level)
 	var chapter_config: Dictionary = chapter_configs.get(chapter, chapter_configs[1])
 
+	# La dificultad sube por escalones de 10 niveles DENTRO del capítulo.
+	# Antes solo variaba por capítulo, y un capítulo son 100 niveles: te
+	# ibas mejorando el arma y el árbol mientras los bichos seguían
+	# exactamente iguales, así que el juego se volvía más fácil a medida
+	# que avanzabas.
+	var tier := get_difficulty_tier(level)
+
 	return {
 		"level": level,
 		"chapter": chapter,
 		"chapter_name": chapter_config.get("name", "Desconocido"),
 		"background": chapter_config.get("background", ""),
-		"spawn_rate": chapter_config.get("spawn_rate", 2.0),
-		"enemy_speed_mult": chapter_config.get("enemy_speed_mult", 1.0),
+		"spawn_rate": maxf(float(chapter_config.get("spawn_rate", 2.0)) * pow(TIER_SPAWN_MULT, tier), MIN_SPAWN_RATE),
+		"enemy_speed_mult": float(chapter_config.get("enemy_speed_mult", 1.0)) * (1.0 + tier * TIER_SPEED_STEP),
+		"enemy_health_bonus": int(tier / TIERS_PER_EXTRA_HP),
+		"difficulty_tier": tier,
 		"time_limit": BOSS_TIME_LIMIT if is_boss_level(level) else 30,
 		"enemy_types": get_available_enemies(level),
 		"has_mystery_bug": has_mystery_bug(level) and not is_boss_level(level),
@@ -77,6 +93,16 @@ func is_boss_level(level: int) -> bool:
 ## Qué jefe toca. Hay 10 arquetipos y se recorren en orden, repitiendo el
 ## ciclo a medida que se avanza (el nivel 5 es el jefe 1, el 10 el 2, ...,
 ## el 50 el 10, el 55 vuelve al 1 pero más fuerte, ver get_boss_config).
+## Escalón de dificultad: sube uno cada DIFFICULTY_PERIOD niveles.
+## El nivel 10 entra en el escalón 1, el 20 en el 2, y así.
+func get_difficulty_tier(level: int) -> int:
+	return int(level / DIFFICULTY_PERIOD)
+
+## True en los niveles donde el escalón cambia (10, 20, 30...), para
+## avisarle al jugador que los bichos se pusieron más duros.
+func is_difficulty_step(level: int) -> bool:
+	return level > 0 and level % DIFFICULTY_PERIOD == 0
+
 func get_boss_id(level: int) -> int:
 	if not is_boss_level(level):
 		return 0

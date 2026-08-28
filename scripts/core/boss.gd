@@ -20,6 +20,11 @@ signal ability_announced(text: String)
 
 const EDGE_MARGIN := 90.0
 const TOP_MARGIN := 220.0     # no baja de acá salvo cuando carga
+## Hasta dónde puede bajar un jefe. Sofía está más abajo todavía: la
+## franja de abajo queda libre para que siempre se la pueda ver.
+const ARENA_BOTTOM_MARGIN := 300.0
+const SWOOP_PERIOD := 3.4
+
 const BOB_SPEED := 1.8
 const BOB_PIXELS := 12.0
 
@@ -31,6 +36,13 @@ const DASH_SPEED := 900.0
 const HEAL_IDLE_TIME := 5.0   # sin recibir golpes durante esto -> se cura
 const HEAL_AMOUNT := 2
 const ENRAGE_THRESHOLD := 0.3
+## Cuánto se acelera el jefe al entrar en cada fase nueva.
+const PHASE_SPEED_STEP := 1.18
+const PHASE_ANNOUNCE := [
+	"",
+	"¡Se puso serio!",
+	"¡Última fase! Está desesperado",
+]
 const STEAL_AMOUNT := 25
 
 @onready var sprite: Sprite2D = $Sprite2D
@@ -55,6 +67,16 @@ var is_enraged: bool = false
 var _direction := Vector2.RIGHT
 var _bob_phase: float = 0.0
 var _ability_timer: float = 0.0
+
+## Movimiento y patrón: el jefe recorre su lista de ataques EN ORDEN y en
+## bucle, en vez de sortear uno al azar. Así se puede aprender la pelea,
+## que es lo que la hace divertida en vez de ruidosa.
+var _movement: String = "patrol"
+var _pattern: Array = []
+var _pattern_index: int = 0
+var _phase: int = 0
+var _move_phase: float = 0.0      # reloj propio del movimiento
+var _move_timer: float = 0.0      # para los movimientos por ráfagas
 var _time_since_hit: float = 0.0
 var _dashing: bool = false
 var _dash_target := Vector2.ZERO
@@ -75,7 +97,14 @@ func setup(boss_config: Dictionary) -> void:
 	if sprite:
 		sprite.scale = Vector2(1.7, 1.7)
 
-	_ability_timer = randf_range(2.0, 3.5)
+	_movement = str(config.get("movement", "patrol"))
+	_pattern = config.get("pattern", []).duplicate()
+	_pattern_index = 0
+	_phase = 0
+
+	# El primer ataque sale rápido: si el jefe tarda en hacer algo, los
+	# primeros segundos se sienten vacíos.
+	_ability_timer = randf_range(1.0, 1.8)
 	health_changed.emit(current_health, max_health)
 
 func set_player_position(pos: Vector2) -> void:
@@ -114,16 +143,130 @@ func _physics_process(delta: float) -> void:
 
 	_process_abilities(delta)
 
+## Despacha al movimiento del jefe. Cada uno mueve el jefe de forma
+## distinta; todos respetan los márgenes de pantalla y ninguno baja más
+## allá de la zona de Sofía (eso lo hace solo el dash).
 func _process_patrol(delta: float) -> void:
+	_move_phase += delta
 	var view := get_viewport_rect().size
+
+	match _movement:
+		"zigzag": _move_zigzag(delta, view)
+		"swoop": _move_swoop(delta, view)
+		"strafe": _move_strafe(delta, view)
+		"blink": _move_blink(delta, view)
+		"orbit": _move_orbit(delta, view)
+		"pendulum": _move_pendulum(delta, view)
+		"erratic": _move_erratic(delta, view)
+		"advance": _move_advance(delta, view)
+		_: _move_side_to_side(delta, view)
+
+	_clamp_to_arena(view)
+
+## Los límites se aplican una vez, al final, para no repetirlos en cada
+## movimiento (y para que ninguno se pueda escapar de la pantalla).
+func _clamp_to_arena(view: Vector2) -> void:
+	global_position.x = clampf(global_position.x, EDGE_MARGIN, view.x - EDGE_MARGIN)
+	global_position.y = clampf(global_position.y, TOP_MARGIN * 0.45, view.y - ARENA_BOTTOM_MARGIN)
+
+func _move_side_to_side(delta: float, view: Vector2) -> void:
 	global_position.x += _direction.x * speed * delta
-	if global_position.x < EDGE_MARGIN:
-		global_position.x = EDGE_MARGIN
+	if global_position.x <= EDGE_MARGIN:
 		_direction.x = 1.0
-	elif global_position.x > view.x - EDGE_MARGIN:
-		global_position.x = view.x - EDGE_MARGIN
+	elif global_position.x >= view.x - EDGE_MARGIN:
 		_direction.x = -1.0
 	global_position.y = lerpf(global_position.y, TOP_MARGIN, delta * 2.0)
+
+## Cruza en diagonal y rebota contra los cuatro bordes de su franja.
+func _move_zigzag(delta: float, view: Vector2) -> void:
+	if _direction.y == 0.0:
+		_direction.y = 1.0
+	global_position += Vector2(_direction.x, _direction.y * 0.55) * speed * delta
+	if global_position.x <= EDGE_MARGIN or global_position.x >= view.x - EDGE_MARGIN:
+		_direction.x = -_direction.x
+	if global_position.y <= TOP_MARGIN * 0.6 or global_position.y >= TOP_MARGIN * 1.9:
+		_direction.y = -_direction.y
+
+## Baja en picada hacia Sofía y vuelve arriba. No la toca: el daño por
+## contacto es del dash, esto es presión y esquive.
+func _move_swoop(delta: float, view: Vector2) -> void:
+	var t := fmod(_move_phase, SWOOP_PERIOD) / SWOOP_PERIOD
+	var depth: float = sin(t * TAU) # baja y sube
+	global_position.x += _direction.x * speed * 0.7 * delta
+	if global_position.x <= EDGE_MARGIN or global_position.x >= view.x - EDGE_MARGIN:
+		_direction.x = -_direction.x
+	var low := view.y - ARENA_BOTTOM_MARGIN - 60.0
+	global_position.y = lerpf(TOP_MARGIN, low, maxf(depth, 0.0))
+
+## Ráfagas laterales rápidas con pausas: se queda quieto, apunta, y
+## cruza medio ancho de pantalla de golpe.
+func _move_strafe(delta: float, view: Vector2) -> void:
+	_move_timer -= delta
+	if _move_timer <= 0.0:
+		_move_timer = randf_range(0.7, 1.2)
+		_direction.x = -_direction.x if randf() < 0.7 else _direction.x
+	var burst: float = 2.4 if _move_timer > 0.45 else 0.15
+	global_position.x += _direction.x * speed * burst * delta
+	if global_position.x <= EDGE_MARGIN or global_position.x >= view.x - EDGE_MARGIN:
+		_direction.x = -_direction.x
+	global_position.y = lerpf(global_position.y, TOP_MARGIN, delta * 2.0)
+
+## Se desvanece y reaparece en otro lado. Distinto de `burrow`: acá no
+## queda invulnerable, solo cuesta seguirlo.
+func _move_blink(delta: float, view: Vector2) -> void:
+	_move_timer -= delta
+	if _move_timer <= 0.0:
+		_move_timer = randf_range(1.4, 2.3)
+		var destination := randf_range(EDGE_MARGIN, view.x - EDGE_MARGIN)
+		# Salta lejos, no dos pasos al costado.
+		if absf(destination - global_position.x) < view.x * 0.3:
+			destination = view.x - destination
+		global_position.x = destination
+		global_position.y = randf_range(TOP_MARGIN * 0.7, TOP_MARGIN * 1.6)
+		if sprite:
+			sprite.modulate.a = 0.15
+	global_position.y = lerpf(global_position.y, TOP_MARGIN, delta * 1.2)
+
+## Gira en círculo alrededor del centro de la arena.
+func _move_orbit(delta: float, view: Vector2) -> void:
+	var radius: float = minf(view.x * 0.33, 190.0)
+	var angular := speed / maxf(radius, 1.0)
+	var angle := _move_phase * angular
+	global_position.x = view.x / 2.0 + cos(angle) * radius
+	global_position.y = TOP_MARGIN + sin(angle) * radius * 0.5
+
+## Péndulo: rápido en el medio, frena en las puntas. Se lee como que
+## "toma impulso", y da una ventana para pegarle en los extremos.
+func _move_pendulum(delta: float, view: Vector2) -> void:
+	var span := (view.x - EDGE_MARGIN * 2.0) / 2.0
+	var angular := speed / maxf(span, 1.0)
+	global_position.x = view.x / 2.0 + sin(_move_phase * angular) * span
+	global_position.y = lerpf(global_position.y, TOP_MARGIN, delta * 2.0)
+
+## Cambia de rumbo de golpe. Impredecible a propósito: al Rayo Insecto y
+## a la Mutagénesis les toca ser difíciles de seguir.
+func _move_erratic(delta: float, view: Vector2) -> void:
+	_move_timer -= delta
+	if _move_timer <= 0.0:
+		_move_timer = randf_range(0.35, 0.8)
+		_direction = Vector2(randf_range(-1.0, 1.0), randf_range(-0.6, 0.6)).normalized()
+		if _direction == Vector2.ZERO:
+			_direction = Vector2.RIGHT
+	global_position += _direction * speed * delta
+	if global_position.x <= EDGE_MARGIN or global_position.x >= view.x - EDGE_MARGIN:
+		_direction.x = -_direction.x
+	if global_position.y <= TOP_MARGIN * 0.6 or global_position.y >= TOP_MARGIN * 2.0:
+		_direction.y = -_direction.y
+
+## Baja de a poco hacia Sofía mientras patrulla. Mete presión de tiempo:
+## cuanto más tardás en bajarle la vida, más cerca lo tenés.
+func _move_advance(delta: float, view: Vector2) -> void:
+	global_position.x += _direction.x * speed * delta
+	if global_position.x <= EDGE_MARGIN or global_position.x >= view.x - EDGE_MARGIN:
+		_direction.x = -_direction.x
+	var floor_y := view.y - ARENA_BOTTOM_MARGIN
+	var progress := 1.0 - float(current_health) / float(maxi(max_health, 1))
+	global_position.y = lerpf(global_position.y, lerpf(TOP_MARGIN, floor_y, progress), delta * 0.6)
 
 func _process_dash(delta: float) -> void:
 	var to_target := _dash_target - global_position
@@ -145,32 +288,77 @@ func _end_dash() -> void:
 # --- Habilidades ---
 
 func _process_abilities(delta: float) -> void:
+	_update_phase()
+
 	_ability_timer -= delta
 	if _ability_timer > 0.0:
 		return
-	_ability_timer = randf_range(3.0, 5.5) * (0.6 if is_enraged else 1.0)
-	_use_random_ability()
 
-	# `heal` no entra en el sorteo: se dispara sola si la dejás tranquila.
+	var cooldown: Vector2 = BossData.PHASE_COOLDOWNS[mini(_phase, BossData.PHASE_COOLDOWNS.size() - 1)]
+	_ability_timer = randf_range(cooldown.x, cooldown.y)
+	_use_next_ability()
+
+	# `heal` no entra en el patrón: se dispara sola si lo dejás tranquilo.
 	if BossData.has_ability(config, "heal") and _time_since_hit > HEAL_IDLE_TIME:
 		_heal()
 
-func _use_random_ability() -> void:
-	var options: Array = []
-	for ability in config.get("abilities", []):
-		match ability:
-			"summon":
-				if minions_alive == 0:
-					options.append(ability)
-			"shield":
-				if not shield_active:
-					options.append(ability)
-			"burrow", "dash", "spit", "haste", "split":
-				options.append(ability)
-	if options.is_empty():
+## Fases por vida. Al entrar en una nueva, el jefe lo anuncia y desde ahí
+## ataca más seguido (PHASE_COOLDOWNS) y suma la habilidad que le toque.
+func _update_phase() -> void:
+	var ratio := float(current_health) / float(maxi(max_health, 1))
+	var new_phase := 0
+	if ratio <= BossData.PHASE_3_HP:
+		new_phase = 2
+	elif ratio <= BossData.PHASE_2_HP:
+		new_phase = 1
+	if new_phase <= _phase:
 		return
 
-	match options[randi() % options.size()]:
+	_phase = new_phase
+	var unlocks: Array = config.get("phase_unlocks", [])
+	var unlocked: String = str(unlocks[_phase]) if _phase < unlocks.size() else ""
+	if unlocked != "" and not (unlocked in _pattern):
+		_pattern.append(unlocked)
+
+	# Entrar en fase acelera un poco al jefe: se nota que se puso serio.
+	base_speed *= PHASE_SPEED_STEP
+	if not _dashing:
+		speed = base_speed * (1.5 if is_enraged else 1.0)
+
+	# El ataque siguiente sale casi enseguida, para que el cambio se sienta.
+	_ability_timer = minf(_ability_timer, 0.6)
+	ability_announced.emit(PHASE_ANNOUNCE[mini(_phase, PHASE_ANNOUNCE.size() - 1)])
+
+## Ejecuta el siguiente ataque del patrón, en orden y en bucle. Si el que
+## toca no se puede usar ahora (ya hay minions, ya hay escudo), avanza al
+## siguiente en vez de perder el turno.
+func _use_next_ability() -> void:
+	if _pattern.is_empty():
+		return
+	for _i in range(_pattern.size()):
+		var ability: String = str(_pattern[_pattern_index])
+		_pattern_index = (_pattern_index + 1) % _pattern.size()
+		if _can_use(ability):
+			_perform(ability)
+			return
+
+func _can_use(ability: String) -> bool:
+	match ability:
+		"summon":
+			return minions_alive == 0
+		"shield":
+			return not shield_active
+		"enrage":
+			return not is_enraged
+		"burrow":
+			return not is_burrowed
+		"dash":
+			return not _dashing
+		_:
+			return true
+
+func _perform(ability: String) -> void:
+	match ability:
 		"summon": _summon()
 		"shield": _raise_shield()
 		"burrow": _burrow()
@@ -178,9 +366,15 @@ func _use_random_ability() -> void:
 		"spit": _spit()
 		"haste": _haste()
 		"split": _split()
+		"heal": _heal()
+		"enrage": _enrage()
 
 func _summon() -> void:
-	var count := 3 if not is_enraged else 5
+	# Más refuerzos a medida que avanza la pelea: en la última fase la
+	# pantalla se llena y hay que limpiar rápido.
+	var count: int = 3 + _phase
+	if is_enraged:
+		count += 1
 	minions_alive = count
 	shield_changed.emit(true)
 	ability_announced.emit("¡Invoca refuerzos! No podés tocarlo hasta limpiarlos")
@@ -297,6 +491,10 @@ func take_damage(amount: int = 1) -> void:
 		die()
 
 func _enrage() -> void:
+	# Ahora el enrage puede venir del patrón además de por vida baja, así
+	# que se protege de entrar dos veces (duplicaría la velocidad).
+	if is_enraged:
+		return
 	is_enraged = true
 	speed = base_speed * 1.5
 	ability_announced.emit("¡Se enfureció!")

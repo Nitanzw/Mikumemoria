@@ -52,7 +52,7 @@ theme_override_constants/separation = 4
 [node name="Title" type="Label" parent="Margin/VBox/Header/HeaderVBox"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "Tienda de Armas"
+text = "Tienda"
 
 [node name="CoinsHolder" type="HBoxContainer" parent="Margin/VBox/Header/HeaderVBox"]
 layout_mode = 2
