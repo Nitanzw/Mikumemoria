@@ -110,7 +110,12 @@ incógnitos animan tanto cuando aparecen como incógnita (`mystery_bug.gd`)
 como cuando reaparecen de tipo avanzado (`insect.gd`): las dos escenas
 pasan por el mismo `_apply_sprite_data`.
 
-Dos cosas que costaron y quedaron resueltas en el generador:
+Los ciclos van en el **mismo estilo** que el arte fijo (`POLISHED_STYLE`,
+el de Sofía, los fondos y la UI). Antes usaban `STYLE_SUFFIX`, que el
+propio código marca como "el estilo viejo, plano": el bicho cambiaba de
+dibujo entre estar quieto y caminar.
+
+Tres cosas que costaron y quedaron resueltas en el generador:
 
 **No pidas líneas de grilla.** El prompt pedía "a thin black grid line
 dividing it into 4 cells" y el modelo las dibujaba donde quería: en la
@@ -126,6 +131,18 @@ regiones que no tocaban ese borde, así que sobrevivían como bloques de
 verde vivo adentro del cuadro (le pasó a `mantis_cronometro`, que quedó
 con 54% de transparencia en vez de 72%). Recortando cada celda ya
 separada, su fondo toca su propio borde y sale entero.
+
+**Normalizá la escala en post-proceso, no a fuerza de prompts.** El
+modelo dibuja cada pose del tamaño que se le ocurre: a `mosca_pesada` le
+salían cuadros con 32% de diferencia de alto y el bicho latía de tamaño
+al caminar. Reforzar el prompt con "IDENTICAL SIZE" y regenerar no
+alcanzó (probado dos veces, volvió a salir disparejo). `_normalize_scale`
+mide la caja opaca de cada cuadro y la lleva a la mediana de **alto** —
+el alto y no el ancho, porque lo que cambia legítimamente entre poses es
+a lo ancho: alas que se abren, lombriz que se estira. Quedó en 0-2% de
+variación. Ojo con el lienzo: tiene que entrar el cuadro más ancho de la
+serie y con margen **proporcional**, si no un sujeto más ancho que alto
+sale recortado (le pasó a la lombriz estirada).
 
 La hoja cruda de cada sheet se guarda en `assets/sprites/_sheets_raw/`
 (gitignoreada): partirla y recortarla es post-proceso local, así que se

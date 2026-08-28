@@ -19,7 +19,8 @@ fuente grande y contorno para que se lea bien, niveles de 30 segundos,
 historia narrada por **Sofía** con retratos reales por emoción
 (neutral/feliz/triste/enojada/preocupada/sorprendida). Los **5 insectos
 comunes** y los **10 incógnitos** tienen ciclo de caminata animado de 4
-cuadros, más el balanceo procedural que llevan todos.
+cuadros, en el mismo estilo pulido que el resto del arte y con el tamaño
+emparejado entre cuadros, más el balanceo procedural que llevan todos.
 
 **Jefes cada 5 niveles**: los niveles múltiplo de 5 son pelea de jefe,
 con **dos barras de vida** (la del jefe arriba, la de Sofía abajo) y 90

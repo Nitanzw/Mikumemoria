@@ -204,6 +204,62 @@ WALK_SHEETS: dict[str, dict] = {
         "dest_prefix": "hormiga_obrera_walk",
     },
 
+    "cucaracha_electrica_walk": {
+        "prompt": (
+            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
+            "lines, NO borders and NO frames between them, the poses clearly "
+            "separated by wide empty background, each pose shows the exact same cute cartoon cockroach crackling with yellow electric energy, dark reddish-brown shell with glowing yellow lightning arcs around its body, small sparks, speedy alert posture, big round eyes, "
+            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
+            "the character fills each pose the same amount, same color, "
+            "only the legs and the electric arcs change between poses"
+        ),
+        "grid": (2, 2),
+        "frame_size": (128, 128),
+        "dest_dir": "insects",
+        "dest_prefix": "cucaracha_electrica_walk",
+    },
+    "escarabajo_blindado_walk": {
+        "prompt": (
+            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
+            "lines, NO borders and NO frames between them, the poses clearly "
+            "separated by wide empty background, each pose shows the exact same cute but tough cartoon beetle with a thick metallic blue-grey armored shell with riveted plates, short stubby legs, heavy solid stance, small determined eyes, scratches on the armor, "
+            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
+            "the character fills each pose the same amount, same color, "
+            "only the legs move between poses, in a different position of a walking cycle"
+        ),
+        "grid": (2, 2),
+        "frame_size": (128, 128),
+        "dest_dir": "insects",
+        "dest_prefix": "escarabajo_blindado_walk",
+    },
+    "mosca_pesada_walk": {
+        "prompt": (
+            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
+            "lines, NO borders and NO frames between them, the poses clearly "
+            "separated by wide empty background, each pose shows the exact same cute chubby cartoon housefly, round heavy dark grey body, translucent iridescent wings, big compound red eyes, tiny legs tucked in, "
+            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
+            "the character fills each pose the same amount, same color, "
+            "only the wings change position between poses"
+        ),
+        "grid": (2, 2),
+        "frame_size": (128, 128),
+        "dest_dir": "insects",
+        "dest_prefix": "mosca_pesada_walk",
+    },
+    "grillo_saltarin_walk": {
+        "prompt": (
+            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
+            "lines, NO borders and NO frames between them, the poses clearly "
+            "separated by wide empty background, each pose shows the exact same cute cartoon green cricket, powerful folded hind legs, long antennae, bright leaf-green body with lighter belly, cheerful energetic expression, "
+            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
+            "the character fills each pose the same amount, same color, "
+            "the hind legs go through a leap: crouched, pushing off, extended in the air, landing"
+        ),
+        "grid": (2, 2),
+        "frame_size": (128, 128),
+        "dest_dir": "insects",
+        "dest_prefix": "grillo_saltarin_walk",
+    },
     "hormiga_ladrona_walk": {
         "prompt": (
             "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
@@ -411,16 +467,67 @@ def split_walk_sheet(img: "Image.Image", cols: int, rows: int, frame_size: tuple
     y_cuts = [0] + _find_dividers(rgb, key, rows - 1, 0) + [img.height]
 
     pad = max(int(min(img.size) * GRID_LINE_PAD), 2)
-    frames = []
+    cells = []
     for row in range(rows):
         for col in range(cols):
-            left = x_cuts[col] + (pad if col > 0 else pad)
+            left = x_cuts[col] + pad
             right = x_cuts[col + 1] - pad
-            top = y_cuts[row] + (pad if row > 0 else pad)
+            top = y_cuts[row] + pad
             bottom = y_cuts[row + 1] - pad
-            cell = img.crop((left, top, right, bottom))
-            frames.append(fit_transparent(key_out(cell), frame_size))
-    return frames
+            cells.append(key_out(img.crop((left, top, right, bottom))))
+    return _normalize_scale(cells, frame_size)
+
+
+def _normalize_scale(cells: list["Image.Image"], frame_size: tuple[int, int]) -> list["Image.Image"]:
+    """Escala los cuadros para que el bicho mida lo mismo en todos.
+
+    El modelo dibuja cada pose del tamaño que se le ocurre — a la
+    mosca_pesada le salían cuadros con 32% de diferencia de alto, y al
+    reproducirlos el bicho late de tamaño mientras camina. Repetir la
+    generación no lo arregla: probado, vuelve a salir descentrado.
+
+    Se mide el alto del sujeto (su caja opaca) en cada cuadro y se lleva
+    a la mediana. El alto y no el ancho: lo que cambia legítimamente
+    entre poses es a lo ancho (alas que se abren, lombriz que se estira),
+    mientras que el alto de un bicho caminando es estable.
+    """
+    boxes = [c.getbbox() for c in cells]
+    heights = [(b[3] - b[1]) if b else 0 for b in boxes]
+    usable = sorted(h for h in heights if h > 0)
+    if not usable:
+        return [fit_transparent(c, frame_size) for c in cells]
+    target = usable[len(usable) // 2]
+
+    scaled = []
+    for cell, box, height in zip(cells, boxes, heights):
+        if box is None or height <= 0:
+            scaled.append(None)
+            continue
+        subject = cell.crop(box)
+        scale = target / height
+        scaled.append(subject.resize(
+            (max(int(subject.width * scale), 1), max(int(subject.height * scale), 1)),
+            Image.LANCZOS))
+
+    # El lienzo tiene que entrar al cuadro MÁS ANCHO de la serie, si no un
+    # sujeto más ancho que alto se recorta: le pasó a la lombriz estirada,
+    # que salía cortada en los 4 cuadros. Y tiene que ser el mismo lienzo
+    # para todos, porque es lo que mantiene la escala pareja.
+    widest = max((im.width for im in scaled if im), default=target)
+    # El margen va proporcional, no en píxeles fijos: el lienzo después se
+    # escala a frame_size, y 4px sobre un lienzo grande se vuelven menos de
+    # uno al reducir, con lo que el sujeto igual toca el borde.
+    side = max(int(target * 1.35), int(widest * 1.08) + 4)
+
+    out = []
+    for cell, subject in zip(cells, scaled):
+        if subject is None:
+            out.append(fit_transparent(cell, frame_size))
+            continue
+        canvas = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+        canvas.paste(subject, ((side - subject.width) // 2, (side - subject.height) // 2), subject)
+        out.append(fit_transparent(canvas, frame_size))
+    return out
 
 
 def generate_walk_sheet(name: str, api_key: str, model: str, skip_existing: bool) -> float:
@@ -433,7 +540,11 @@ def generate_walk_sheet(name: str, api_key: str, model: str, skip_existing: bool
         print(f"[{name}] ya existe, se salta (--skip-existing)")
         return 0.0
 
-    prompt = spec["prompt"] + STYLE_SUFFIX + GREEN_SCREEN_BG_INSTRUCTION
+    # POLISHED_STYLE y no STYLE_SUFFIX: el arte fijo del juego está en el
+    # estilo pulido (mismo que Sofía, los fondos y la UI), así que un ciclo
+    # en el estilo plano viejo hace que el bicho cambie de dibujo entre
+    # estar quieto y caminar.
+    prompt = spec["prompt"] + POLISHED_STYLE + GREEN_SCREEN_BG_INSTRUCTION
     print(f"[{name}] generando grid {cols}x{rows} con {model}...")
 
     result = _call_images_api(api_key, model, prompt, "1:1")

@@ -100,7 +100,9 @@ cuadros) y después se partió en post-proceso local.
 <sub>Los 5 comunes arriba, los 10 incógnitos abajo. El movimiento se le
 pide distinto a cada uno: la lombriz se enrosca, al rayo le cambian los
 arcos, a los alados les mueven las alas. Pidiéndoles a todos "mové las
-patas", los que no tienen patas salían con los 4 cuadros calcados.</sub>
+patas", los que no tienen patas salían con los 4 cuadros calcados. El
+tamaño se empareja en post-proceso: el modelo dibuja cada pose como
+quiere, y sin emparejar el bicho late de tamaño mientras camina.</sub>
 
 Acá el de la `hormiga_obrera`, cuadro por cuadro:
 
