@@ -88,6 +88,28 @@ magenta el modelo no respeta el color exacto y encima les mete tonos
 rosados a las patas de los bichos marrones, que después el recorte se
 come.
 
+### Ciclos de caminata: se enganchan por nombre de archivo
+
+`insect.gd` no lleva una lista de cuadros por bicho. Busca por convención
+`assets/sprites/insects/<tipo>_walk_0.png` .. `_walk_3.png`, y si
+encuentra **más de uno** arma el ciclo; si no, usa el sprite fijo
+`<tipo>.png`. O sea que agregar la animación de un insecto es generar los
+4 PNG y nada más — cero cambios de código:
+
+```bash
+export OPENROUTER_API_KEY=...
+python3 tools/generate_sprites_openrouter.py --walk-sheet mantis_cronometro_walk
+```
+
+El "más de uno" importa: si se armara el `SpriteFrames` con cero cuadros
+cargados, el insecto quedaría **invisible** en vez de caer al sprite
+fijo. Por eso primero se juntan las texturas y recién ahí se decide.
+
+Hoy tienen ciclo los **5 comunes**. Los **10 incógnitos** siguen con
+sprite fijo (más el balanceo procedural que tienen todos): sus prompts ya
+están cargados en `WALK_SHEETS`, falta correr el generador con una API
+key viva.
+
 ### Herramientas de post-proceso
 
 Las imágenes llegan con fondo verde y, en el caso de las caminatas, como

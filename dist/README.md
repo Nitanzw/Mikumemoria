@@ -97,6 +97,15 @@ verificar el **tipo** de la setting y el manifest binario del APK, en el
 `README.md` de la raíz, sección "Orientación en Android:
 `handheld/orientation` es un ENTERO, no un string".
 
+**Dos arreglos de arte** (0.4.0): el overol de Sofía en el menú estaba
+**azul denim** mientras que en todo el resto del arte es **verde**; se
+corrigió rotando el tono con `tools/recolor_hue.py`, que conserva el
+sombreado original de los pliegues (no toca el brillo, solo el tono).
+Y en el menú principal la **cabeza de Sofía quedaba tapada** por el
+botón "Historia": los botones terminan a los 700px y ella ocupaba de
+640 para abajo, así que ahora entra en el hueco libre de abajo y se ve
+entera.
+
 **Menús rediseñados** (0.4.0): tienda, árbol de habilidades, mapa de
 mundos y selector de niveles ya no usan el tema por defecto de Godot.
 Comparten fondo ilustrado, botones de madera y tarjetas con

@@ -192,6 +192,127 @@ WALK_SHEETS: dict[str, dict] = {
         "dest_dir": "insects",
         "dest_prefix": "hormiga_obrera_walk",
     },
+
+    "hormiga_ladrona_walk": {
+        "prompt": (
+            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
+            "4 equal square cells, each cell shows the exact same cute cartoon golden ant wearing a black bandit eye mask, clutching a tiny sparkling blue diamond in its front legs, sly grin, small loot sack on its back, "
+            "identical character design, size, color and camera angle in all 4 cells, "
+            "only the legs move between cells, in a different position of a walking cycle"
+        ),
+        "grid": (2, 2),
+        "frame_size": (128, 128),
+        "dest_dir": "insects",
+        "dest_prefix": "hormiga_ladrona_walk",
+    },
+    "abejorro_pinata_walk": {
+        "prompt": (
+            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
+            "4 equal square cells, each cell shows the exact same cute cartoon bumblebee whose body is made of a colorful layered paper pinata, orange and black crepe-paper fringe, tiny paper wings, festive party look, "
+            "identical character design, size, color and camera angle in all 4 cells, "
+            "only the wings and the paper fringe move between cells"
+        ),
+        "grid": (2, 2),
+        "frame_size": (128, 128),
+        "dest_dir": "insects",
+        "dest_prefix": "abejorro_pinata_walk",
+    },
+    "mantis_cronometro_walk": {
+        "prompt": (
+            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
+            "4 equal square cells, each cell shows the exact same cute cartoon praying mantis, teal-green body, with a real analog stopwatch embedded in its chest showing visible clock hands, raised scythe arms, focused stare, "
+            "identical character design, size, color and camera angle in all 4 cells, "
+            "only the legs move between cells, in a different position of a walking cycle"
+        ),
+        "grid": (2, 2),
+        "frame_size": (128, 128),
+        "dest_dir": "insects",
+        "dest_prefix": "mantis_cronometro_walk",
+    },
+    "escarabajo_radiactivo_walk": {
+        "prompt": (
+            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
+            "4 equal square cells, each cell shows the exact same cute cartoon beetle glowing toxic neon green, radioactive trefoil symbol markings on its shell, dripping glowing green ooze, faint green light from the seams, "
+            "identical character design, size, color and camera angle in all 4 cells, "
+            "only the legs move between cells, in a different position of a walking cycle"
+        ),
+        "grid": (2, 2),
+        "frame_size": (128, 128),
+        "dest_dir": "insects",
+        "dest_prefix": "escarabajo_radiactivo_walk",
+    },
+    "lombriz_gigante_walk": {
+        "prompt": (
+            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
+            "4 equal square cells, each cell shows the exact same cute cartoon giant earthworm, thick pink segmented glossy body, small simple friendly face at one end, damp soil crumbs stuck to its skin, "
+            "identical character design, size, color and camera angle in all 4 cells, "
+            "only the body coils and stretches between cells, like an earthworm crawling forward, the head stays the same"
+        ),
+        "grid": (2, 2),
+        "frame_size": (128, 128),
+        "dest_dir": "insects",
+        "dest_prefix": "lombriz_gigante_walk",
+    },
+    "mutante_volador_walk": {
+        "prompt": (
+            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
+            "4 equal square cells, each cell shows the exact same cute cartoon mutant flying insect with four translucent purple wings, an extra pair of asymmetric eyes on its forehead, slightly lumpy mutated body, "
+            "identical character design, size, color and camera angle in all 4 cells, "
+            "only the four wings change position between cells"
+        ),
+        "grid": (2, 2),
+        "frame_size": (128, 128),
+        "dest_dir": "insects",
+        "dest_prefix": "mutante_volador_walk",
+    },
+    "centella_blindada_walk": {
+        "prompt": (
+            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
+            "4 equal square cells, each cell shows the exact same cute cartoon insect encased in riveted blue electric armor plating, arcs of white-blue energy sparking between the plates, glowing seams, heavy stance, "
+            "identical character design, size, color and camera angle in all 4 cells, "
+            "only the legs and the energy arcs move between cells"
+        ),
+        "grid": (2, 2),
+        "frame_size": (128, 128),
+        "dest_dir": "insects",
+        "dest_prefix": "centella_blindada_walk",
+    },
+    "rayo_insecto_walk": {
+        "prompt": (
+            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
+            "4 equal square cells, each cell shows the exact same cute cartoon insect whose entire body is made of bright yellow lightning bolts and crackling energy, semi-transparent glowing form, extremely fast look, "
+            "identical character design, size, color and camera angle in all 4 cells, "
+            "only the lightning arcs and the energy streaks change shape between cells, the silhouette stays the same"
+        ),
+        "grid": (2, 2),
+        "frame_size": (128, 128),
+        "dest_dir": "insects",
+        "dest_prefix": "rayo_insecto_walk",
+    },
+    "coraza_antigua_walk": {
+        "prompt": (
+            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
+            "4 equal square cells, each cell shows the exact same cute cartoon insect wearing weathered ancient bronze beetle-shell armor with green patina, engraved tribal glyphs on the plates, chipped edges, "
+            "identical character design, size, color and camera angle in all 4 cells, "
+            "only the legs move between cells, in a different position of a walking cycle"
+        ),
+        "grid": (2, 2),
+        "frame_size": (128, 128),
+        "dest_dir": "insects",
+        "dest_prefix": "coraza_antigua_walk",
+    },
+    "reina_primordial_walk": {
+        "prompt": (
+            "a 2x2 grid sprite sheet with a thin black grid line dividing it into "
+            "4 equal square cells, each cell shows the exact same majestic cartoon insect queen, large regal body in deep purple and gold, ornate crown-like antennae, layered iridescent wings, glowing amber eyes, commanding pose, "
+            "identical character design, size, color and camera angle in all 4 cells, "
+            "only the wings and the legs move between cells"
+        ),
+        "grid": (2, 2),
+        "frame_size": (128, 128),
+        "dest_dir": "insects",
+        "dest_prefix": "reina_primordial_walk",
+    },
 }
 
 

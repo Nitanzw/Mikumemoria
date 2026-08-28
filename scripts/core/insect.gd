@@ -5,37 +5,12 @@ extends CharacterBody2D
 ## para que el spawner también pueda consultarlos sin instanciar la escena.
 
 const INSECT_DATA := {
-	# --- Los 5 básicos, con ciclo de caminata animado ---
-	"hormiga_obrera": {"speed": 100.0, "health": 1, "points": 50, "coin_reward": 10, "sprite": "res://assets/sprites/insects/hormiga_obrera.png", "walk_frames": [
-		"res://assets/sprites/insects/hormiga_obrera_walk_0.png",
-		"res://assets/sprites/insects/hormiga_obrera_walk_1.png",
-		"res://assets/sprites/insects/hormiga_obrera_walk_2.png",
-		"res://assets/sprites/insects/hormiga_obrera_walk_3.png",
-	]},
-	"cucaracha_electrica": {"speed": 200.0, "health": 1, "points": 75, "coin_reward": 15, "sprite": "res://assets/sprites/insects/cucaracha_electrica.png", "walk_frames": [
-		"res://assets/sprites/insects/cucaracha_electrica_walk_0.png",
-		"res://assets/sprites/insects/cucaracha_electrica_walk_1.png",
-		"res://assets/sprites/insects/cucaracha_electrica_walk_2.png",
-		"res://assets/sprites/insects/cucaracha_electrica_walk_3.png",
-	]},
-	"escarabajo_blindado": {"speed": 50.0, "health": 3, "points": 150, "coin_reward": 30, "sprite": "res://assets/sprites/insects/escarabajo_blindado.png", "walk_frames": [
-		"res://assets/sprites/insects/escarabajo_blindado_walk_0.png",
-		"res://assets/sprites/insects/escarabajo_blindado_walk_1.png",
-		"res://assets/sprites/insects/escarabajo_blindado_walk_2.png",
-		"res://assets/sprites/insects/escarabajo_blindado_walk_3.png",
-	]},
-	"mosca_pesada": {"speed": 150.0, "health": 1, "points": 100, "coin_reward": 20, "sprite": "res://assets/sprites/insects/mosca_pesada.png", "walk_frames": [
-		"res://assets/sprites/insects/mosca_pesada_walk_0.png",
-		"res://assets/sprites/insects/mosca_pesada_walk_1.png",
-		"res://assets/sprites/insects/mosca_pesada_walk_2.png",
-		"res://assets/sprites/insects/mosca_pesada_walk_3.png",
-	]},
-	"grillo_saltarin": {"speed": 120.0, "health": 1, "points": 80, "coin_reward": 16, "sprite": "res://assets/sprites/insects/grillo_saltarin.png", "walk_frames": [
-		"res://assets/sprites/insects/grillo_saltarin_walk_0.png",
-		"res://assets/sprites/insects/grillo_saltarin_walk_1.png",
-		"res://assets/sprites/insects/grillo_saltarin_walk_2.png",
-		"res://assets/sprites/insects/grillo_saltarin_walk_3.png",
-	]},
+	# --- Los 5 básicos ---
+	"hormiga_obrera": {"speed": 100.0, "health": 1, "points": 50, "coin_reward": 10, "sprite": "res://assets/sprites/insects/hormiga_obrera.png"},
+	"cucaracha_electrica": {"speed": 200.0, "health": 1, "points": 75, "coin_reward": 15, "sprite": "res://assets/sprites/insects/cucaracha_electrica.png"},
+	"escarabajo_blindado": {"speed": 50.0, "health": 3, "points": 150, "coin_reward": 30, "sprite": "res://assets/sprites/insects/escarabajo_blindado.png"},
+	"mosca_pesada": {"speed": 150.0, "health": 1, "points": 100, "coin_reward": 20, "sprite": "res://assets/sprites/insects/mosca_pesada.png"},
+	"grillo_saltarin": {"speed": 120.0, "health": 1, "points": 80, "coin_reward": 16, "sprite": "res://assets/sprites/insects/grillo_saltarin.png"},
 
 	# --- Variantes avanzadas. Reusan el arte de los incógnitos, que hasta
 	# ahora solo se veía al revelarlos. Cubren el rango completo: desde
@@ -51,6 +26,13 @@ const INSECT_DATA := {
 	"rayo_insecto": {"speed": 320.0, "health": 1, "points": 220, "coin_reward": 48, "sprite": "res://assets/sprites/insects/rayo_insecto.png"},
 	"coraza_antigua": {"speed": 45.0, "health": 8, "points": 320, "coin_reward": 70, "sprite": "res://assets/sprites/insects/coraza_antigua.png"},
 }
+
+## Los cuadros del ciclo de caminata se buscan por convención de nombre:
+## `<tipo>_walk_0.png` .. `<tipo>_walk_3.png`, al lado del sprite fijo. No
+## hay que declararlos en INSECT_DATA: alcanza con que los archivos estén,
+## y el bicho pasa a caminar solo. Así, generar el arte que falta (los 10
+## incógnitos) es un comando y cero cambios de código.
+const WALK_FRAME_COUNT := 4
 
 const WANDER_MIN := 0.6
 const WANDER_MAX := 1.4
@@ -136,26 +118,34 @@ func initialize_by_type() -> void:
 	current_health = health
 	points = int(data["points"])
 	coin_reward = int(data["coin_reward"])
-	_apply_sprite_data(sprite, data)
+	_apply_sprite_data(sprite, data, insect_type)
 
-## Arma un SpriteFrames a partir de la config del tipo de insecto: si trae
-## "walk_frames" (lista de rutas), arma un ciclo de caminata animado; si
-## no, cae en un único frame estático desde "sprite" (mismo resultado
-## visual que un Sprite2D de toda la vida, pero con el mismo tipo de nodo
-## para todos los insectos).
-func _apply_sprite_data(target: AnimatedSprite2D, data: Dictionary) -> void:
+## Arma un SpriteFrames para el insecto. Si están los
+## `<tipo>_walk_N.png` arma el ciclo de caminata; si no, cae en un único
+## cuadro estático desde "sprite" (mismo resultado visual que un Sprite2D
+## de toda la vida, pero con el mismo tipo de nodo para todos).
+##
+## Ojo con el caso borde: si se arma el SpriteFrames y después no se
+## carga ningún cuadro, el insecto queda **invisible** en vez de caer al
+## sprite fijo. Por eso primero se juntan las texturas y recién se decide.
+func _apply_sprite_data(target: AnimatedSprite2D, data: Dictionary, type_name: String) -> void:
 	if not target:
 		return
 
-	var walk_frames: Array = data.get("walk_frames", [])
-	if not walk_frames.is_empty():
+	var textures: Array[Texture2D] = []
+	for i in range(WALK_FRAME_COUNT):
+		var path := "res://assets/sprites/insects/%s_walk_%d.png" % [type_name, i]
+		if ResourceLoader.exists(path):
+			textures.append(load(path))
+
+	# Con un solo cuadro no hay animación que valga: es el sprite fijo.
+	if textures.size() > 1:
 		var frames := SpriteFrames.new()
 		frames.add_animation("walk")
 		frames.set_animation_loop("walk", true)
 		frames.set_animation_speed("walk", 8.0)
-		for path in walk_frames:
-			if ResourceLoader.exists(path):
-				frames.add_frame("walk", load(path))
+		for texture in textures:
+			frames.add_frame("walk", texture)
 		target.sprite_frames = frames
 		target.play("walk")
 		return
