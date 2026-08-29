@@ -20,6 +20,16 @@ const PLAYER_MAX_HP := 5
 const MINION_CONTACT_DAMAGE := 1
 const MINION_SPEED_MULT := 2.0
 const MINION_CYCLE_SPEED := 1.1
+## Cada cuánto muerde un minion que ya se te prendió encima.
+const BITE_INTERVAL := 1.1
+
+## Música. TRACK_STEP es primo respecto de la cantidad de pistas para que
+## la rotación no quede emparejada con los niveles de jefe (cada 5).
+const MUSIC_TRACK_COUNT := 14
+const TRACK_STEP := 5
+const BOSS_TRACK := "boss_theme"
+const BOSS_FALLBACK_TRACK := 8
+const MUSIC_FADE := 1.2
 ## Radio alrededor de Sofía donde un proyectil o minion cuenta como golpe.
 const PLAYER_HURT_RADIUS := 85.0
 
@@ -45,6 +55,9 @@ var player_hp: int = PLAYER_MAX_HP
 var player_max_hp: int = PLAYER_MAX_HP
 ## Golpes recibidos en la pelea, para el bloqueo del Delantal Reforzado.
 var _hits_taken: int = 0
+## Minions prendidos a Sofía -> segundos que faltan para el próximo
+## mordisco. Se limpia al morir el minion o al terminar la pelea.
+var _biting: Dictionary = {}
 var _projectiles: Array = []
 var _boss_minions: Array = []
 
@@ -190,7 +203,7 @@ func _spawn_boss() -> void:
 
 	hud.announce(str(boss_config.get("taunt", "")))
 
-func _process_boss_fight(_delta: float) -> void:
+func _process_boss_fight(delta: float) -> void:
 	if not is_instance_valid(boss):
 		return
 
@@ -207,19 +220,32 @@ func _process_boss_fight(_delta: float) -> void:
 			_projectiles.erase(projectile)
 			_damage_player(1)
 
-	# Minions que llegan abajo, donde está Sofía
+	# Minions que llegan hasta Sofía. Antes tocaban, hacían 1 de daño y
+	# desaparecían solos: no había nada que reaccionar, el daño ya estaba
+	# hecho. Ahora se le PRENDEN y siguen mordiendo cada BITE_INTERVAL
+	# hasta que los aplastes, así que sacártelos rápido importa.
 	for minion in _boss_minions.duplicate():
 		if not is_instance_valid(minion):
 			_boss_minions.erase(minion)
+			_biting.erase(minion)
 			if is_instance_valid(boss):
 				boss.on_minion_died()
 			continue
-		if minion.global_position.distance_to(player_pos) < PLAYER_HURT_RADIUS:
-			_damage_player(MINION_CONTACT_DAMAGE)
-			_boss_minions.erase(minion)
-			minion.queue_free()
-			if is_instance_valid(boss):
-				boss.on_minion_died()
+
+		var latched: bool = minion in _biting
+		if not latched and minion.global_position.distance_to(player_pos) < PLAYER_HURT_RADIUS:
+			latched = true
+			_biting[minion] = 0.0     # el primer mordisco es inmediato
+			minion.speed = 0.0        # se queda encima de ella
+			hud.announce("¡Se te prendió uno! Aplastalo")
+
+		if latched:
+			# Se lo mantiene pegado a Sofía para que se vea qué hay que tocar.
+			minion.global_position = minion.global_position.lerp(player_pos, delta * 8.0)
+			_biting[minion] -= delta
+			if _biting[minion] <= 0.0:
+				_biting[minion] = BITE_INTERVAL
+				_damage_player(MINION_CONTACT_DAMAGE)
 
 func _player_position() -> Vector2:
 	if sofia_sprite:
@@ -306,6 +332,7 @@ func _lose_boss_fight(reason: String) -> void:
 		return
 	level_ended = true
 	spawn_timer.stop()
+	_biting.clear()
 	for child in insect_container.get_children():
 		child.queue_free()
 
@@ -313,14 +340,37 @@ func _lose_boss_fight(reason: String) -> void:
 	level_complete_ui.show_defeat(reason, lives_left)
 
 func _play_chapter_music() -> void:
-	# Cada capítulo puede tener su propio tema (generado con
-	# tools/generate_music_suno.py); si todavía no existe, se usa el del
-	# capítulo 1 para que nunca falte música de fondo.
-	var chapter_track := "level_theme_%d" % GameManager.current_chapter
-	if AudioManager.has_music(chapter_track):
-		AudioManager.play_music(chapter_track)
-	else:
-		AudioManager.play_music("level_theme_1")
+	AudioManager.play_music(_pick_track(), MUSIC_FADE)
+
+## Qué pista suena en este nivel.
+##
+## Antes se elegía por CAPÍTULO — y un capítulo son 100 niveles, así que
+## te comías `level_theme_1` cien veces seguidas mientras las otras nueve
+## pistas no sonaban nunca. Ahora rota por nivel.
+##
+## La rotación no es `nivel % 10`: eso hace que los jefes (múltiplos de 5)
+## caigan siempre en las mismas dos pistas. Se usa un paso primo para que
+## el ciclo tarde en repetirse y no quede emparejado con nada del juego.
+func _pick_track() -> String:
+	var level: int = GameManager.current_level
+
+	# Las peleas de jefe tienen su propia pista si existe; si no, se les
+	# reserva la más intensa del set en vez de sonar como un nivel normal.
+	if is_boss_level:
+		if AudioManager.has_music(BOSS_TRACK):
+			return BOSS_TRACK
+		return "level_theme_%d" % BOSS_FALLBACK_TRACK
+
+	var available: Array = []
+	for i in range(1, MUSIC_TRACK_COUNT + 1):
+		var name := "level_theme_%d" % i
+		if AudioManager.has_music(name):
+			available.append(name)
+	if available.is_empty():
+		return "level_theme_1"
+
+	var index: int = ((level - 1) * TRACK_STEP) % available.size()
+	return available[index]
 
 func _setup_background() -> void:
 	# Con stretch/aspect="expand" el viewport real es más alto que los
@@ -399,7 +449,7 @@ func _end_level() -> void:
 
 	AudioManager.play_sfx("level_complete")
 	var reward := GameManager.on_level_complete()
-	level_complete_ui.show_results(GameManager.player_score, GameManager.combo_max, reward)
+	level_complete_ui.show_results(GameManager.player_score, GameManager.combo_max, reward, is_boss_level)
 
 func _on_next_level_pressed() -> void:
 	if GameManager.current_chapter != _entry_chapter:

@@ -48,6 +48,23 @@ el jefe seguía igual: la Reina Primordial caía en 10 golpes.
 guantes (+daño), botiquín (+corazones en las peleas de jefe), delantal
 (bloquea golpes) y repelente (frena a los refuerzos).
 
+**Música nueva y variada**: las 16 pistas se rehicieron **acústicas**
+(guitarra, ukelele, marimba, mandolina) en vez del chiptune 8-bit de
+antes, que cansaba. Y ahora rotan **por nivel**: antes la pista se elegía
+por capítulo, y un capítulo son 100 niveles, así que sonaba siempre la
+misma. Las peleas de jefe tienen su propio tema.
+
+**HUD con panel**: los datos de arriba van sobre un panel translúcido.
+Antes el texto flotaba sobre el fondo y un insecto que pasaba por atrás
+lo tapaba. En las peleas de jefe las **dos barras de vida van verticales
+a los costados** — Sofía a la izquierda, el jefe a la derecha — en vez de
+comerse el alto de la pantalla.
+
+**Los refuerzos ahora muerden**: antes tocaban a Sofía, hacían un punto
+de daño y desaparecían solos; no había nada que reaccionar. Ahora se le
+**prenden encima** y siguen mordiendo cada segundo hasta que los
+aplastás.
+
 **Vidas**: 3 corazones, se pierde uno solo al perder una pelea de jefe.
 Regeneran una cada 10 minutos de tiempo real (también con el juego
 cerrado) o se recargan pagando 150 monedas tocando los corazones en el

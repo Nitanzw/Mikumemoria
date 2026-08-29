@@ -30,6 +30,36 @@ y árbol de habilidades.
    (`emulate_touch_from_mouse=true`), así que no hace falta un dispositivo
    táctil para probar.
 
+## Música: por qué sonaba a arcade y siempre igual
+
+Dos problemas distintos que se sentían como uno.
+
+**Sonaba a 8-bit** porque los prompts lo pedían literalmente: el de
+`level_theme_1` decía *"estilo 8-bit/chiptune, tempo rapido"*. Contra el
+arte pintado del juego quedaba fuera de lugar, y a tempo rápido cansaba
+en pocos niveles. El set entero se regeneró **acústico** — guitarra,
+ukelele, marimba, mandolina, cajón — con dinámica pareja y pensado para
+escucharse largo rato.
+
+**Sonaba siempre la misma** porque la pista se elegía **por capítulo**, y
+un capítulo son 100 niveles: te comías `level_theme_1` cien veces
+mientras las otras nueve no sonaban nunca. Ahora rota **por nivel**, con
+un paso primo respecto de la cantidad de pistas para que la rotación no
+quede emparejada con los niveles de jefe (cada 5). Son 14 pistas de nivel
+más el menú, y las peleas de jefe tienen la suya (`boss_theme`).
+
+**Sobre el peso**: 16 pistas en el estéreo de 200kbps que devuelve Suno
+son 65MB y el APK no entra en GitHub. Se reencodean a **mono 96kbps** —
+es música de fondo en un parlante de celular, el estéreo no aporta — y
+quedan en 33MB, menos que las 11 pistas de antes:
+
+```bash
+ffmpeg -i pista.mp3 -ac 1 -b:a 96k salida.mp3
+```
+
+Ojo con las pistas cortas: Suno a veces devuelve una de 48s en vez de
+~190s. Vale la pena chequear duraciones y regenerar la que salga corta.
+
 ## Generar música con Suno
 
 `tools/generate_music_suno.py` llama a la [API de Suno](https://docs.sunoapi.org)

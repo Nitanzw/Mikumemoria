@@ -2,6 +2,15 @@
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1"]
 
+[sub_resource type="StyleBoxFlat" id="SB_hudpanel"]
+bg_color = Color(0.06, 0.05, 0.04, 0.55)
+corner_radius_bottom_left = 18
+corner_radius_bottom_right = 18
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 14.0
+content_margin_bottom = 12.0
+
 [sub_resource type="StyleBoxFlat" id="SB_bosstrack"]
 bg_color = Color(0.08, 0.05, 0.07, 0.75)
 corner_radius_top_left = 8
@@ -39,12 +48,18 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="VBox" type="VBoxContainer" parent="Margin"]
+[node name="TopPanel" type="PanelContainer" parent="Margin"]
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("SB_hudpanel")
+
+[node name="VBox" type="VBoxContainer" parent="Margin/TopPanel"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 2
 
-[node name="LevelLabel" type="Label" parent="Margin/VBox"]
+[node name="LevelLabel" type="Label" parent="Margin/TopPanel/VBox"]
 layout_mode = 2
 mouse_filter = 2
 horizontal_alignment = 1
@@ -54,12 +69,12 @@ theme_override_constants/outline_size = 6
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
 text = "Nivel 1 - El Huerto de Tomates"
 
-[node name="TopRow" type="HBoxContainer" parent="Margin/VBox"]
+[node name="TopRow" type="HBoxContainer" parent="Margin/TopPanel/VBox"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="ScoreLabel" type="Label" parent="Margin/VBox/TopRow"]
+[node name="ScoreLabel" type="Label" parent="Margin/TopPanel/VBox/TopRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
@@ -69,7 +84,7 @@ theme_override_constants/outline_size = 6
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
 text = "Puntos: 0"
 
-[node name="CoinsLabel" type="Label" parent="Margin/VBox/TopRow"]
+[node name="CoinsLabel" type="Label" parent="Margin/TopPanel/VBox/TopRow"]
 layout_mode = 2
 mouse_filter = 2
 horizontal_alignment = 2
@@ -78,7 +93,7 @@ theme_override_constants/outline_size = 6
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
 text = "🪙 0"
 
-[node name="ComboLabel" type="Label" parent="Margin/VBox"]
+[node name="ComboLabel" type="Label" parent="Margin/TopPanel/VBox"]
 layout_mode = 2
 mouse_filter = 2
 horizontal_alignment = 1
@@ -89,13 +104,13 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
 theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
 text = "Combo x2"
 
-[node name="BossBox" type="VBoxContainer" parent="Margin/VBox"]
+[node name="BossBox" type="VBoxContainer" parent="Margin/TopPanel/VBox"]
 layout_mode = 2
 visible = false
 mouse_filter = 2
 theme_override_constants/separation = 2
 
-[node name="BossName" type="Label" parent="Margin/VBox/BossBox"]
+[node name="BossName" type="Label" parent="Margin/TopPanel/VBox/BossBox"]
 layout_mode = 2
 horizontal_alignment = 1
 mouse_filter = 2
@@ -105,7 +120,7 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
 theme_override_colors/font_color = Color(1, 0.55, 0.55, 1)
 text = "Jefe"
 
-[node name="BossBar" type="ProgressBar" parent="Margin/VBox/BossBox"]
+[node name="BossBar" type="ProgressBar" parent="Margin/TopPanel/VBox/BossBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 22)
 mouse_filter = 2
@@ -114,7 +129,7 @@ theme_override_styles/background = SubResource("SB_bosstrack")
 theme_override_styles/fill = SubResource("SB_bossfill")
 value = 100.0
 
-[node name="Announce" type="Label" parent="Margin/VBox"]
+[node name="Announce" type="Label" parent="Margin/TopPanel/VBox"]
 layout_mode = 2
 horizontal_alignment = 1
 mouse_filter = 2
@@ -126,7 +141,7 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
 theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
 text = ""
 
-[node name="TimeLabel" type="Label" parent="Margin/VBox"]
+[node name="TimeLabel" type="Label" parent="Margin/TopPanel/VBox"]
 layout_mode = 2
 mouse_filter = 2
 horizontal_alignment = 1
@@ -158,6 +173,77 @@ show_percentage = false
 theme_override_styles/background = SubResource("SB_bosstrack")
 theme_override_styles/fill = SubResource("SB_hpfill")
 value = 100.0
+
+[node name="SideBars" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+mouse_filter = 2
+
+[node name="PlayerSide" type="ProgressBar" parent="SideBars"]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 232.0
+offset_right = 38.0
+offset_bottom = -120.0
+mouse_filter = 2
+show_percentage = false
+fill_mode = 3
+theme_override_styles/background = SubResource("SB_bosstrack")
+theme_override_styles/fill = SubResource("SB_hpfill")
+value = 100.0
+
+[node name="PlayerSideLabel" type="Label" parent="SideBars"]
+layout_mode = 1
+anchors_preset = 9
+offset_left = 8.0
+offset_top = 204.0
+offset_right = 90.0
+offset_bottom = 230.0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 16
+theme_override_constants/outline_size = 5
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_colors/font_color = Color(0.7, 1, 0.7, 1)
+text = "Sofía"
+
+[node name="BossSide" type="ProgressBar" parent="SideBars"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -38.0
+offset_top = 232.0
+offset_right = -10.0
+offset_bottom = -120.0
+mouse_filter = 2
+show_percentage = false
+fill_mode = 3
+theme_override_styles/background = SubResource("SB_bosstrack")
+theme_override_styles/fill = SubResource("SB_bossfill")
+value = 100.0
+
+[node name="BossSideLabel" type="Label" parent="SideBars"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -90.0
+offset_top = 204.0
+offset_right = -8.0
+offset_bottom = 230.0
+mouse_filter = 2
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 16
+theme_override_constants/outline_size = 5
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_colors/font_color = Color(1, 0.6, 0.6, 1)
+text = "Jefe"
 
 [node name="DamageFlash" type="ColorRect" parent="."]
 layout_mode = 1

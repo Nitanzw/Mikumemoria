@@ -54,88 +54,95 @@ POLL_TIMEOUT_SECONDS = 8 * 60
 DEFAULT_CALLBACK_URL = "https://example.com/suno-callback-unused"
 
 # nombre -> (título, estilo, prompt)
+#
+# Ojo con el estilo: la primera tanda pedía literalmente "8-bit/chiptune"
+# y "tempo rapido", y el resultado sonaba a arcade y cansaba en pocos
+# niveles. Ahora todo el set es ACÚSTICO y de dinámica pareja, que es lo
+# que pega con el arte pintado del juego y se banca escucharlo seguido.
 # Los nombres son justo los que ya usa/usará el código GDScript
 # (AudioManager.play_music("menu_theme"), "level_theme_<capítulo>", etc).
 TRACKS: dict[str, tuple[str, str, str]] = {
     "menu_theme": (
-        "Invasion en el Huerto - Menu",
-        "chiptune alegre, videojuego casual, staccato, tempo medio",
-        "Tema de menu principal para un juego movil casual de golpear "
-        "insectos en un huerto. Chiptune alegre y acogedor, ritmo saltarin, "
-        "sensacion de granja soleada, instrumental, pensado para loop.",
+        "El Huerto de Sofia - Menu",
+        "folk acustico calido, guitarra, ukelele, marimba suave, tempo tranquilo",
+        "Tema de menu de un juego de huerta. Guitarra acustica y ukelele, marimba de fondo, sensacion de tarde de sol en el jardin, relajado y acogedor. instrumental, sin voces, sin letra, loop limpio, mezcla suave sin picos, dinamica pareja para escuchar largo rato sin cansar.",
     ),
     "level_theme_1": (
         "El Huerto de Tomates",
-        "chiptune energetico, 8-bit, ritmo rapido, videojuego arcade",
-        "Musica de fondo para el nivel 'El Huerto de Tomates', capitulo 1 "
-        "de un juego arcade de golpear insectos. Energetica y divertida, "
-        "tempo rapido, estilo 8-bit/chiptune, instrumental, para loop.",
+        "folk acustico alegre, guitarra ritmica, palmas suaves, tempo medio",
+        "Nivel en una huerta de tomates. Guitarra acustica ritmica, palmas suaves y flauta, alegre y liviano, nada frenetico. instrumental, sin voces, sin letra, loop limpio, mezcla suave sin picos, dinamica pareja para escuchar largo rato sin cansar.",
     ),
     "level_theme_2": (
         "El Invernadero",
-        "chiptune calido, humedo, synth suave, tempo medio",
-        "Musica de fondo para 'El Invernadero', capitulo 2. Ambiente calido "
-        "y humedo, synths suaves con un toque tropical, tempo medio, "
-        "instrumental, para loop.",
+        "acustico calido, vibrafono, cuerdas suaves, tempo medio lento",
+        "Nivel dentro de un invernadero humedo. Vibrafono y cuerdas suaves, aire tibio y verde, tranquilo. instrumental, sin voces, sin letra, loop limpio, mezcla suave sin picos, dinamica pareja para escuchar largo rato sin cansar.",
     ),
     "level_theme_3": (
         "La Cueva Subterranea",
-        "chiptune oscuro, ecos, misterioso, tempo medio",
-        "Musica de fondo para 'La Cueva Subterranea', capitulo 3. Ambiente "
-        "oscuro y misterioso con ecos, tension creciente sin dejar de ser "
-        "un juego casual, instrumental, para loop.",
+        "ambiente acustico con eco, contrabajo pizzicato, percusion tenue",
+        "Nivel en una cueva bajo tierra. Contrabajo en pizzicato con eco y percusion tenue, curioso y misterioso, no de miedo. instrumental, sin voces, sin letra, loop limpio, mezcla suave sin picos, dinamica pareja para escuchar largo rato sin cansar.",
     ),
     "level_theme_4": (
         "El Cultivo Radiactivo",
-        "electronico glitch, energetico, synth acido",
-        "Musica de fondo para 'El Cultivo Radiactivo', capitulo 4. "
-        "Electronica glitch y energetica, synths acidos, sensacion de "
-        "peligro radiactivo pero divertida, instrumental, para loop.",
+        "folk con synth analogico suave, tempo medio, texturas calidas",
+        "Nivel en un cultivo raro y brillante. Guitarra con un synth analogico suave por encima, curioso y un poco extraño, sin estridencias. instrumental, sin voces, sin letra, loop limpio, mezcla suave sin picos, dinamica pareja para escuchar largo rato sin cansar.",
     ),
     "level_theme_5": (
         "El Pantano",
-        "groove pantanoso, percusion organica, misterioso",
-        "Musica de fondo para 'El Pantano', capitulo 5. Groove pantanoso "
-        "con percusion organica y atmosfera misteriosa, tempo medio, "
-        "instrumental, para loop.",
+        "groove acustico lento, percusion de madera, bajo redondo",
+        "Nivel en un pantano. Groove lento con percusion de madera y bajo redondo, humedo y perezoso. instrumental, sin voces, sin letra, loop limpio, mezcla suave sin picos, dinamica pareja para escuchar largo rato sin cansar.",
     ),
     "level_theme_6": (
         "Laboratorio Mutante",
-        "synth de ciencia ficcion, tenso, electronico",
-        "Musica de fondo para 'Laboratorio Mutante', capitulo 6. Synths de "
-        "ciencia ficcion, tension electronica, sensacion de laboratorio "
-        "secreto, instrumental, para loop.",
+        "acustico con cuerdas curiosas, pizzicato juguetón, tempo medio",
+        "Nivel en un laboratorio abandonado. Cuerdas en pizzicato juguetonas, curioso y travieso, nada tenso. instrumental, sin voces, sin letra, loop limpio, mezcla suave sin picos, dinamica pareja para escuchar largo rato sin cansar.",
     ),
     "level_theme_7": (
         "Fabrica de Cascos",
-        "industrial mecanico, ritmo de maquina, percusion metalica",
-        "Musica de fondo para 'Fabrica de Cascos', capitulo 7. Ritmo "
-        "industrial y mecanico con percusion metalica, tempo firme, "
-        "instrumental, para loop.",
+        "percusion de madera y metal suave, groove medio, acustico",
+        "Nivel en una fabrica vieja. Percusion de madera y metal suave marcando un groove medio, ritmico pero calmo. instrumental, sin voces, sin letra, loop limpio, mezcla suave sin picos, dinamica pareja para escuchar largo rato sin cansar.",
     ),
     "level_theme_8": (
         "Red de Tuneles Express",
-        "electronico muy rapido, persecucion, alta energia",
-        "Musica de fondo para 'Red de Tuneles Express', capitulo 8. "
-        "Electronica muy rapida tipo persecucion, altisima energia, "
-        "instrumental, para loop.",
+        "acustico ritmico, guitarra staccato, bongos, tempo medio alto",
+        "Nivel de tuneles. Guitarra staccato y bongos, con movimiento y ganas, sin llegar a ser frenetico. instrumental, sin voces, sin letra, loop limpio, mezcla suave sin picos, dinamica pareja para escuchar largo rato sin cansar.",
     ),
     "level_theme_9": (
         "El Bunker Enemigo",
-        "accion militar, tenso, percusion marcial",
-        "Musica de fondo para 'El Bunker Enemigo', capitulo 9. Accion "
-        "militar tensa con percusion marcial, sensacion de infiltracion, "
-        "instrumental, para loop.",
+        "cuerdas graves suaves, percusion contenida, tempo medio",
+        "Nivel de infiltracion. Cuerdas graves suaves y percusion contenida, expectante y sigiloso. instrumental, sin voces, sin letra, loop limpio, mezcla suave sin picos, dinamica pareja para escuchar largo rato sin cansar.",
     ),
     "level_theme_10": (
         "El Nucleo Reina",
-        "epico electronico, orquesta sintetica, climax final",
-        "Musica de fondo para 'El Nucleo Reina', capitulo final. Epica, "
-        "electronica con toques orquestales sinteticos, sensacion de "
-        "enfrentamiento final, instrumental, para loop.",
+        "orquesta acustica calida, cuerdas y maderas, epico contenido",
+        "Nivel final. Orquesta acustica calida con cuerdas y maderas, sensacion de cierre importante, epico pero sin estridencia. instrumental, sin voces, sin letra, loop limpio, mezcla suave sin picos, dinamica pareja para escuchar largo rato sin cansar.",
+    ),
+    "boss_theme": (
+        "Pelea de Jefe",
+        "percusion tribal, cuerdas tensas, tempo medio alto, acustico",
+        "Musica de pelea contra un insecto jefe. Percusion tribal y cuerdas tensas, urgente y con pulso, se nota que es una pelea pero sigue siendo acustica y agradable. instrumental, sin voces, sin letra, loop limpio, mezcla suave sin picos, dinamica pareja para escuchar largo rato sin cansar.",
+    ),
+    "level_theme_11": (
+        "Tarde de Riego",
+        "acustico suave, guitarra con arpegios, flauta, tempo lento",
+        "Nivel tranquilo de huerta al atardecer. Arpegios de guitarra y flauta, sereno. instrumental, sin voces, sin letra, loop limpio, mezcla suave sin picos, dinamica pareja para escuchar largo rato sin cansar.",
+    ),
+    "level_theme_12": (
+        "Entre los Girasoles",
+        "folk luminoso, mandolina, acordeon suave, tempo medio",
+        "Nivel entre girasoles altos. Mandolina y acordeon suave, luminoso y campestre. instrumental, sin voces, sin letra, loop limpio, mezcla suave sin picos, dinamica pareja para escuchar largo rato sin cansar.",
+    ),
+    "level_theme_13": (
+        "Despues de la Lluvia",
+        "acustico fresco, piano suave, cuerdas livianas, tempo medio lento",
+        "Nivel despues de la lluvia. Piano suave y cuerdas livianas, fresco y limpio. instrumental, sin voces, sin letra, loop limpio, mezcla suave sin picos, dinamica pareja para escuchar largo rato sin cansar.",
+    ),
+    "level_theme_14": (
+        "El Galpon de Herramientas",
+        "acustico juguetón, banjo, percusion de cajon, tempo medio",
+        "Nivel en el galpon. Banjo y cajon peruano, juguetón y con swing. instrumental, sin voces, sin letra, loop limpio, mezcla suave sin picos, dinamica pareja para escuchar largo rato sin cansar.",
     ),
 }
-
 
 def _api_key() -> str:
     key = os.environ.get("SUNO_API_KEY", "").strip()
