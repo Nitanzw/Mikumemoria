@@ -22,11 +22,13 @@ const TIER_HEALTH_STEP := 0.18
 const PHASE_2_HP := 0.6
 const PHASE_3_HP := 0.3
 
-## Segundos entre ataques, por fase. En la fase 3 ataca casi al doble.
+## Segundos entre ataques, por fase. Bastante más agresivo que antes
+## (2.2-3.2 / 1.5-2.4 / 0.9-1.6): con esos números el jefe se pasaba la
+## mayor parte de la pelea paseando sin hacer nada.
 const PHASE_COOLDOWNS := [
-	Vector2(2.2, 3.2),
-	Vector2(1.5, 2.4),
-	Vector2(0.9, 1.6),
+	Vector2(1.3, 2.0),
+	Vector2(0.9, 1.4),
+	Vector2(0.5, 0.9),
 ]
 
 # --- Habilidades ---

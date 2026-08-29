@@ -361,6 +361,39 @@ un 18%, invoca un refuerzo más y **desbloquea una habilidad nueva**
 tiempo de limpiarlos sin despeinarse. Ahora van a 2x, y más en las
 vueltas siguientes al roster.
 
+## Los ataques del jefe se pueden anular
+
+Antes, una vez que el jefe empezaba un ataque salía sí o sí: lo único que
+quedaba era esquivar. Ahora **embestida, invocación y escupitajo tienen
+una ventana** (`_telegraph`) en la que pegarle al jefe **cancela el
+ataque** y lo deja aturdido un rato. Eso es lo que hace que valga la pena
+mirar lo que hace el jefe en vez de tapear al vacío.
+
+El chequeo va **antes** que el escudo y los minions a propósito: si fuera
+después, un jefe escudado nunca podría interrumpirse, que es justo cuando
+más se necesita.
+
+Además atacan bastante más seguido: `PHASE_COOLDOWNS` pasó de 2.2-3.2s a
+1.3-2.0s en la primera fase, y de 0.9-1.6s a 0.5-0.9s en la última. Con
+los números viejos el jefe se pasaba la pelea paseando.
+
+## La tienda tiene dos vistas
+
+Con 18 artículos, la lista con nombre y descripción obligaba a scrollear
+muchísimo. Ahora hay un botón arriba que alterna:
+
+- **Cuadrícula** (por defecto): grilla de íconos tipo market, con el
+  precio o el nivel comprado abajo. Tocando uno se abre su ficha con la
+  descripción y el botón de comprar.
+- **Lista**: la vista detallada de siempre.
+
+La ficha reusa la misma tarjeta que la vista de lista, para no tener dos
+formas distintas de mostrar lo mismo. La vista elegida se guarda.
+
+Y desde el resumen de un nivel se puede **ir derecho a la tienda**: antes
+había que volver al menú, entrar a la tienda y rehacer todo el camino
+hasta el nivel. El botón "Volver" de la tienda sabe de dónde viniste.
+
 ## Objetos pasivos (`ItemSystem`)
 
 La tienda tiene dos secciones. Las **armas** se equipan de a una; los

@@ -2,6 +2,9 @@ extends CanvasLayer
 
 signal next_level_pressed
 signal menu_pressed
+## Ir derecho a la tienda desde el resumen: sin esto había que volver al
+## menú, entrar a la tienda y rehacer todo el camino hasta el nivel.
+signal shop_pressed
 signal retry_pressed
 
 ## Umbrales de combo para elegir el título y el comentario.
@@ -19,12 +22,14 @@ const DEFEAT_TITLES := [
 @onready var reward_value: Label = $Dim/Panel/VBox/RewardValue
 @onready var next_button: Button = $Dim/Panel/VBox/Buttons/NextButton
 @onready var menu_button: Button = $Dim/Panel/VBox/Buttons/MenuButton
+@onready var shop_button: Button = $Dim/Panel/VBox/Buttons/ShopButton
 @onready var title_label: Label = $Dim/Panel/VBox/Title
 
 func _ready() -> void:
 	visible = false
 	next_button.pressed.connect(_on_next_pressed)
 	menu_button.pressed.connect(func(): menu_pressed.emit())
+	shop_button.pressed.connect(func(): shop_pressed.emit())
 
 func _on_next_pressed() -> void:
 	# El mismo botón sirve para avanzar o reintentar según cómo terminó.

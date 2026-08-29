@@ -69,6 +69,10 @@ theme_override_constants/separation = 12
 layout_mode = 2
 text = "Menú"
 
+[node name="ShopButton" type="Button" parent="Dim/Panel/VBox/Buttons"]
+layout_mode = 2
+text = "Tienda"
+
 [node name="NextButton" type="Button" parent="Dim/Panel/VBox/Buttons"]
 layout_mode = 2
 text = "Siguiente Nivel"

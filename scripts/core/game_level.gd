@@ -96,6 +96,7 @@ func _ready() -> void:
 	level_complete_ui.next_level_pressed.connect(_on_next_level_pressed)
 	level_complete_ui.menu_pressed.connect(_on_menu_pressed)
 	level_complete_ui.retry_pressed.connect(_on_retry_pressed)
+	level_complete_ui.shop_pressed.connect(_on_shop_pressed)
 
 	spawn_timer.wait_time = level_config.get("spawn_rate", 2.0)
 	spawn_timer.timeout.connect(_on_spawn_timer_timeout)
@@ -583,6 +584,11 @@ func _on_next_level_pressed() -> void:
 
 func _on_retry_pressed() -> void:
 	get_tree().reload_current_scene()
+
+## Abre la tienda dejando marcado que se vuelve al juego, no al menú.
+func _on_shop_pressed() -> void:
+	GameManager.return_to_game_after_shop = true
+	get_tree().change_scene_to_file("res://scenes/menu/shop.tscn")
 
 func _on_menu_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/menu/main_menu.tscn")

@@ -72,6 +72,16 @@ lenta, campo expansivo, tormenta de rayos que pega a todos, y
 lanzallamas. Se pagan al desbloquearlos **y cada vez que los usás**, así
 no rompen el juego.
 
+**A los jefes se les pueden cortar los ataques**: cuando se preparan
+para embestir, invocar o escupir, pegarles cancela el ataque y los deja
+aturdidos. Y atacan bastante más seguido que antes, que se pasaban la
+pelea paseando.
+
+**Tienda tipo market**: por defecto es una grilla de íconos; tocás uno y
+se abre su ficha. Con el botón de arriba se pasa a la vista de lista
+detallada. Y desde el resumen de un nivel se entra derecho a la tienda,
+sin volver al menú.
+
 **Vidas**: 3 corazones, se pierde uno solo al perder una pelea de jefe.
 Regeneran una cada 10 minutos de tiempo real (también con el juego
 cerrado) o se recargan pagando 150 monedas tocando los corazones en el

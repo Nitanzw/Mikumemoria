@@ -32,6 +32,10 @@ const SHIELD_HITS := 4        # golpes para romper el escudo de `shield`
 const SHIELD_RECOVER_TIME := 2.5
 const BURROW_TIME := 2.2
 const DASH_WINDUP := 0.7
+const SUMMON_WINDUP := 0.6
+const SPIT_WINDUP := 0.5
+## Cuánto queda frenado el jefe después de que le cortás un ataque.
+const STUN_SECONDS := 1.4
 const DASH_SPEED := 900.0
 const HEAL_IDLE_TIME := 5.0   # sin recibir golpes durante esto -> se cura
 const HEAL_AMOUNT := 2
@@ -79,6 +83,9 @@ var _move_phase: float = 0.0      # reloj propio del movimiento
 var _move_timer: float = 0.0      # para los movimientos por ráfagas
 var _time_since_hit: float = 0.0
 var _dashing: bool = false
+## Mientras prepara un ataque, un golpe se lo anula (ver _telegraph).
+var _charging: bool = false
+var _charge_cancelled: bool = false
 var _dash_target := Vector2.ZERO
 var _player_position := Vector2.ZERO
 
@@ -370,6 +377,10 @@ func _perform(ability: String) -> void:
 		"enrage": _enrage()
 
 func _summon() -> void:
+	ability_announced.emit("¡Está llamando refuerzos! Pegale para cortarlo")
+	if not await _telegraph(SUMMON_WINDUP):
+		return
+
 	# Más refuerzos a medida que avanza la pelea: en la última fase la
 	# pantalla se llena y hay que limpiar rápido.
 	var count: int = 3 + _phase
@@ -409,19 +420,49 @@ func _burrow() -> void:
 	out.tween_property(sprite, "scale", Vector2(1.7, 1.7), 0.3)
 
 func _start_dash() -> void:
-	ability_announced.emit("¡Se prepara para embestir!")
+	ability_announced.emit("¡Se prepara para embestir! Pegale para frenarlo")
 	# Aviso previo: se agranda un toque antes de salir disparado, para que
 	# el golpe sea esquivable y no se sienta injusto.
 	var tween := create_tween()
 	tween.tween_property(sprite, "scale", Vector2(2.0, 2.0), DASH_WINDUP * 0.5)
 	tween.tween_property(sprite, "scale", Vector2(1.7, 1.7), DASH_WINDUP * 0.5)
-	await get_tree().create_timer(DASH_WINDUP).timeout
-	if is_dead or is_burrowed:
+
+	if not await _telegraph(DASH_WINDUP):
 		return
 	_dash_target = _player_position
 	_dashing = true
 
+## Ventana en la que el ataque se puede ANULAR pegándole al jefe.
+##
+## Antes los ataques salían sí o sí una vez empezados: solo quedaba
+## esquivar. Ahora se puede interrumpir, que es lo que hace que valga la
+## pena mirar lo que hace el jefe en vez de tapear al vacío.
+##
+## Devuelve false si el ataque quedó anulado (o el jefe murió / se
+## enterró), y el llamador tiene que abandonar.
+func _telegraph(seconds: float) -> bool:
+	_charging = true
+	_charge_cancelled = false
+	await get_tree().create_timer(seconds).timeout
+	_charging = false
+
+	if _charge_cancelled:
+		_charge_cancelled = false
+		# Queda aturdido un momento: es la recompensa por anticiparlo.
+		ability_announced.emit("¡Le cortaste el ataque!")
+		_ability_timer = maxf(_ability_timer, STUN_SECONDS)
+		_flash(Color(1.6, 1.6, 0.6))
+		if sprite:
+			sprite.scale = Vector2(1.7, 1.7)
+		return false
+
+	return not (is_dead or is_burrowed)
+
 func _spit() -> void:
+	ability_announced.emit("¡Va a escupir!")
+	if not await _telegraph(SPIT_WINDUP):
+		return
+
 	ability_announced.emit("¡Escupe!")
 	wants_projectile.emit(global_position)
 
@@ -461,6 +502,13 @@ func take_damage(amount: int = 1) -> void:
 		return
 
 	_time_since_hit = 0.0
+
+	# Un golpe mientras prepara un ataque lo anula. Se chequea ANTES que
+	# el escudo y los minions a propósito: si no, un jefe escudado nunca
+	# podría ser interrumpido y la mecánica no existiría justo cuando más
+	# se necesita.
+	if _charging:
+		_charge_cancelled = true
 
 	if is_burrowed:
 		return

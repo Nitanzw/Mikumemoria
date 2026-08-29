@@ -1,6 +1,17 @@
 extends Control
 
-## Tienda: dos secciones.
+## Tienda, con DOS VISTAS que se alternan con el botón de arriba:
+##
+## - **Cuadrícula** (por defecto): una grilla de íconos tipo market. De un
+##   vistazo se ve todo el catálogo; tocando uno se abre su ficha con la
+##   descripción y el botón de comprar. Con 18 artículos, la lista con
+##   texto completo obligaba a scrollear muchísimo para encontrar algo.
+## - **Lista**: la vista detallada de siempre, con nombre y descripción
+##   visibles en cada fila.
+##
+## La vista elegida se guarda, así no hay que volver a cambiarla.
+##
+## Tres secciones.
 ##
 ## **Armas** (WeaponSystem): se compran una vez y se equipan; solo una a
 ## la vez. **Objetos** (ItemSystem): mejoras pasivas por niveles que
@@ -21,14 +32,40 @@ extends Control
 @onready var header: PanelContainer = $Margin/VBox/Header
 @onready var back_button: Button = $Margin/VBox/BackButton
 
+const GRID_COLUMNS := 3
+const TILE := Vector2(96, 108)
+
+var _grid_view: bool = true
+var _view_button: Button
+
 func _ready() -> void:
 	header.add_theme_stylebox_override("panel", UITheme.scrim_style(0.55))
 	UITheme.style_title(title, 30)
 	UITheme.style_wood_button(back_button)
 
-	back_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/menu/main_menu.tscn"))
+	back_button.text = "Volver al nivel" if GameManager.return_to_game_after_shop else "Volver"
+	back_button.pressed.connect(_on_back_pressed)
+
+	_grid_view = bool(GameManager.shop_grid_view)
+	_build_view_toggle()
+
 	GameManager.coins_changed.connect(func(_v): _refresh())
 	_refresh()
+
+## Botón para alternar vista. Va en el encabezado, arriba de todo, que es
+## donde se lo busca.
+func _build_view_toggle() -> void:
+	_view_button = Button.new()
+	_view_button.custom_minimum_size = Vector2(0, 46)
+	_view_button.add_theme_font_size_override("font_size", 18)
+	UITheme.style_wood_button(_view_button)
+	_view_button.pressed.connect(func():
+		_grid_view = not _grid_view
+		GameManager.set_shop_grid_view(_grid_view)
+		_refresh()
+	)
+	$Margin/VBox.add_child(_view_button)
+	$Margin/VBox.move_child(_view_button, 1)
 
 func _refresh() -> void:
 	for child in coins_holder.get_children():
@@ -38,6 +75,16 @@ func _refresh() -> void:
 	for child in list.get_children():
 		child.queue_free()
 
+	if _view_button:
+		_view_button.text = "Ver en lista" if _grid_view else "Ver en cuadrícula"
+
+	if _grid_view:
+		_build_grid_view()
+	else:
+		_build_list_view()
+
+## Vista detallada: una tarjeta por artículo, con su descripción.
+func _build_list_view() -> void:
 	list.add_child(_build_section("Armas"))
 	for weapon_name in WeaponSystem.get_all_weapon_names():
 		list.add_child(_build_row(weapon_name))
@@ -54,6 +101,123 @@ func _refresh() -> void:
 	for item_id in ItemSystem.get_all_item_ids():
 		if ItemSystem.get_item(item_id).get("active", false):
 			list.add_child(_build_item_row(item_id))
+
+## Vista cuadrícula: solo íconos, con su precio abajo. La descripción se
+## ve tocando el artículo.
+func _build_grid_view() -> void:
+	list.add_child(_build_section("Armas"))
+	list.add_child(_build_grid(WeaponSystem.get_all_weapon_names(), true))
+
+	var pasivos: Array = []
+	var poderes: Array = []
+	for item_id in ItemSystem.get_all_item_ids():
+		if ItemSystem.get_item(item_id).get("active", false):
+			poderes.append(item_id)
+		else:
+			pasivos.append(item_id)
+
+	list.add_child(_build_section("Objetos"))
+	list.add_child(_build_grid(pasivos, false))
+	list.add_child(_build_section("Poderes"))
+	list.add_child(_build_grid(poderes, false))
+
+func _build_grid(ids: Array, are_weapons: bool) -> GridContainer:
+	var grid := GridContainer.new()
+	grid.columns = GRID_COLUMNS
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 10)
+	for item_id in ids:
+		grid.add_child(_build_tile(item_id, are_weapons))
+	return grid
+
+## Casillero de la cuadrícula: ícono grande, y abajo el estado (precio,
+## nivel comprado, o "Equipado"). Sin texto largo: para eso está la ficha.
+func _build_tile(item_id: String, is_weapon: bool) -> Control:
+	var button := Button.new()
+	button.custom_minimum_size = TILE
+	button.add_theme_stylebox_override("normal", UITheme.card_style())
+	button.add_theme_stylebox_override("hover", UITheme.card_style())
+	button.add_theme_stylebox_override("pressed", UITheme.card_style())
+	button.pressed.connect(_show_detail.bind(item_id, is_weapon))
+
+	var box := VBoxContainer.new()
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.set_anchors_preset(Control.PRESET_FULL_RECT)
+	box.add_theme_constant_override("separation", 2)
+	button.add_child(box)
+
+	var icon := TextureRect.new()
+	var path: String = _icon_path(item_id, is_weapon)
+	if path != "" and ResourceLoader.exists(path):
+		icon.texture = load(path)
+	icon.custom_minimum_size = Vector2(0, 58)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(icon)
+
+	var status := Label.new()
+	status.text = _tile_status(item_id, is_weapon)
+	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UITheme.style_body(status, 14)
+	box.add_child(status)
+	return button
+
+func _icon_path(item_id: String, is_weapon: bool) -> String:
+	if is_weapon:
+		return str(WeaponSystem.get_weapon_data(item_id).get("sprite", ""))
+	return str(ItemSystem.get_item(item_id).get("icon", ""))
+
+func _tile_status(item_id: String, is_weapon: bool) -> String:
+	if is_weapon:
+		if item_id == GameManager.equipped_weapon:
+			return "Equipado"
+		if item_id in GameManager.unlocked_weapons:
+			return "Tenés"
+		return str(int(WeaponSystem.get_price(item_id)))
+
+	var level := ItemSystem.get_level(GameManager.items, item_id)
+	var cost := ItemSystem.get_cost(GameManager.items, item_id)
+	if cost < 0:
+		return "MAX %d/%d" % [level, ItemSystem.get_max_level(item_id)]
+	return "%d/%d\n%d" % [level, ItemSystem.get_max_level(item_id), cost]
+
+## Ficha del artículo: se abre al tocar un casillero de la cuadrícula.
+## Es la misma tarjeta que usa la vista de lista, sobre un fondo oscuro,
+## para no tener dos formas distintas de mostrar lo mismo.
+func _show_detail(item_id: String, is_weapon: bool) -> void:
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.72)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(dim)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.add_child(center)
+
+	var holder := VBoxContainer.new()
+	holder.custom_minimum_size = Vector2(440, 0)
+	holder.add_theme_constant_override("separation", 10)
+	center.add_child(holder)
+
+	holder.add_child(_build_row(item_id) if is_weapon else _build_item_row(item_id))
+
+	var close := Button.new()
+	close.text = "Cerrar"
+	close.custom_minimum_size = Vector2(0, 50)
+	close.add_theme_font_size_override("font_size", 20)
+	UITheme.style_wood_button(close)
+	close.pressed.connect(func(): dim.queue_free())
+	holder.add_child(close)
+
+	# Comprar desde la ficha cierra y refresca: si quedara abierta, el
+	# precio y el nivel que muestra serían los de antes de la compra.
+	GameManager.coins_changed.connect(func(_v):
+		if is_instance_valid(dim):
+			dim.queue_free()
+	, CONNECT_ONE_SHOT)
 
 ## Separador con el nombre de la sección: sin esto, armas y objetos
 ## quedaban mezclados en una sola lista larga y no se entendía qué era qué.
@@ -208,3 +372,13 @@ func _build_row(weapon_name: String) -> Control:
 
 	box.add_child(button)
 	return card
+
+
+## Vuelve a donde estabas: al juego si entraste desde el resumen de un
+## nivel, al menú principal si entraste desde el menú.
+func _on_back_pressed() -> void:
+	if GameManager.return_to_game_after_shop:
+		GameManager.return_to_game_after_shop = false
+		get_tree().change_scene_to_file("res://scenes/main_game.tscn")
+		return
+	get_tree().change_scene_to_file("res://scenes/menu/main_menu.tscn")
