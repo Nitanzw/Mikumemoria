@@ -182,6 +182,15 @@ UI_PIECES = {
     "item_botiquin": ("ui_icon", "a small cream-colored first aid tin box with a red cross on the lid, slightly open showing bandages, homemade and worn, game item icon, readable at small size"),
     "item_delantal": ("ui_icon", "a thick padded green gardening apron with reinforced stitching and a front pocket, folded neatly, sturdy protective look, game item icon, readable at small size"),
     "item_repelente": ("ui_icon", "a homemade glass spray bottle filled with cloudy green herbal liquid, cork and hand-tied label, a few leaves at its base, game item icon, readable at small size"),
+    "item_trebol": ("ui_icon", "a single bright four-leaf clover with dewdrops and a soft golden glow around it, lucky charm, game item icon, readable at small size"),
+    "item_frasco": ("ui_icon", "a glass mason jar packed with gold coins, metal lid slightly open, coins spilling over the rim, warm shine, game item icon, readable at small size"),
+    "item_reloj": ("ui_icon", "a small wooden-framed hourglass with golden sand falling, brass caps, game item icon, readable at small size"),
+    "item_lupa": ("ui_icon", "an old brass magnifying glass with a worn wooden handle and a clear round lens, game item icon, readable at small size"),
+    "item_botas": ("ui_icon", "a pair of yellow rubber gardening boots with muddy soles, standing side by side, game item icon, readable at small size"),
+    "item_reloj_bolsillo": ("ui_icon", "an ornate golden pocket watch on a chain, lid open showing the clock face, faint blue glow, game item icon, readable at small size"),
+    "item_campo": ("ui_icon", "a glowing translucent blue energy dome shockwave expanding outward in concentric rings, game item icon, readable at small size"),
+    "item_rayo": ("ui_icon", "a dark storm cloud with a bright yellow lightning bolt striking down from it, game item icon, readable at small size"),
+    "item_lanzallamas": ("ui_icon", "a homemade metal flamethrower nozzle shooting a burst of orange flame to the side, rustic and improvised, game item icon, readable at small size"),
 }
 
 # El icono vive en la raiz del repo, no en assets/sprites/

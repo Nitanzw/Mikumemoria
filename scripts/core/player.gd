@@ -9,8 +9,15 @@ const BOSS_LAYER_MASK := 1 << 2    # capa 4, ver boss.tscn
 const HITTABLE_MASK := INSECT_LAYER_MASK | BOSS_LAYER_MASK
 const TAUNT_RADIUS := 300.0
 
+## Avisa que el tap salió crítico, para que la escena lo muestre.
+signal crit_landed(at: Vector2)
+
 const HitEffectScene := preload("res://scenes/effects/hit_effect.tscn")
 const WeaponStrikeScene := preload("res://scenes/effects/weapon_strike.tscn")
+
+## Multiplicador de radio para el próximo golpe (Campo Expansivo).
+## 1.0 = sin efecto. Lo setea game_level al activar el poder.
+var next_hit_radius_mult: float = 1.0
 
 var total_hits: int = 0
 var total_misses: int = 0
@@ -25,8 +32,24 @@ func handle_tap(tap_position: Vector2) -> void:
 	var radius := GameManager.get_weapon_radius()
 	var damage := GameManager.get_weapon_damage()
 
+	# Campo Expansivo: agranda UN golpe y se gasta, acierte o no. Si solo
+	# se gastara al acertar, se podría dejar cargado indefinidamente
+	# tocando al vacío.
+	if next_hit_radius_mult > 1.0:
+		radius *= next_hit_radius_mult
+		next_hit_radius_mult = 1.0
+
+	# Trébol de la Suerte: el crítico se tira UNA vez por tap, no por
+	# insecto. Si se tirara por insecto, un tap que agarra a cinco daría
+	# cinco tiradas y el trébol valdría mucho más de lo que dice.
+	var is_crit := ItemSystem.roll_crit(GameManager.items)
+	if is_crit:
+		damage *= ItemSystem.CRIT_MULTIPLIER
+
 	spawn_hit_effect(tap_position, radius)
 	spawn_weapon_strike(tap_position, radius)
+	if is_crit:
+		crit_landed.emit(tap_position)
 
 	# Los proyectiles del jefe se revientan tocándolos: es la forma de
 	# defenderse, y hace que la pelea no sea solo aguantar.

@@ -367,12 +367,47 @@ La tienda tiene dos secciones. Las **armas** se equipan de a una; los
 **objetos** son mejoras por niveles que hacen efecto solas y están
 pensadas para aguantar las peleas de jefe:
 
+**Pasivos** — hacen efecto solos:
+
 | Objeto | Qué hace |
 |---|---|
 | Guantes de Trabajo | +1 de daño plano por nivel |
 | Botiquín de la Abuela | +2 corazones en las peleas de jefe |
 | Delantal Reforzado | Bloquea 1 de cada N golpes recibidos |
 | Repelente Casero | Los refuerzos del jefe vienen más lentos |
+| Trébol de la Suerte | +10% de golpe crítico (daño doble) |
+| Frasco de Monedas | +15% de monedas al terminar el nivel |
+| Reloj de Arena | +5 segundos de nivel |
+| Lupa del Abuelo | Más radio de golpe |
+| Botas de Goma | Te perdona fallos sin cortarte el combo |
+
+**Poderes activos** — aparecen como botón en la pantalla de juego:
+
+| Poder | Qué hace | Desbloqueo | Por uso |
+|---|---|---|---|
+| Reloj de Bolsillo | Cámara lenta unos segundos | 900 | 60 |
+| Campo Expansivo | El próximo golpe abarca muchísimo más | 1400 | 90 |
+| Tormenta de Rayos | Golpea a TODOS los insectos en pantalla | 2200 | 150 |
+| Lanzallamas | Quema todo alrededor durante unos segundos | 3200 | 220 |
+
+Los poderes se pagan **dos veces**: el desbloqueo y cada activación. Sin
+el costo por uso serían gratis para siempre después de la primera compra
+y romperían el juego; así hay que elegir cuándo vale la pena la moneda.
+Subir de nivel un poder no encarece el uso, lo hace más fuerte.
+
+Tres detalles que no son obvios:
+
+- El **crítico se tira una vez por tap**, no por insecto. Si se tirara
+  por insecto, un tap que agarra a cinco daría cinco tiradas y el trébol
+  valdría mucho más de lo que dice.
+- El **Campo Expansivo se gasta acierte o no**. Si solo se gastara al
+  acertar, se podría dejar cargado indefinidamente tocando al vacío.
+- La **cámara lenta no alarga el nivel**: `Engine.time_scale` escala el
+  delta de `_process`, así que sin corregirlo el reloj también se frenaría
+  y el objeto haría dos cosas a la vez. El contador se lleva a tiempo real
+  dividiendo por `time_scale`. Y como `time_scale` es global y sobrevive
+  al cambio de escena, se restaura en `_exit_tree`: si no, salir del nivel
+  con la cámara lenta activa dejaba **todo el juego** lento para siempre.
 
 El daño de los guantes se suma **después** del multiplicador del árbol, a
 propósito: si se sumara antes, la rama Fuerza lo escalaría y dos mejoras

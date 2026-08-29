@@ -15,6 +15,8 @@ var player_coins: int = 0
 var player_score: int = 0
 var combo_hits: int = 0
 var combo_max: int = 0
+## Fallos que todavía te perdonan las Botas de Goma en este nivel.
+var _combo_forgives_left: int = 0
 
 # --- Desbloqueos ---
 var unlocked_insects: Array = []          # índices de insectos incógnito revelados
@@ -62,6 +64,7 @@ signal level_completed(level: int)
 signal insect_unlocked(index: int, insect_name: String)
 signal score_changed(new_score: int)
 signal coins_changed(new_coins: int)
+signal combo_forgiven(forgives_left: int)
 signal combo_changed(combo: int)
 signal lives_changed(lives: int)
 
@@ -120,6 +123,7 @@ func start_level(level: int) -> void:
 	player_score = 0
 	combo_hits = 0
 	combo_max = 0
+	_combo_forgives_left = ItemSystem.get_combo_forgives(items)
 
 	print("[GameManager] Iniciando nivel %d (capítulo %d)" % [level, current_chapter])
 	level_started.emit(level)
@@ -138,6 +142,15 @@ func on_insect_hit(insect: Insect) -> void:
 	AudioManager.play_sfx("hit_" + insect.insect_type)
 
 func on_insect_missed() -> void:
+	# Botas de Goma: los primeros fallos del nivel no cortan el combo.
+	# El contador se reinicia por nivel (ver reset_level_stats), así el
+	# perdón no se gasta para siempre en el primer error.
+	if _combo_forgives_left > 0:
+		_combo_forgives_left -= 1
+		combo_forgiven.emit(_combo_forgives_left)
+		AudioManager.play_sfx("taunt")
+		return
+
 	combo_hits = 0
 	combo_changed.emit(combo_hits)
 	AudioManager.play_sfx("taunt")
@@ -163,7 +176,8 @@ func calculate_level_reward() -> int:
 	var level_bonus := current_level * 2
 	var combo_bonus := ComboSystem.get_combo_bonus_coins(combo_max)
 	var total := base + level_bonus + combo_bonus
-	return int(round(total * skill_system.get_coin_multiplier(skill_tree)))
+	var multiplier := skill_system.get_coin_multiplier(skill_tree) * ItemSystem.get_coin_bonus(items)
+	return int(round(total * multiplier))
 
 func add_coins(amount: int) -> void:
 	player_coins += amount
@@ -332,7 +346,7 @@ func get_weapon_damage() -> int:
 
 func get_weapon_radius() -> float:
 	var base_radius := float(WeaponSystem.get_weapon_data(equipped_weapon).get("radius", 50.0))
-	return base_radius + skill_system.get_radius_bonus(skill_tree)
+	return base_radius + skill_system.get_radius_bonus(skill_tree) + ItemSystem.get_bonus_radius(items)
 
 ## Compra (o sube un nivel de) un objeto pasivo. Devuelve si se pudo.
 func purchase_item(item_id: String) -> bool:

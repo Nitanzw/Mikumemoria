@@ -42,9 +42,18 @@ func _refresh() -> void:
 	for weapon_name in WeaponSystem.get_all_weapon_names():
 		list.add_child(_build_row(weapon_name))
 
+	# Objetos y poderes van separados: los pasivos hacen efecto solos, los
+	# poderes son un botón en la pantalla de juego y además cobran monedas
+	# cada vez que los usás. Mezclados no se entendía la diferencia.
 	list.add_child(_build_section("Objetos"))
 	for item_id in ItemSystem.get_all_item_ids():
-		list.add_child(_build_item_row(item_id))
+		if not ItemSystem.get_item(item_id).get("active", false):
+			list.add_child(_build_item_row(item_id))
+
+	list.add_child(_build_section("Poderes"))
+	for item_id in ItemSystem.get_all_item_ids():
+		if ItemSystem.get_item(item_id).get("active", false):
+			list.add_child(_build_item_row(item_id))
 
 ## Separador con el nombre de la sección: sin esto, armas y objetos
 ## quedaban mezclados en una sola lista larga y no se entendía qué era qué.
@@ -93,7 +102,10 @@ func _build_item_row(item_id: String) -> Control:
 	info.add_child(name_label)
 
 	var desc := Label.new()
-	desc.text = str(data.get("description", ""))
+	var text: String = str(data.get("description", ""))
+	if data.get("active", false):
+		text += "\nCada uso: %d monedas" % ItemSystem.get_power_use_cost(item_id)
+	desc.text = text
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UITheme.style_body(desc, 16)
 	desc.add_theme_color_override("font_color", Color(0.92, 0.88, 0.78))

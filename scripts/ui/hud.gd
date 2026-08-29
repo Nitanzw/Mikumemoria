@@ -48,6 +48,7 @@ func set_time(seconds: float) -> void:
 @onready var boss_side: ProgressBar = $SideBars/BossSide
 @onready var boss_side_label: Label = $SideBars/BossSideLabel
 @onready var player_side: ProgressBar = $SideBars/PlayerSide
+@onready var powers_box: VBoxContainer = $PowersBox
 @onready var damage_flash: ColorRect = $DamageFlash
 
 var _announce_timer: float = 0.0
@@ -121,3 +122,47 @@ func _process(delta: float) -> void:
 		announce_label.modulate.a = maxf(_announce_timer / 0.6, 0.0)
 	if _announce_timer <= 0.0:
 		announce_label.visible = false
+
+
+# --- Poderes activos ---
+#
+# Un botón por poder comprado, apilados abajo a la derecha: lejos de
+# donde camina Sofía, para no taparla ni robarle taps al juego. Los que
+# no comprás no ocupan lugar.
+
+signal power_pressed(power_id: String)
+
+var _power_buttons: Dictionary = {}
+
+func setup_powers(power_ids: Array) -> void:
+	for child in powers_box.get_children():
+		child.queue_free()
+	_power_buttons.clear()
+
+	for power_id in power_ids:
+		var button := Button.new()
+		button.custom_minimum_size = Vector2(92, 62)
+		button.add_theme_font_size_override("font_size", 15)
+		button.add_theme_constant_override("outline_size", 5)
+		button.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+		button.add_theme_color_override("font_color", Color(1, 0.97, 0.85))
+		UITheme.style_wood_button(button)
+		button.pressed.connect(_on_power_pressed.bind(power_id))
+		# El precio va EN el botón: hay que poder decidir si conviene
+		# gastarlo sin dejar de mirar la pantalla.
+		button.text = "%s\n%d 🪙" % [
+			ItemSystem.get_power_label(power_id),
+			ItemSystem.get_power_use_cost(power_id),
+		]
+		powers_box.add_child(button)
+		_power_buttons[power_id] = button
+
+## Apaga los poderes que no te alcanzan. Se llama cada vez que cambian
+## las monedas, así el botón nunca miente sobre si podés usarlo.
+func refresh_power_affordability(coins: int) -> void:
+	for power_id in _power_buttons.keys():
+		var button: Button = _power_buttons[power_id]
+		button.disabled = coins < ItemSystem.get_power_use_cost(power_id)
+
+func _on_power_pressed(power_id: String) -> void:
+	power_pressed.emit(power_id)

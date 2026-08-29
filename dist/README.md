@@ -65,6 +65,13 @@ de daño y desaparecían solos; no había nada que reaccionar. Ahora se le
 **prenden encima** y siguen mordiendo cada segundo hasta que los
 aplastás.
 
+**Tienda con 13 objetos y 4 poderes**. Los pasivos hacen efecto solos
+(crítico, suerte, más tiempo, más radio, perdón de combo, corazones
+extra). Los **poderes** son botones en la pantalla de juego: cámara
+lenta, campo expansivo, tormenta de rayos que pega a todos, y
+lanzallamas. Se pagan al desbloquearlos **y cada vez que los usás**, así
+no rompen el juego.
+
 **Vidas**: 3 corazones, se pierde uno solo al perder una pelea de jefe.
 Regeneran una cada 10 minutos de tiempo real (también con el juego
 cerrado) o se recargan pagando 150 monedas tocando los corazones en el

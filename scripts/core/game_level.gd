@@ -38,6 +38,7 @@ const PLAYER_HURT_RADIUS := 85.0
 @onready var spawn_timer: Timer = $SpawnTimer
 @onready var hud = $HUD
 @onready var level_complete_ui = $LevelComplete
+@onready var player: Player = $Player
 @onready var sofia_sprite: Sprite2D = $Player/SofiaSprite
 
 var level_config: Dictionary = {}
@@ -58,6 +59,9 @@ var _hits_taken: int = 0
 ## Minions prendidos a Sofía -> segundos que faltan para el próximo
 ## mordisco. Se limpia al morir el minion o al terminar la pelea.
 var _biting: Dictionary = {}
+## Usos de cámara lenta que quedan en este nivel, y si está activa ahora.
+var _slowmo_active: bool = false
+var _flames_active: bool = false
 var _projectiles: Array = []
 var _boss_minions: Array = []
 
@@ -69,7 +73,9 @@ func _ready() -> void:
 	_play_chapter_music()
 	_setup_background()
 
-	time_remaining = float(level_config.get("time_limit", 30))
+	# Reloj de Arena: segundos extra de nivel. En las peleas de jefe
+	# también suman, que es donde más se agradecen.
+	time_remaining = float(level_config.get("time_limit", 30)) + ItemSystem.get_bonus_seconds(GameManager.items)
 	hud.set_level_label(GameManager.current_level, level_config.get("chapter_name", ""))
 	hud.set_time(time_remaining)
 	hud.set_score(0)
@@ -79,6 +85,13 @@ func _ready() -> void:
 	GameManager.score_changed.connect(hud.set_score)
 	GameManager.coins_changed.connect(hud.set_coins)
 	GameManager.combo_changed.connect(hud.set_combo)
+
+	hud.setup_powers(ItemSystem.get_owned_powers(GameManager.items))
+	hud.refresh_power_affordability(GameManager.player_coins)
+	hud.power_pressed.connect(_on_power_pressed)
+	GameManager.coins_changed.connect(hud.refresh_power_affordability)
+	if player:
+		player.crit_landed.connect(_on_crit_landed)
 
 	level_complete_ui.next_level_pressed.connect(_on_next_level_pressed)
 	level_complete_ui.menu_pressed.connect(_on_menu_pressed)
@@ -101,7 +114,11 @@ func _process(delta: float) -> void:
 	if level_ended or not gameplay_started:
 		return
 
-	time_remaining -= delta
+	# delta viene escalado por Engine.time_scale, así que en cámara lenta
+	# el reloj del nivel también se frenaría y el objeto haría dos cosas a
+	# la vez (frenar bichos Y dar tiempo). Se lo devuelve a tiempo real
+	# para que la cámara lenta sirva solo para apuntar mejor.
+	time_remaining -= delta / maxf(Engine.time_scale, 0.01)
 	hud.set_time(max(time_remaining, 0.0))
 
 	if is_boss_level:
@@ -331,6 +348,7 @@ func _lose_boss_fight(reason: String) -> void:
 	if level_ended:
 		return
 	level_ended = true
+	Engine.time_scale = 1.0
 	spawn_timer.stop()
 	_biting.clear()
 	for child in insect_container.get_children():
@@ -338,6 +356,109 @@ func _lose_boss_fight(reason: String) -> void:
 
 	var lives_left := GameManager.on_level_failed()
 	level_complete_ui.show_defeat(reason, lives_left)
+
+# --- Poderes activos ---
+#
+# Cada uso se paga en monedas. El cobro se hace ACÁ, en un solo lugar, y
+# recién después se ejecuta el efecto: así ningún poder puede dispararse
+# gratis si mañana se agrega otro.
+
+## Engine.time_scale es GLOBAL y sobrevive al cambio de escena: si se sale
+## del nivel con la cámara lenta activa (perdiendo, o tocando el menú),
+## todo el juego queda en cámara lenta para siempre. Se restaura acá, que
+## corre pase lo que pase al salir de la escena.
+func _exit_tree() -> void:
+	Engine.time_scale = 1.0
+
+func _on_power_pressed(power_id: String) -> void:
+	if level_ended:
+		return
+	var cost := ItemSystem.get_power_use_cost(power_id)
+	if GameManager.player_coins < cost:
+		hud.announce("No te alcanzan las monedas")
+		return
+
+	var level := ItemSystem.get_level(GameManager.items, power_id)
+	match power_id:
+		"reloj_bolsillo":
+			if _slowmo_active:
+				return
+			_use_slowmo(level)
+		"campo_expansivo":
+			_use_field(level)
+		"tormenta_rayos":
+			_use_storm(level)
+		"lanzallamas":
+			if _flames_active:
+				return
+			_use_flames(level)
+		_:
+			return
+
+	GameManager.add_coins(-cost)
+
+## Frena el juego un rato tocando Engine.time_scale, que afecta a TODO:
+## insectos, jefe, minions y proyectiles se frenan juntos. El reloj del
+## nivel se compensa aparte (ver _process).
+func _use_slowmo(level: int) -> void:
+	_slowmo_active = true
+	hud.announce("Todo en cámara lenta")
+	Engine.time_scale = ItemSystem.SLOWMO_SCALE
+
+	# El timer corre en tiempo de juego (ya frenado), así que la espera se
+	# acorta en la misma proporción para que dure los segundos REALES que
+	# promete el objeto. Cada nivel del objeto suma un segundo.
+	var seconds := (ItemSystem.SLOWMO_SECONDS + level - 1) * ItemSystem.SLOWMO_SCALE
+	await get_tree().create_timer(seconds).timeout
+	Engine.time_scale = 1.0
+	_slowmo_active = false
+
+## El próximo golpe abarca muchísimo más. No pega solo: hay que apuntar
+## igual, que es lo que lo diferencia de la tormenta.
+func _use_field(level: int) -> void:
+	if not player:
+		return
+	player.next_hit_radius_mult = ItemSystem.FIELD_RADIUS_MULT + (level - 1) * 0.8
+	hud.announce("¡Campo cargado! El próximo golpe es enorme")
+
+## Un rayo a cada insecto de la pantalla. Al jefe también, salvo que esté
+## protegido — ahí su propia lógica de invulnerabilidad lo frena.
+func _use_storm(level: int) -> void:
+	var damage := ItemSystem.STORM_DAMAGE_PER_LEVEL * level
+	var count := 0
+	for node in insect_container.get_children():
+		if node is Insect and not node.is_dead:
+			node.take_damage(damage)
+			count += 1
+		elif node is Boss:
+			node.take_damage(damage)
+	hud.announce("¡Tormenta! %d insectos alcanzados" % count)
+	AudioManager.play_sfx("unlock")
+
+## Quema todo lo que esté cerca de Sofía durante unos segundos, por
+## tandas. A diferencia de la tormenta, hay que aguantar a que haga
+## efecto y solo alcanza a lo que se acerque.
+func _use_flames(level: int) -> void:
+	_flames_active = true
+	hud.announce("¡Fuego! Que se acerquen si quieren")
+	var radius := ItemSystem.FLAME_RADIUS + (level - 1) * 40.0
+	var ticks := int(ItemSystem.FLAME_SECONDS / ItemSystem.FLAME_TICK)
+	for _i in range(ticks):
+		if level_ended:
+			break
+		var origin := _player_position()
+		for node in insect_container.get_children():
+			if node is Insect and not node.is_dead and node.global_position.distance_to(origin) <= radius:
+				node.take_damage(ItemSystem.FLAME_DAMAGE)
+			elif node is Boss and node.global_position.distance_to(origin) <= radius:
+				node.take_damage(ItemSystem.FLAME_DAMAGE)
+		await get_tree().create_timer(ItemSystem.FLAME_TICK).timeout
+	_flames_active = false
+
+## Aviso de golpe crítico. Va por el HUD y no por un cartel nuevo para no
+## sumar más cosas encima de la pantalla.
+func _on_crit_landed(_at: Vector2) -> void:
+	hud.announce("¡Crítico!")
 
 func _play_chapter_music() -> void:
 	AudioManager.play_music(_pick_track(), MUSIC_FADE)
@@ -442,6 +563,7 @@ func _screen_center() -> Vector2:
 
 func _end_level() -> void:
 	level_ended = true
+	Engine.time_scale = 1.0
 	spawn_timer.stop()
 
 	for insect in insect_container.get_children():
