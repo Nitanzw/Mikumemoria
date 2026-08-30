@@ -100,6 +100,12 @@ el reloj y placas con emblema para puntos y monedas. Y **nada puede
 meterse debajo**: ni insectos ni jefes, que antes quedaban atrapados ahí
 donde no se los podía golpear.
 
+**Vidas en la pelea de jefe**: las dos barras pasan a un panel abajo de
+la pantalla, con el número exacto (Sofía 1.000, el jefe entre 2.000 y
+6.800). Eso permite **subir la vida de Sofía en la tienda** y que los
+jefes peguen más fuerte a medida que sube la dificultad — antes el daño
+del jefe era fijo y las peleas tardías dejaban de doler.
+
 **Vidas**: 3 corazones, se pierde uno solo al perder una pelea de jefe.
 Regeneran una cada 10 minutos de tiempo real (también con el juego
 cerrado) o se recargan pagando 150 monedas tocando los corazones en el

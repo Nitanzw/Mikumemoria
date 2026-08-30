@@ -431,7 +431,7 @@ func purchase_item(item_id: String) -> bool:
 
 ## Corazones en las peleas de jefe: los base más los del botiquín.
 func get_boss_max_hp(base_hp: int) -> int:
-	return base_hp + ItemSystem.get_bonus_hearts(items)
+	return base_hp + ItemSystem.get_bonus_hp(items)
 
 func purchase_weapon(weapon_name: String) -> bool:
 	if weapon_name in unlocked_weapons:

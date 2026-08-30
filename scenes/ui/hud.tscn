@@ -6,6 +6,9 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/hud_badge.png" id="hud_badge"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/hud_ribbon.png" id="hud_ribbon"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/hud_star.png" id="hud_star"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/hud_bottom_panel.png" id="hud_bpanel"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/hud_boss_icon.png" id="hud_bossic"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/hud_heart_icon.png" id="hud_heartic"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/coin.png" id="hud_coin"]
 
 
@@ -19,7 +22,12 @@ content_margin_right = 14.0
 content_margin_bottom = 12.0
 
 [sub_resource type="StyleBoxFlat" id="SB_bosstrack"]
-bg_color = Color(0.08, 0.05, 0.07, 0.75)
+bg_color = Color(0.04, 0.02, 0.02, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.45, 0.3, 0.14, 0.9)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_left = 8
@@ -300,100 +308,158 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
 theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
 text = ""
 
-[node name="PlayerHPBox" type="VBoxContainer" parent="Margin"]
-layout_mode = 2
-size_flags_vertical = 8
+[node name="BottomBars" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -118.0
+grow_vertical = 0
 visible = false
 mouse_filter = 2
-theme_override_constants/separation = 2
 
-[node name="PlayerHPLabel" type="Label" parent="Margin/PlayerHPBox"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_font_sizes/font_size = 18
-theme_override_constants/outline_size = 5
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
-text = "Sofía"
-
-[node name="PlayerBar" type="ProgressBar" parent="Margin/PlayerHPBox"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 22)
-mouse_filter = 2
-show_percentage = false
-theme_override_styles/background = SubResource("SB_bosstrack")
-theme_override_styles/fill = SubResource("SB_hpfill")
-value = 100.0
-
-[node name="SideBars" type="Control" parent="."]
+[node name="Panel" type="NinePatchRect" parent="BottomBars"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-visible = false
+offset_left = 4.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
 mouse_filter = 2
+texture = ExtResource("hud_bpanel")
+patch_margin_left = 60
+patch_margin_top = 34
+patch_margin_right = 60
+patch_margin_bottom = 34
 
-[node name="PlayerSide" type="ProgressBar" parent="SideBars"]
+[node name="BossIcon" type="TextureRect" parent="BottomBars"]
 layout_mode = 1
-anchors_preset = 9
-anchor_bottom = 1.0
-offset_left = 10.0
-offset_top = 168.0
-offset_right = 38.0
-offset_bottom = -120.0
+anchors_preset = 0
+offset_left = 12.0
+offset_top = 30.0
+offset_right = 66.0
+offset_bottom = 84.0
 mouse_filter = 2
-show_percentage = false
-fill_mode = 3
-theme_override_styles/background = SubResource("SB_bosstrack")
-theme_override_styles/fill = SubResource("SB_hpfill")
-value = 100.0
+texture = ExtResource("hud_bossic")
+expand_mode = 1
+stretch_mode = 5
 
-[node name="PlayerSideLabel" type="Label" parent="SideBars"]
+[node name="BossTitle" type="Label" parent="BottomBars"]
 layout_mode = 1
-anchors_preset = 9
-offset_left = 8.0
-offset_top = 140.0
-offset_right = 90.0
-offset_bottom = 166.0
+anchors_preset = 0
+offset_left = 70.0
+offset_top = 20.0
+offset_right = 262.0
+offset_bottom = 42.0
 mouse_filter = 2
-theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+clip_text = true
+theme_override_font_sizes/font_size = 14
 theme_override_constants/outline_size = 5
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
-theme_override_colors/font_color = Color(0.7, 1, 0.7, 1)
-text = "Sofía"
+theme_override_colors/font_color = Color(1, 0.82, 0.82, 1)
+text = "VIDA JEFE"
 
-[node name="BossSide" type="ProgressBar" parent="SideBars"]
+[node name="BossFill" type="ProgressBar" parent="BottomBars"]
 layout_mode = 1
-anchors_preset = 11
-anchor_left = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -38.0
-offset_top = 168.0
-offset_right = -10.0
-offset_bottom = -120.0
+anchors_preset = 0
+offset_left = 70.0
+offset_top = 48.0
+offset_right = 262.0
+offset_bottom = 74.0
 mouse_filter = 2
 show_percentage = false
-fill_mode = 3
 theme_override_styles/background = SubResource("SB_bosstrack")
 theme_override_styles/fill = SubResource("SB_bossfill")
 value = 100.0
 
-[node name="BossSideLabel" type="Label" parent="SideBars"]
+[node name="BossValue" type="Label" parent="BottomBars"]
 layout_mode = 1
-anchors_preset = 11
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -90.0
-offset_top = 140.0
-offset_right = -8.0
-offset_bottom = 166.0
+anchors_preset = 0
+offset_left = 68.0
+offset_top = 78.0
+offset_right = 264.0
+offset_bottom = 100.0
 mouse_filter = 2
-horizontal_alignment = 2
-theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+clip_text = true
+theme_override_font_sizes/font_size = 14
 theme_override_constants/outline_size = 5
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
-theme_override_colors/font_color = Color(1, 0.6, 0.6, 1)
-text = "Jefe"
+theme_override_colors/font_color = Color(1, 0.96, 0.9, 1)
+text = "0 / 0"
+
+[node name="PlayerIcon" type="TextureRect" parent="BottomBars"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -66.0
+offset_top = 30.0
+offset_right = -12.0
+offset_bottom = 84.0
+grow_horizontal = 0
+mouse_filter = 2
+texture = ExtResource("hud_heartic")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PlayerTitle" type="Label" parent="BottomBars"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -262.0
+offset_top = 20.0
+offset_right = -70.0
+offset_bottom = 42.0
+grow_horizontal = 0
+mouse_filter = 2
+horizontal_alignment = 1
+clip_text = true
+theme_override_font_sizes/font_size = 14
+theme_override_constants/outline_size = 5
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
+text = "VIDA SOFÍA"
+
+[node name="PlayerFill" type="ProgressBar" parent="BottomBars"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -262.0
+offset_top = 48.0
+offset_right = -70.0
+offset_bottom = 74.0
+grow_horizontal = 0
+mouse_filter = 2
+show_percentage = false
+theme_override_styles/background = SubResource("SB_bosstrack")
+theme_override_styles/fill = SubResource("SB_hpfill")
+value = 100.0
+
+[node name="PlayerValue" type="Label" parent="BottomBars"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -264.0
+offset_top = 78.0
+offset_right = -68.0
+offset_bottom = 100.0
+grow_horizontal = 0
+mouse_filter = 2
+horizontal_alignment = 1
+clip_text = true
+theme_override_font_sizes/font_size = 14
+theme_override_constants/outline_size = 5
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_colors/font_color = Color(1, 0.96, 0.9, 1)
+text = "0 / 0"
 
 [node name="PowersBox" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -403,9 +469,9 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -104.0
-offset_top = -320.0
+offset_top = -450.0
 offset_right = -12.0
-offset_bottom = -14.0
+offset_bottom = -132.0
 grow_horizontal = 0
 grow_vertical = 0
 alignment = 2

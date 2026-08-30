@@ -18,6 +18,17 @@ const CYCLE_SPEED_MULT := 1.12
 ## Cuánta vida extra por escalón de dificultad del nivel (cada 10 niveles).
 const TIER_HEALTH_STEP := 0.18
 
+## Daño que hace el jefe a Sofía, en puntos de vida (ella arranca con
+## 1000). 200 son cinco golpes desde vida llena, que es exactamente lo
+## que aguantaba cuando la vida eran 5 corazones.
+##
+## Antes el daño era fijo: un jefe del nivel 95 pegaba igual que el del
+## nivel 5, así que con el botiquín comprado las peleas tardías dejaban
+## de doler. Ahora sube con el escalón y con la vuelta al roster.
+const BASE_DAMAGE := 200
+const TIER_DAMAGE_STEP := 0.15
+const CYCLE_DAMAGE_MULT := 1.25
+
 ## Umbrales de vida (fracción) donde el jefe cambia de fase.
 const PHASE_2_HP := 0.6
 const PHASE_3_HP := 0.3
@@ -234,6 +245,11 @@ static func get_boss_config(boss_id: int, cycle: int = 0, tier: int = 0) -> Dict
 	health *= 1.0 + float(maxi(tier, 0)) * TIER_HEALTH_STEP
 	config["health"] = int(round(health))
 	config["speed"] = speed
+
+	var damage := float(BASE_DAMAGE)
+	damage *= 1.0 + float(maxi(tier, 0)) * TIER_DAMAGE_STEP
+	damage *= pow(CYCLE_DAMAGE_MULT, maxi(cycle, 0))
+	config["damage"] = int(round(damage))
 	return config
 
 static func has_ability(config: Dictionary, ability: String) -> bool:

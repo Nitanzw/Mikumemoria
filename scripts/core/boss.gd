@@ -38,6 +38,10 @@ const SUMMON_WINDUP := 0.6
 const SPIT_WINDUP := 0.5
 ## Cuánto queda frenado el jefe después de que le cortás un ataque.
 const STUN_SECONDS := 1.4
+## Factor entre los números de BossData y los que se muestran. El daño
+## que entra se multiplica por lo mismo, así los golpes-para-matar quedan
+## exactamente igual que antes del cambio de escala.
+const HP_SCALE := 100
 const DASH_SPEED := 900.0
 const HEAL_IDLE_TIME := 5.0   # sin recibir golpes durante esto -> se cura
 const HEAL_AMOUNT := 2
@@ -70,6 +74,9 @@ var is_burrowed: bool = false
 var minions_alive: int = 0        # mientras haya, el jefe está escudado
 
 var is_enraged: bool = false
+## Daño que este jefe le hace a Sofía. Sale de la config, que lo escala
+## con el escalón de dificultad y la vuelta al roster.
+var player_damage: int = BossData.BASE_DAMAGE
 var _direction := Vector2.RIGHT
 var _bob_phase: float = 0.0
 var _ability_timer: float = 0.0
@@ -93,8 +100,12 @@ var _player_position := Vector2.ZERO
 
 func setup(boss_config: Dictionary) -> void:
 	config = boss_config
-	max_health = int(config.get("health", 20))
+	# La vida se guarda en escala GRANDE (2000 en vez de 20) para que el
+	# número que se muestra abajo se lea como el de un juego de peleas.
+	# BossData sigue teniendo números chicos y legibles para tunear.
+	max_health = int(config.get("health", 20)) * HP_SCALE
 	current_health = max_health
+	player_damage = int(config.get("damage", BossData.BASE_DAMAGE))
 	base_speed = float(config.get("speed", 120.0))
 	speed = base_speed
 
@@ -294,7 +305,7 @@ func _process_dash(delta: float) -> void:
 	global_position += to_target.normalized() * DASH_SPEED * delta
 	# Si alcanza a Sofía, le saca una vida.
 	if global_position.distance_to(_player_position) < 90.0:
-		hit_player.emit(1)
+		hit_player.emit(player_damage)
 		if BossData.has_ability(config, "steal"):
 			stole_coins.emit(STEAL_AMOUNT)
 		_end_dash()
@@ -538,7 +549,9 @@ func take_damage(amount: int = 1) -> void:
 			ability_announced.emit("¡Escudo roto!")
 		return
 
-	current_health = maxi(current_health - amount, 0)
+	# El llamador (Player, la tormenta, el lanzallamas) trabaja en la
+	# escala chica de los insectos comunes; acá se convierte una sola vez.
+	current_health = maxi(current_health - amount * HP_SCALE, 0)
 	health_changed.emit(current_health, max_health)
 	_flash(Color(2.0, 1.4, 1.4))
 

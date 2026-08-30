@@ -16,7 +16,7 @@ extends Control
 ## **Armas** (WeaponSystem): se compran una vez y se equipan; solo una a
 ## la vez. **Objetos** (ItemSystem): mejoras pasivas por niveles que
 ## hacen efecto solas, pensadas para aguantar las peleas de jefe —
-## corazones extra, bloquear golpes, frenar a los refuerzos.
+## vida extra, bloquear golpes, frenar a los refuerzos.
 ##
 ## Sobre el layout: la versión anterior se salía de la pantalla a la
 ## derecha (aparecía scroll horizontal y los botones quedaban cortados).

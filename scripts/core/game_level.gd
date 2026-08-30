@@ -20,9 +20,15 @@ const SPAWN_MARGIN := 60.0
 
 ## Vida de Sofía en las peleas de jefe. Se muestra como barra propia y,
 ## al llegar a 0, se pierde una de las 3 vidas del sistema global.
-const PLAYER_MAX_HP := 5
+## Vida de Sofía en las peleas de jefe, en la misma escala que la del
+## jefe: se muestra como número abajo, así que 1000 se lee mejor que 5.
+## Los daños salen de la config del jefe (BossData.BASE_DAMAGE = 200 son
+## cinco golpes, exactamente lo que aguantaba con 5 corazones).
+const PLAYER_MAX_HP := 1000
 ## Cuando un minion invocado llega hasta Sofía, le saca esto.
-const MINION_CONTACT_DAMAGE := 1
+## Los refuerzos y los escupitajos pegan menos que el jefe en persona.
+const MINION_DAMAGE_FACTOR := 0.5
+const PROJECTILE_DAMAGE_FACTOR := 0.75
 const MINION_SPEED_MULT := 2.0
 const MINION_CYCLE_SPEED := 1.1
 ## Cada cuánto muerde un minion que ya se te prendió encima.
@@ -57,7 +63,7 @@ var is_boss_level: bool = false
 var boss: Boss = null
 var boss_config: Dictionary = {}
 var player_hp: int = PLAYER_MAX_HP
-## Máximo real de la pelea: PLAYER_MAX_HP más los corazones del botiquín.
+## Máximo real de la pelea: PLAYER_MAX_HP más la vida del botiquín.
 var player_max_hp: int = PLAYER_MAX_HP
 ## Golpes recibidos en la pelea, para el bloqueo del Delantal Reforzado.
 var _hits_taken: int = 0
@@ -74,6 +80,12 @@ func _ready() -> void:
 	GameManager.start_level(GameManager.current_level)
 	level_config = GameManager.get_current_level_config()
 	_entry_chapter = GameManager.current_chapter
+
+	# Tiene que quedar seteado ANTES de _setup_background(): esa función
+	# usa is_boss_level para decidir a qué altura va Sofía, y si se asigna
+	# después (como estaba) la posiciona siempre como en un nivel normal y
+	# en las peleas queda tapada por el panel de vidas de abajo.
+	is_boss_level = bool(level_config.get("is_boss", false))
 
 	_play_chapter_music()
 	_setup_background()
@@ -106,7 +118,6 @@ func _ready() -> void:
 	spawn_timer.wait_time = level_config.get("spawn_rate", 2.0)
 	spawn_timer.timeout.connect(_on_spawn_timer_timeout)
 
-	is_boss_level = bool(level_config.get("is_boss", false))
 	if is_boss_level:
 		var boss_id: int = int(level_config.get("boss_id", 1))
 		var cycle: int = GameManager.level_manager.get_boss_cycle(GameManager.current_level)
@@ -269,7 +280,7 @@ func _process_boss_fight(delta: float) -> void:
 		if projectile.distance_to_point(player_pos) < PLAYER_HURT_RADIUS:
 			projectile.pop()
 			_projectiles.erase(projectile)
-			_damage_player(1)
+			_damage_player(_scaled_damage(PROJECTILE_DAMAGE_FACTOR))
 
 	# Minions que llegan hasta Sofía. Antes tocaban, hacían 1 de daño y
 	# desaparecían solos: no había nada que reaccionar, el daño ya estaba
@@ -296,7 +307,13 @@ func _process_boss_fight(delta: float) -> void:
 			_biting[minion] -= delta
 			if _biting[minion] <= 0.0:
 				_biting[minion] = BITE_INTERVAL
-				_damage_player(MINION_CONTACT_DAMAGE)
+				_damage_player(_scaled_damage(MINION_DAMAGE_FACTOR))
+
+## Daño de una fuente secundaria (refuerzo, escupitajo) como fracción del
+## daño del jefe de este nivel, así todo escala junto con la dificultad.
+func _scaled_damage(factor: float) -> int:
+	var base: int = int(boss_config.get("damage", BossData.BASE_DAMAGE)) if boss_config else BossData.BASE_DAMAGE
+	return maxi(int(round(base * factor)), 1)
 
 func _player_position() -> Vector2:
 	if sofia_sprite:
@@ -549,7 +566,10 @@ func _setup_background() -> void:
 		background.position = view_size / 2.0
 
 	if sofia_sprite:
-		sofia_sprite.position = Vector2(view_size.x / 2.0, view_size.y - 60.0)
+		# En las peleas de jefe el panel de vidas ocupa los 118px de abajo,
+		# así que Sofía sube para no quedar tapada por él.
+		var from_bottom: float = 265.0 if is_boss_level else 60.0
+		sofia_sprite.position = Vector2(view_size.x / 2.0, view_size.y - from_bottom)
 
 ## Siembra los primeros bichos ya ADENTRO de la pantalla (no en el borde),
 ## así el nivel arranca con acción a la vista en vez de con el huerto vacío.

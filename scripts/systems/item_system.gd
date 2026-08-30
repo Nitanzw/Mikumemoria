@@ -6,7 +6,7 @@ extends RefCounted
 ##
 ## Se diferencian del árbol de habilidades en para qué sirven: el árbol
 ## mejora cómo aplastás bichos comunes (daño, monedas, radio), y estos
-## objetos están pensados para **aguantar las peleas de jefe** — corazones
+## objetos están pensados para **aguantar las peleas de jefe** — vida
 ## extra, menos daño recibido, refuerzos más lentos.
 ##
 ## Cada objeto tiene niveles: comprarlo otra vez sube el nivel y el costo.
@@ -23,7 +23,7 @@ const ITEMS := {
 	},
 	"botiquin_abuela": {
 		"display_name": "Botiquín de la Abuela",
-		"description": "+2 corazones en las peleas de jefe",
+		"description": "+400 de vida en las peleas de jefe",
 		"icon": "res://assets/sprites/ui/item_botiquin.png",
 		"max_level": 3,
 		"base_cost": 350,
@@ -142,7 +142,9 @@ const ITEMS := {
 }
 
 const DAMAGE_PER_LEVEL := 1
-const HEARTS_PER_LEVEL := 2
+## Vida extra por nivel del botiquín. Sofía arranca con 1000, así que
+## cada nivel es un 40% más de aguante.
+const HP_PER_LEVEL := 400
 ## Nivel 1 bloquea 1 de cada 4 golpes; nivel 2, 1 de cada 3.
 const BLOCK_EVERY := [0, 4, 3]
 const MINION_SLOW_PER_LEVEL := 0.12
@@ -196,8 +198,8 @@ static func get_cost(items: Dictionary, item_id: String) -> int:
 static func get_bonus_damage(items: Dictionary) -> int:
 	return get_level(items, "guantes_trabajo") * DAMAGE_PER_LEVEL
 
-static func get_bonus_hearts(items: Dictionary) -> int:
-	return get_level(items, "botiquin_abuela") * HEARTS_PER_LEVEL
+static func get_bonus_hp(items: Dictionary) -> int:
+	return get_level(items, "botiquin_abuela") * HP_PER_LEVEL
 
 ## Cada cuántos golpes recibidos se bloquea uno. 0 = no bloquea ninguno.
 static func get_block_every(items: Dictionary) -> int:

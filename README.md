@@ -361,6 +361,34 @@ un 18%, invoca un refuerzo más y **desbloquea una habilidad nueva**
 tiempo de limpiarlos sin despeinarse. Ahora van a 2x, y más en las
 vueltas siguientes al roster.
 
+## Vidas de la pelea: barra abajo y números grandes
+
+Las dos vidas van en un panel abajo de la pantalla, con el número exacto
+debajo de cada barra. Fueron pasando por tres formas: horizontales arriba
+y abajo, verticales a los costados, y ahora esta. La diferencia real no
+es estética — **con el número a la vista la vida puede crecer**, que es
+lo que habilita mejorarla en la tienda y que los jefes peguen más fuerte
+con la dificultad.
+
+Sofía arranca con **1000** y el jefe con 2000-6800 según cuál sea. Los
+números de `BossData` siguen siendo chicos y legibles para tunear (20,
+26, 30...): `Boss.HP_SCALE` los multiplica al cargar, y el daño que entra
+se multiplica por lo mismo, así los **golpes-para-matar quedaron
+exactamente iguales** a los que ya estaban balanceados.
+
+**El daño del jefe ahora escala.** Antes era fijo: un jefe del nivel 95
+pegaba igual que el del nivel 5, así que con el botiquín comprado las
+peleas tardías dejaban de doler. Ahora sale de `BossData.BASE_DAMAGE`
+(200 = cinco golpes desde vida llena, lo mismo que aguantaba con los 5
+corazones viejos) y sube con el escalón de dificultad y con la vuelta al
+roster. Los refuerzos y los escupitajos pegan una fracción de eso, así
+todo escala junto.
+
+Un bug de orden que esto destapó: `_setup_background()` decide a qué
+altura va Sofía según `is_boss_level`, pero esa variable se asignaba
+**después** de llamarla. Con el panel nuevo abajo, eso la dejaba tapada
+en todas las peleas. Ahora se asigna antes.
+
 ## El HUD de partida
 
 Era un panel translúcido plano de **215px** — casi un cuarto de la

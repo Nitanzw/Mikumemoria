@@ -30,62 +30,50 @@ func set_time(seconds: float) -> void:
 
 # --- Pelea de jefe ---
 #
-# Las dos barras solo se muestran en niveles de jefe: en un nivel normal
-# no hay nada que perder, así que ocuparían pantalla al pedo.
-#
-# Van **verticales, pegadas a los costados**: la de Sofía a la izquierda
-# y la del jefe a la derecha. Antes estaban horizontales arriba y abajo,
-# comiéndose el alto de una pantalla de celular justo donde pasa la
-# acción. A los costados quedan siempre visibles sin tapar nada.
+# Las dos vidas van en un panel ABAJO, con el número exacto debajo de
+# cada barra. Antes eran barras verticales a los costados y antes de eso
+# horizontales arriba y abajo; con el número a la vista se entiende
+# cuánto falta de verdad, y permite que la vida crezca (Sofía arranca con
+# 1000 y la sube en la tienda) sin que la barra deje de decir nada.
 
 @onready var boss_box: VBoxContainer = $UnderBar/BossBox
 @onready var boss_name_label: Label = $UnderBar/BossBox/BossName
 @onready var boss_bar: ProgressBar = $UnderBar/BossBox/BossBar
 @onready var announce_label: Label = $UnderBar/Announce
-@onready var player_hp_box: VBoxContainer = $Margin/PlayerHPBox
-@onready var player_bar: ProgressBar = $Margin/PlayerHPBox/PlayerBar
-@onready var side_bars: Control = $SideBars
-@onready var boss_side: ProgressBar = $SideBars/BossSide
-@onready var boss_side_label: Label = $SideBars/BossSideLabel
-@onready var player_side: ProgressBar = $SideBars/PlayerSide
+@onready var bottom_bars: Control = $BottomBars
+@onready var boss_fill: ProgressBar = $BottomBars/BossFill
+@onready var boss_value: Label = $BottomBars/BossValue
+@onready var boss_title: Label = $BottomBars/BossTitle
+@onready var player_fill: ProgressBar = $BottomBars/PlayerFill
+@onready var player_value: Label = $BottomBars/PlayerValue
 @onready var powers_box: VBoxContainer = $PowersBox
 @onready var damage_flash: ColorRect = $DamageFlash
 
 var _announce_timer: float = 0.0
 
 func setup_boss_bars(max_hp: int, boss_name: String) -> void:
-	# El nombre del jefe sigue arriba, en el panel; las barras van al
-	# costado. Las horizontales viejas quedan ocultas.
+	# El nombre del jefe sigue arriba; las barras viejas quedan ocultas.
 	boss_box.visible = true
 	boss_bar.visible = false
-	player_hp_box.visible = false
-	side_bars.visible = true
+	bottom_bars.visible = true
 	boss_name_label.text = boss_name
 
-	# El nombre completo no entra en la etiqueta finita del costado, así
-	# que ahí va solo la primera palabra.
-	boss_side_label.text = boss_name.split(" ")[0]
-
-	for bar: ProgressBar in [boss_bar, boss_side]:
-		bar.max_value = 100.0
-		bar.value = 100.0
+	# En la placa de abajo no entra el nombre completo, así que va la
+	# primera palabra; el nombre entero se lee arriba.
+	boss_title.text = "VIDA " + boss_name.split(" ")[0].to_upper()
 	set_player_hp(max_hp, max_hp)
 
 func set_boss_hp(current: int, maximum: int) -> void:
 	if maximum <= 0:
 		return
-	var pct := (float(current) / float(maximum)) * 100.0
+	_update_bar(boss_fill, boss_value, current, maximum)
 	var tween := create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(boss_bar, "value", pct, 0.2)
-	tween.tween_property(boss_side, "value", pct, 0.2)
+	tween.tween_property(boss_bar, "value", (float(current) / float(maximum)) * 100.0, 0.2)
 
 ## Cuando el jefe está protegido (minions vivos o escudo levantado), la
 ## barra se pone azul: es la señal de que pegarle ahí no sirve.
 func set_boss_shield(active: bool) -> void:
-	# `bar` sale del array sin tipo, así que get_theme_stylebox devuelve
-	# Variant y hay que declarar el tipo a mano.
-	for bar: ProgressBar in [boss_bar, boss_side]:
+	for bar: ProgressBar in [boss_bar, boss_fill]:
 		var style: StyleBox = bar.get_theme_stylebox("fill")
 		if style is StyleBoxFlat:
 			var box: StyleBoxFlat = style.duplicate()
@@ -95,11 +83,26 @@ func set_boss_shield(active: bool) -> void:
 func set_player_hp(current: int, maximum: int) -> void:
 	if maximum <= 0:
 		return
+	_update_bar(player_fill, player_value, current, maximum)
+
+## Mueve la barra y escribe el número. Los miles van con punto: "2.500"
+## se lee de un vistazo y "2500" no.
+func _update_bar(bar: ProgressBar, label: Label, current: int, maximum: int) -> void:
 	var pct := (float(current) / float(maximum)) * 100.0
 	var tween := create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(player_bar, "value", pct, 0.15)
-	tween.tween_property(player_side, "value", pct, 0.15)
+	tween.tween_property(bar, "value", pct, 0.18)
+	label.text = "%s / %s" % [_thousands(current), _thousands(maximum)]
+
+func _thousands(value: int) -> String:
+	var digits := str(maxi(value, 0))
+	var out := ""
+	var count := 0
+	for i in range(digits.length() - 1, -1, -1):
+		out = digits[i] + out
+		count += 1
+		if count % 3 == 0 and i > 0:
+			out = "." + out
+	return out
 
 func announce(text: String) -> void:
 	if text == "":
