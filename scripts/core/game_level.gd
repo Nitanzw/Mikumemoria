@@ -239,7 +239,8 @@ func _spawn_boss() -> void:
 
 	boss = BossScene.instantiate() as Boss
 	insect_container.add_child(boss)
-	boss.global_position = Vector2(get_viewport_rect().size.x / 2.0, 200.0)
+	# Debajo de la barra del HUD; si no, aparece medio tapado el primer frame.
+	boss.global_position = Vector2(get_viewport_rect().size.x / 2.0, 250.0)
 	boss.setup(boss_config)
 
 	boss.health_changed.connect(hud.set_boss_hp)
@@ -594,18 +595,22 @@ func _spawn_mystery_bug() -> void:
 	insect_container.add_child(bug)
 	bug.global_position = _screen_center()
 
+## Punto de aparición, siempre fuera de la pantalla.
+##
+## El borde de ARRIBA quedó afuera: está detrás de la barra del HUD, así
+## que los bichos que entraban por ahí aparecían tapados y había que
+## adivinarlos. Entran por los costados o por abajo, y en los costados
+## nunca por encima de la barra.
 func _random_edge_position() -> Vector2:
 	var size := get_viewport_rect().size
-	var edge := randi() % 4
-	match edge:
+	var top := Insect.PLAY_TOP_INSET
+	match randi() % 3:
 		0:
-			return Vector2(randf_range(0.0, size.x), -SPAWN_MARGIN)
+			return Vector2(size.x + SPAWN_MARGIN, randf_range(top, size.y))
 		1:
-			return Vector2(size.x + SPAWN_MARGIN, randf_range(0.0, size.y))
-		2:
 			return Vector2(randf_range(0.0, size.x), size.y + SPAWN_MARGIN)
 		_:
-			return Vector2(-SPAWN_MARGIN, randf_range(0.0, size.y))
+			return Vector2(-SPAWN_MARGIN, randf_range(top, size.y))
 
 func _screen_center() -> Vector2:
 	return get_viewport_rect().size / 2.0

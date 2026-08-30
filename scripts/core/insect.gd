@@ -43,10 +43,11 @@ const SCREEN_MARGIN := 100.0
 const EDGE_PULL_CURVE := 2.0
 ## Margen hacia adentro para considerar que ya "entró" a la pantalla.
 const ON_SCREEN_INSET := 24.0
-## Franja de arriba que ocupa el panel del HUD. Los bichos no se quedan
-## ahí: detrás del panel translúcido casi no se los ve y tapearlos es a
-## ciegas. No es una pared — pueden cruzarla — pero el rumbo los saca.
-const PLAY_TOP_INSET := 215.0
+## Franja de arriba que ocupa la barra del HUD. Es una PARED: ningún
+## insecto puede entrar ahí. El tirón del rumbo solo no alcanzaba —
+## seguían metiéndose y tapearlos debajo de la barra es incomodísimo.
+## boss.gd también lee esta constante, para que haya un solo número.
+const PLAY_TOP_INSET := 150.0
 ## Franja de abajo donde está Sofía.
 const PLAY_BOTTOM_INSET := 120.0
 
@@ -202,6 +203,14 @@ func _physics_process(delta: float) -> void:
 
 	velocity = direction * speed
 	move_and_slide()
+
+	# Pared dura contra la barra del HUD. Si algo lo empujó ahí arriba
+	# (el rebote, un dash del jefe, el spawn), se lo baja y se lo manda
+	# hacia adentro en vez de dejarlo pegado al techo.
+	if global_position.y < PLAY_TOP_INSET:
+		global_position.y = PLAY_TOP_INSET
+		if direction.y < 0.0:
+			direction.y = absf(direction.y)
 
 	var viewport_size := get_viewport_rect().size
 	if global_position.x > viewport_size.x + SCREEN_MARGIN or \

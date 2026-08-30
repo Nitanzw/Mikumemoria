@@ -2,20 +2,20 @@ extends CanvasLayer
 
 ## HUD de la partida: nivel, puntuación, monedas, combo y tiempo restante.
 
-@onready var level_label: Label = $Margin/TopPanel/VBox/LevelLabel
-@onready var score_label: Label = $Margin/TopPanel/VBox/TopRow/ScoreLabel
-@onready var coins_label: Label = $Margin/TopPanel/VBox/TopRow/CoinsLabel
-@onready var combo_label: Label = $Margin/TopPanel/VBox/ComboLabel
-@onready var time_label: Label = $Margin/TopPanel/VBox/TimeLabel
+@onready var level_label: Label = $TopBar/LevelLabel
+@onready var score_label: Label = $TopBar/ScoreLabel
+@onready var coins_label: Label = $TopBar/CoinsLabel
+@onready var combo_label: Label = $UnderBar/ComboLabel
+@onready var time_label: Label = $TopBar/TimeLabel
 
 func set_level_label(level: int, chapter_name: String) -> void:
-	level_label.text = "Nivel %d - %s" % [level, chapter_name]
+	level_label.text = "Nivel %d · %s" % [level, chapter_name]
 
 func set_score(value: int) -> void:
-	score_label.text = "Puntos: %d" % value
+	score_label.text = str(value)
 
 func set_coins(value: int) -> void:
-	coins_label.text = "🪙 %d" % value
+	coins_label.text = str(value)
 
 func set_combo(value: int) -> void:
 	if value >= 2:
@@ -38,10 +38,10 @@ func set_time(seconds: float) -> void:
 # comiéndose el alto de una pantalla de celular justo donde pasa la
 # acción. A los costados quedan siempre visibles sin tapar nada.
 
-@onready var boss_box: VBoxContainer = $Margin/TopPanel/VBox/BossBox
-@onready var boss_name_label: Label = $Margin/TopPanel/VBox/BossBox/BossName
-@onready var boss_bar: ProgressBar = $Margin/TopPanel/VBox/BossBox/BossBar
-@onready var announce_label: Label = $Margin/TopPanel/VBox/Announce
+@onready var boss_box: VBoxContainer = $UnderBar/BossBox
+@onready var boss_name_label: Label = $UnderBar/BossBox/BossName
+@onready var boss_bar: ProgressBar = $UnderBar/BossBox/BossBar
+@onready var announce_label: Label = $UnderBar/Announce
 @onready var player_hp_box: VBoxContainer = $Margin/PlayerHPBox
 @onready var player_bar: ProgressBar = $Margin/PlayerHPBox/PlayerBar
 @onready var side_bars: Control = $SideBars

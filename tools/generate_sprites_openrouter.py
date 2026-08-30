@@ -190,6 +190,13 @@ UI_PIECES = {
     "item_reloj_bolsillo": ("ui_icon", "an ornate golden pocket watch on a chain, lid open showing the clock face, faint blue glow, game item icon, readable at small size"),
     "item_campo": ("ui_icon", "a glowing translucent blue energy dome shockwave expanding outward in concentric rings, game item icon, readable at small size"),
     "item_rayo": ("ui_icon", "a dark storm cloud with a bright yellow lightning bolt striking down from it, game item icon, readable at small size"),
+    # Piezas del HUD de partida. Se ensamblan en hud.tscn: la barra va
+    # 9-sliceada a lo ancho, el medallón y las placas van encima.
+    "hud_bar": ("ui_panel", "a long horizontal ornate game HUD bar, dark carved stone slab with a polished bronze frame and rivets, symmetrical, completely empty flat surface in the middle with no text and no icons, seen straight from the front"),
+    "hud_medallion": ("ui_icon", "an ornate circular bronze medallion frame for a game timer, thick decorated rim with small rivets, hollow dark empty center, seen straight from the front, no text"),
+    "hud_badge": ("ui_icon", "an ornate bronze shield-shaped badge plaque for a game HUD, decorated border, flat dark empty center, seen straight from the front, no text no emblem"),
+    "hud_star": ("ui_icon", "a golden five-pointed star with a small laurel wreath under it, game score emblem, seen straight from the front, no text"),
+    "hud_ribbon": ("ui_panel", "a horizontal green cloth banner ribbon with bronze end caps and forked tails, empty surface with no text, game UI title banner, seen straight from the front"),
     "item_lanzallamas": ("ui_icon", "a homemade metal flamethrower nozzle shooting a burst of orange flame to the side, rustic and improvised, game item icon, readable at small size"),
 }
 

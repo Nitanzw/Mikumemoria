@@ -23,6 +23,8 @@ const TOP_MARGIN := 220.0     # no baja de acá salvo cuando carga
 ## Hasta dónde puede bajar un jefe. Sofía está más abajo todavía: la
 ## franja de abajo queda libre para que siempre se la pueda ver.
 const ARENA_BOTTOM_MARGIN := 300.0
+## Medio alto aproximado del jefe ya escalado (1.7x sobre 128px).
+const BOSS_HALF_HEIGHT := 55.0
 const SWOOP_PERIOD := 3.4
 
 const BOB_SPEED := 1.8
@@ -174,7 +176,16 @@ func _process_patrol(delta: float) -> void:
 ## movimiento (y para que ninguno se pueda escapar de la pantalla).
 func _clamp_to_arena(view: Vector2) -> void:
 	global_position.x = clampf(global_position.x, EDGE_MARGIN, view.x - EDGE_MARGIN)
-	global_position.y = clampf(global_position.y, TOP_MARGIN * 0.45, view.y - ARENA_BOTTOM_MARGIN)
+	# El techo es la barra del HUD, no una fracción de TOP_MARGIN: con
+	# TOP_MARGIN * 0.45 daba 99px, o sea ARRIBA de la barra, y los jefes
+	# que suben (swoop, zigzag, blink) quedaban atrapados abajo del marco
+	# donde no se los ve ni se les puede pegar.
+	global_position.y = clampf(global_position.y, _ceiling(), view.y - ARENA_BOTTOM_MARGIN)
+
+## Altura mínima a la que puede llegar el jefe: justo debajo de la barra
+## del HUD, más su medio alto para que no se le corte la cabeza.
+func _ceiling() -> float:
+	return Insect.PLAY_TOP_INSET + BOSS_HALF_HEIGHT
 
 func _move_side_to_side(delta: float, view: Vector2) -> void:
 	global_position.x += _direction.x * speed * delta
@@ -191,7 +202,7 @@ func _move_zigzag(delta: float, view: Vector2) -> void:
 	global_position += Vector2(_direction.x, _direction.y * 0.55) * speed * delta
 	if global_position.x <= EDGE_MARGIN or global_position.x >= view.x - EDGE_MARGIN:
 		_direction.x = -_direction.x
-	if global_position.y <= TOP_MARGIN * 0.6 or global_position.y >= TOP_MARGIN * 1.9:
+	if global_position.y <= _ceiling() or global_position.y >= TOP_MARGIN * 1.9:
 		_direction.y = -_direction.y
 
 ## Baja en picada hacia Sofía y vuelve arriba. No la toca: el daño por
@@ -262,7 +273,7 @@ func _move_erratic(delta: float, view: Vector2) -> void:
 	global_position += _direction * speed * delta
 	if global_position.x <= EDGE_MARGIN or global_position.x >= view.x - EDGE_MARGIN:
 		_direction.x = -_direction.x
-	if global_position.y <= TOP_MARGIN * 0.6 or global_position.y >= TOP_MARGIN * 2.0:
+	if global_position.y <= _ceiling() or global_position.y >= TOP_MARGIN * 2.0:
 		_direction.y = -_direction.y
 
 ## Baja de a poco hacia Sofía mientras patrulla. Mete presión de tiempo:

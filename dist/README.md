@@ -94,6 +94,12 @@ comprás uno, y cómo va la pelea de jefe justo antes del primero.
 que se volvían). Ahora el rumbo tira hacia adentro, no se meten detrás
 del panel del HUD, y desde el nivel 1 hay bastantes más.
 
+**HUD nuevo**: la barra de arriba pasó de un panel plano de 215px a un
+marco de 132px con banda para el nombre del nivel, medallón central para
+el reloj y placas con emblema para puntos y monedas. Y **nada puede
+meterse debajo**: ni insectos ni jefes, que antes quedaban atrapados ahí
+donde no se los podía golpear.
+
 **Vidas**: 3 corazones, se pierde uno solo al perder una pelea de jefe.
 Regeneran una cada 10 minutos de tiempo real (también con el juego
 cerrado) o se recargan pagando 150 monedas tocando los corazones en el

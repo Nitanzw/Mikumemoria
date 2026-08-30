@@ -361,6 +361,44 @@ un 18%, invoca un refuerzo más y **desbloquea una habilidad nueva**
 tiempo de limpiarlos sin despeinarse. Ahora van a 2x, y más en las
 vueltas siguientes al roster.
 
+## El HUD de partida
+
+Era un panel translúcido plano de **215px** — casi un cuarto de la
+pantalla de un celular, y con el aspecto de una caja de debug. Ahora es
+un marco de **132px** armado con cuatro piezas generadas:
+
+| Pieza | Cómo se usa |
+|---|---|
+| `hud_bar` | NinePatchRect estirado a lo ancho |
+| `hud_medallion` | Círculo central, con el reloj adentro |
+| `hud_badge` | Las dos placas de las puntas |
+| `hud_ribbon` | Banda con el nombre del nivel |
+
+Las cuatro están **recortadas a su bbox de alfa** antes de usarse: sin
+eso el 9-slice estira el margen transparente y el marco queda corrido
+respecto del texto (el mismo problema que ya había aparecido con
+`button_wood` y `panel_card`).
+
+Las etiquetas dejaron de decir "Puntos:" y "🪙": el emblema de cada placa
+(estrella y moneda) ya dice qué es cada número, y en 540px de ancho esas
+palabras eran las que obligaban a agrandar todo.
+
+El combo, el nombre del jefe y los avisos van **debajo** de la barra, en
+`UnderBar`, para que el marco quede siempre igual y no salte de altura.
+
+**Nada entra debajo de la barra.** El tirón del rumbo hacia el centro no
+alcanzaba: los bichos igual se metían, y tapearlos ahí abajo es a ciegas.
+Ahora `Insect.PLAY_TOP_INSET` es una **pared dura** — se los baja y se
+les invierte el rumbo si algo los empujó arriba — y el borde superior
+quedó fuera de los puntos de aparición.
+
+Los **jefes quedaban directamente atrapados**: su techo era
+`TOP_MARGIN * 0.45`, o sea 99px, **arriba** de la barra de 132px. Los que
+suben (swoop, zigzag, blink) se metían debajo del marco y no se los podía
+ni ver ni golpear. Ahora `boss.gd` lee la misma constante que los
+insectos, así hay un solo número que define dónde empieza la zona
+jugable.
+
 ## La historia no interrumpe: se cuenta mientras jugás
 
 Al abrir el juego había **siete líneas de intro más cinco de tutorial**:
