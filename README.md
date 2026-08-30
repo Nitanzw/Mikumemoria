@@ -361,6 +361,60 @@ un 18%, invoca un refuerzo más y **desbloquea una habilidad nueva**
 tiempo de limpiarlos sin despeinarse. Ahora van a 2x, y más en las
 vueltas siguientes al roster.
 
+## La historia no interrumpe: se cuenta mientras jugás
+
+Al abrir el juego había **siete líneas de intro más cinco de tutorial**:
+doce taps antes de ver un insecto. Nadie quiere leer eso para empezar.
+
+Ahora la apertura son **dos líneas** ("me están saqueando el huerto,
+ayudame") y arranca. Todo lo que se sacó no se perdió: está en
+`STORY_BEATS`, repartido por nivel (3, 6, 12, 18, 25, 32, 45, 60), de a
+una o dos líneas por vez.
+
+## Mini tutoriales por hito, no de golpe al principio
+
+El tutorial viejo soltaba las cinco reglas juntas antes del primer nivel
+y después no explicaba nada más. Las mecánicas que aparecen mucho más
+tarde —objetos pasivos, poderes activos— no las explicaba nadie: había
+que adivinar que existían.
+
+Ahora cada consejo sale **cuando hace falta**
+(`GameManager.get_pending_tutorial`), una sola vez:
+
+| Tutorial | Cuándo aparece |
+|---|---|
+| `jefe` | Al entrar al primer nivel de jefe |
+| `poderes` | Apenas comprás tu primer poder activo |
+| `objetos` | Cuando te alcanza para el primer objeto y no tenés ninguno |
+| `tienda` | Cuando te alcanza para la primera arma |
+| `vidas` | La primera vez que perdés una |
+| `combo` | La primera vez que encadenás varios golpes |
+
+Se devuelve **el primero que aplique**, así nunca se encadenan dos
+tutoriales en el mismo nivel.
+
+## Los insectos se quedaban pegados a los bordes
+
+Un tester lo reportó y era un bug real: los bichos nacen fuera de la
+pantalla apuntando al centro, pero a los **0.6-1.4 segundos**
+`randomize_direction()` elegía un rumbo **totalmente al azar sin mirar
+dónde estaban**. Muchos se daban vuelta antes de llegar a entrar y se
+iban por donde vinieron; los que quedaban rondaban el borde, donde casi
+no se ven y son un garrón de tapear.
+
+Tres arreglos en `insect.gd`:
+
+- El rumbo nuevo se mezcla con un vector **hacia el centro**, pesado por
+  lo cerca del borde que esté (`EDGE_PULL_CURVE`): en el medio se mueve
+  libre, contra el borde se da vuelta.
+- **No cambia de rumbo hasta haber entrado** a la pantalla.
+- La "zona jugable" excluye la franja del HUD arriba y la de Sofía abajo,
+  así no se esconden detrás del panel translúcido.
+
+Y desde el nivel 1 hay más bichos: `MAX_INSECTS_ON_SCREEN` de 9 a 14, el
+`spawn_rate` del capítulo 1 de 2.0s a 1.1s, y **4 insectos ya presentes**
+al arrancar para no empezar mirando un huerto vacío.
+
 ## Los ataques del jefe se pueden anular
 
 Antes, una vez que el jefe empezaba un ataque salía sí o sí: lo único que

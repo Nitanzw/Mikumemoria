@@ -38,6 +38,17 @@ const WANDER_MIN := 0.6
 const WANDER_MAX := 1.4
 const LIFETIME := 7.0
 const SCREEN_MARGIN := 100.0
+## Cuánto tira hacia el centro al elegir rumbo. Con exponente > 1 el
+## efecto casi no se nota en el medio y se vuelve fuerte cerca del borde.
+const EDGE_PULL_CURVE := 2.0
+## Margen hacia adentro para considerar que ya "entró" a la pantalla.
+const ON_SCREEN_INSET := 24.0
+## Franja de arriba que ocupa el panel del HUD. Los bichos no se quedan
+## ahí: detrás del panel translúcido casi no se los ve y tapearlos es a
+## ciegas. No es una pared — pueden cruzarla — pero el rumbo los saca.
+const PLAY_TOP_INSET := 215.0
+## Franja de abajo donde está Sofía.
+const PLAY_BOTTOM_INSET := 120.0
 
 const SplatEffectScene := preload("res://scenes/effects/splat_effect.tscn")
 
@@ -179,8 +190,13 @@ func _physics_process(delta: float) -> void:
 		lifetime_timer -= delta
 		wander_timer -= delta
 		if wander_timer <= 0.0:
-			randomize_direction()
-			wander_timer = randf_range(WANDER_MIN, WANDER_MAX)
+			# Hasta no estar DENTRO de la pantalla no cambia de rumbo:
+			# nacen afuera, y girar antes de entrar los hacía volverse.
+			if _is_on_screen():
+				_wander_direction()
+				wander_timer = randf_range(WANDER_MIN, WANDER_MAX)
+			else:
+				wander_timer = 0.2
 		if lifetime_timer <= 0.0:
 			speed = base_speed * 1.8  # huye rápido cuando se le acaba el tiempo
 
@@ -193,6 +209,17 @@ func _physics_process(delta: float) -> void:
 			global_position.y > viewport_size.y + SCREEN_MARGIN or \
 			global_position.y < -SCREEN_MARGIN:
 		queue_free()
+
+## Zona jugable: la pantalla menos la franja del HUD arriba y la de
+## Sofía abajo. Es sobre esto que se calcula el tirón hacia el centro.
+func _play_rect() -> Rect2:
+	var view := get_viewport_rect().size
+	var top := PLAY_TOP_INSET
+	var bottom := view.y - PLAY_BOTTOM_INSET
+	return Rect2(ON_SCREEN_INSET, top, maxf(view.x - ON_SCREEN_INSET * 2.0, 1.0), maxf(bottom - top, 1.0))
+
+func _is_on_screen() -> bool:
+	return _play_rect().has_point(global_position)
 
 func take_damage(damage: int = 1) -> void:
 	if not can_be_hit or is_dead:
@@ -263,6 +290,34 @@ func taunt() -> void:
 	GameManager.on_insect_missed()
 
 func randomize_direction() -> void:
-	direction = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)).normalized()
+	_set_direction(Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)).normalized())
+
+## Elige un rumbo nuevo, pero TIRANDO HACIA ADENTRO de la pantalla.
+##
+## Antes era puro azar sin mirar dónde estaba el insecto. Como todos
+## nacen fuera de la pantalla y el primer cambio de rumbo llega a los
+## 0.6-1.4 segundos, muchos se daban vuelta antes de llegar a entrar y se
+## iban por donde vinieron. El resultado era el que reportó el tester:
+## los bichos se quedan pegados a los bordes, casi no se ven y son un
+## garrón de matar.
+##
+## Cuanto más cerca del borde está, más pesa el vector hacia el centro:
+## en el medio de la pantalla se mueve libre, contra el borde se da vuelta.
+func _wander_direction() -> void:
+	var play := _play_rect()
+	var center := play.position + play.size / 2.0
+	var to_center := (center - global_position)
+	# 0 en el centro, 1 pegado al borde (o afuera).
+	var half := play.size / 2.0
+	var edge_pull: float = clampf(to_center.length() / maxf(half.length(), 1.0), 0.0, 1.0)
+	edge_pull = pow(edge_pull, EDGE_PULL_CURVE)
+
+	var random_dir := Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0))
+	if random_dir == Vector2.ZERO:
+		random_dir = Vector2.RIGHT
+	_set_direction(random_dir.normalized().lerp(to_center.normalized(), edge_pull).normalized())
+
+func _set_direction(new_direction: Vector2) -> void:
+	direction = new_direction if new_direction != Vector2.ZERO else Vector2.RIGHT
 	if sprite:
 		sprite.flip_h = direction.x < 0

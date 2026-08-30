@@ -12,7 +12,7 @@ const SAVE_VERSION := 1
 ## Antes esta función tenía una lista blanca de campos y copiaba uno por
 ## uno; cualquier cosa nueva que GameManager agregara al diccionario se
 ## descartaba en silencio, sin error ni aviso. Eso hacía que
-## `story_seen`, `tutorial_seen`, `seen_chapter_intros` y
+## `story_seen`, `seen_tutorials`, `seen_chapter_intros` y
 ## `mystery_progress` no sobrevivieran a cerrar el juego: la intro y el
 ## tutorial volvían a aparecer en cada arranque y el progreso de
 ## revelación de los incógnitos se perdía.

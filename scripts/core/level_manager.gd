@@ -22,7 +22,7 @@ const TIERS_PER_EXTRA_HP := 3     # +1 de vida cada 3 escalones
 const BOSS_TIME_LIMIT := 90
 
 var chapter_configs := {
-	1: {"name": "El Huerto de Tomates", "enemy_speed_mult": 1.0, "spawn_rate": 2.0, "background": "res://assets/sprites/backgrounds/chapter_1_huerto.jpg"},
+	1: {"name": "El Huerto de Tomates", "enemy_speed_mult": 1.0, "spawn_rate": 1.1, "background": "res://assets/sprites/backgrounds/chapter_1_huerto.jpg"},
 	2: {"name": "El Invernadero", "enemy_speed_mult": 1.2, "spawn_rate": 1.8, "background": "res://assets/sprites/backgrounds/chapter_2_invernadero.jpg"},
 	3: {"name": "La Cueva Subterránea", "enemy_speed_mult": 1.4, "spawn_rate": 1.6, "background": "res://assets/sprites/backgrounds/chapter_3_cueva.jpg"},
 	4: {"name": "El Cultivo Radiactivo", "enemy_speed_mult": 1.6, "spawn_rate": 1.5, "background": "res://assets/sprites/backgrounds/chapter_4_radiactivo.jpg"},

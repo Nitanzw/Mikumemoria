@@ -10,7 +10,12 @@ const DialogueBoxScene := preload("res://scenes/ui/dialogue_box.tscn")
 const BossScene := preload("res://scenes/boss.tscn")
 const BossProjectileScene := preload("res://scenes/effects/boss_projectile.tscn")
 
-const MAX_INSECTS_ON_SCREEN := 9
+## Antes eran 9 con un spawn cada 2s: la pantalla quedaba casi vacía y
+## había que esperar. Con la mitad de los bichos pegados al borde (ver el
+## arreglo en insect.gd) quedaban dos o tres realmente jugables.
+const MAX_INSECTS_ON_SCREEN := 14
+## Bichos ya presentes al arrancar, para no empezar mirando un huerto vacío.
+const INITIAL_INSECTS := 4
 const SPAWN_MARGIN := 60.0
 
 ## Vida de Sofía en las peleas de jefe. Se muestra como barra propia y,
@@ -145,12 +150,38 @@ func _maybe_show_intros() -> void:
 			return
 	_maybe_show_tutorial()
 
+## Mini tutorial por HITO. Reemplaza al tutorial viejo, que soltaba las
+## cinco reglas del juego de una antes del primer nivel y después no
+## explicaba nada más — ni la tienda, ni los objetos, ni los poderes.
+## Ahora cada consejo aparece cuando hace falta.
 func _maybe_show_tutorial() -> void:
-	if GameManager.current_level == 1 and not GameManager.tutorial_seen:
-		GameManager.mark_tutorial_seen()
-		_show_dialogue(StoryData.TUTORIAL, _maybe_warn_difficulty)
+	var pending: String = GameManager.get_pending_tutorial()
+	if pending == "":
+		_maybe_show_story_beat()
 		return
-	_maybe_warn_difficulty()
+
+	GameManager.mark_tutorial_shown(pending)
+	var lines: Array = StoryData.get_tutorial(pending)
+	if lines.is_empty():
+		_maybe_show_story_beat()
+		return
+	_show_dialogue(lines, _maybe_show_story_beat)
+
+## Un pedacito de historia cada varios niveles. Cortos a propósito: la
+## intro larga del arranque se partió en estos.
+func _maybe_show_story_beat() -> void:
+	var level: int = GameManager.current_level
+	if GameManager.has_seen_story_beat(level):
+		_maybe_warn_difficulty()
+		return
+
+	var lines: Array = StoryData.get_story_beat(level)
+	if lines.is_empty():
+		_maybe_warn_difficulty()
+		return
+
+	GameManager.mark_story_beat_seen(level)
+	_show_dialogue(lines, _maybe_warn_difficulty)
 
 ## Cada 10 niveles, Sofía avisa que los bichos se pusieron más duros y que
 ## conviene ir a mejorar. Se muestra una sola vez por escalón: rejugar el
@@ -191,6 +222,7 @@ func _start_gameplay() -> void:
 		return
 
 	spawn_timer.start()
+	_spawn_initial_insects()
 
 	if level_config.get("has_mystery_bug", false) and not GameManager.has_unlocked_insect(level_config.get("mystery_index", 0)):
 		await get_tree().create_timer(1.0).timeout
@@ -518,6 +550,21 @@ func _setup_background() -> void:
 	if sofia_sprite:
 		sofia_sprite.position = Vector2(view_size.x / 2.0, view_size.y - 60.0)
 
+## Siembra los primeros bichos ya ADENTRO de la pantalla (no en el borde),
+## así el nivel arranca con acción a la vista en vez de con el huerto vacío.
+func _spawn_initial_insects() -> void:
+	var view := get_viewport_rect().size
+	for i in range(INITIAL_INSECTS):
+		var insect := _spawn_random_insect()
+		if not insect:
+			continue
+		# Debajo del panel del HUD y arriba de Sofía, que es donde se los
+		# ve y se los puede tapear cómodo.
+		insect.global_position = Vector2(
+			randf_range(view.x * 0.15, view.x * 0.85),
+			randf_range(view.y * 0.28, view.y * 0.72))
+		insect.randomize_direction()
+
 func _on_spawn_timer_timeout() -> void:
 	if level_ended:
 		return
@@ -525,7 +572,7 @@ func _on_spawn_timer_timeout() -> void:
 		return
 	_spawn_random_insect()
 
-func _spawn_random_insect() -> void:
+func _spawn_random_insect() -> Insect:
 	var types: Array = level_config.get("enemy_types", [])
 	if types.is_empty():
 		types = ["hormiga_obrera"]
@@ -540,6 +587,7 @@ func _spawn_random_insect() -> void:
 	var spawn_pos := _random_edge_position()
 	insect.global_position = spawn_pos
 	insect.direction = (_screen_center() - spawn_pos).normalized()
+	return insect
 
 func _spawn_mystery_bug() -> void:
 	var bug := MysteryBugScene.instantiate() as MysteryBug

@@ -15,15 +15,83 @@ extends RefCounted
 ## el mundo entero en su colonia. Sofía, armada con lo que tenga a mano
 ## (empezando por un zapato viejo), es lo único que se interpone.
 
+## Gancho de apertura. DOS líneas y a jugar.
+##
+## Antes eran siete, y encima seguía el tutorial de cinco: doce taps
+## antes de ver un insecto. Nadie quiere leer eso para empezar a jugar.
+## Todo lo que se sacó de acá no se perdió: está repartido en STORY_BEATS,
+## que van cayendo de a poco mientras jugás.
 const INTRO := [
-	{"speaker": "Sofía", "emotion": "happy", "text": "Un verano entero sola en el huerto de la abuela. Ella se fue tranquila: «Sofi, solo regá y no te compliques»."},
-	{"speaker": "Sofía", "emotion": "neutral", "text": "Y me estaba saliendo bien, eh. Los tomates este año están enormes."},
-	{"speaker": "Sofía", "emotion": "surprised", "text": "Pará. ¿Desde cuándo las hormigas caminan en fila derecha... y doblan todas en la misma esquina?"},
-	{"speaker": "Sofía", "emotion": "worried", "text": "Eso no es una fila. Eso es una formación. Como si alguien les hubiera dado una orden."},
-	{"speaker": "Sofía", "emotion": "angry", "text": "¡Y me dejaron el cantero pelado! ¡Tres meses de laburo en una noche!"},
-	{"speaker": "Sofía", "emotion": "angry", "text": "Okey. Nadie le hace esto al huerto de mi abuela mientras yo esté a cargo."},
-	{"speaker": "Sofía", "emotion": "happy", "text": "No tengo veneno ni experiencia... pero tengo un zapato viejo y muchas ganas. Vamos."},
+	{"speaker": "Sofía", "emotion": "angry", "text": "¡Me están saqueando el huerto! Tres meses de laburo y me dejaron el cantero pelado en una noche."},
+	{"speaker": "Sofía", "emotion": "neutral", "text": "No tengo veneno ni experiencia. Tengo un zapato viejo. Dale, ayudame."},
 ]
+
+## La historia repartida en el juego, por nivel. Cortas a propósito: una
+## o dos líneas, para que sean un respiro entre partidas y no un muro de
+## texto. Se muestran una sola vez cada una.
+const STORY_BEATS := {
+	3: [
+		{"speaker": "Sofía", "emotion": "neutral", "text": "Che... ¿desde cuándo las hormigas caminan en fila derecha y doblan todas en la misma esquina?"},
+	],
+	6: [
+		{"speaker": "Sofía", "emotion": "worried", "text": "Eso no es una fila. Es una formación. Como si alguien les hubiera dado una orden."},
+	],
+	12: [
+		{"speaker": "Sofía", "emotion": "surprised", "text": "Encontré uno que no es de acá. No es de ningún lado, en realidad."},
+		{"speaker": "Sofía", "emotion": "worried", "text": "Tiene marcas. Como si lo hubieran... fabricado."},
+	],
+	18: [
+		{"speaker": "Sofía", "emotion": "neutral", "text": "El rastro va todo para el mismo lado. Al fondo del terreno."},
+	],
+	25: [
+		{"speaker": "Sofía", "emotion": "angry", "text": "La abuela vuelve en dos meses. Para entonces esto tiene que estar limpio."},
+		{"speaker": "Sofía", "emotion": "happy", "text": "Y capaz que hasta le sale una cosecha decente."},
+	],
+	32: [
+		{"speaker": "Sofía", "emotion": "surprised", "text": "Escuché algo abajo. Bajo tierra. Un zumbido que no para nunca."},
+	],
+	45: [
+		{"speaker": "Sofía", "emotion": "worried", "text": "Cuantos más mato, más raros vienen. No es una plaga. Alguien los está mandando."},
+	],
+	60: [
+		{"speaker": "Sofía", "emotion": "angry", "text": "Hay una reina. Tiene que haberla. Todo esto responde a algo."},
+	],
+}
+
+## Mini tutoriales por HITO, no por nivel: se muestran cuando el jugador
+## llega a la situación donde el consejo sirve, y una sola vez.
+##
+## Antes el juego explicaba todo de una en el tutorial inicial y después
+## nunca más. Las mecánicas que aparecen mucho más tarde (objetos
+## pasivos, poderes activos) no las explicaba nadie: había que adivinar
+## que existían.
+const TUTORIALS := {
+	"tienda": [
+		{"speaker": "Sofía", "emotion": "happy", "text": "Ya junté unas cuantas monedas. Con esto me compro algo mejor que el zapato."},
+		{"speaker": "Sofía", "emotion": "neutral", "text": "Al terminar un nivel tocá «Tienda», o entrá desde el menú. Las armas pegan más fuerte y llegan más lejos."},
+	],
+	"objetos": [
+		{"speaker": "Sofía", "emotion": "neutral", "text": "En la tienda, abajo de las armas, están los «Objetos»."},
+		{"speaker": "Sofía", "emotion": "happy", "text": "Esos no hay que equiparlos ni nada: los comprás y andan solos. Más daño, más monedas, más aguante contra los jefes."},
+	],
+	"poderes": [
+		{"speaker": "Sofía", "emotion": "surprised", "text": "¡Mirá! Ahora tengo un botón abajo a la derecha en la pantalla."},
+		{"speaker": "Sofía", "emotion": "neutral", "text": "Eso es el poder que compré. Se toca cuando lo necesitás, pero cada uso me cuesta monedas — fijate el precio en el botón."},
+	],
+	"jefe": [
+		{"speaker": "Sofía", "emotion": "worried", "text": "Este es más grande que los otros. Un jefe."},
+		{"speaker": "Sofía", "emotion": "neutral", "text": "Van a aparecer dos barras a los costados: la mía y la de él. Si me vacían la mía, pierdo una vida."},
+		{"speaker": "Sofía", "emotion": "happy", "text": "Ojo: cuando avisa que va a atacar, pegale ahí mismo y le cortás el ataque."},
+	],
+	"combo": [
+		{"speaker": "Sofía", "emotion": "happy", "text": "¡Cinco seguidos sin errar! Eso es combo: cuantos más encadenás, más puntos y más monedas al final."},
+		{"speaker": "Sofía", "emotion": "worried", "text": "Pero si le pego al aire se corta. Mejor esperar el momento que tirar manotazos."},
+	],
+	"vidas": [
+		{"speaker": "Sofía", "emotion": "sad", "text": "Perdí una vida. Tengo tres, y solo se gastan cuando me gana un jefe."},
+		{"speaker": "Sofía", "emotion": "neutral", "text": "Se recuperan solas con el tiempo, aunque cierre el juego. O las pago con monedas desde el menú."},
+	],
+}
 
 # Se muestra la primera vez que el jugador entra a cada capítulo
 # (nivel = (capítulo-1)*100 + 1). Cortito, tipo "gancho" de un capítulo
@@ -70,13 +138,6 @@ const CHAPTER_INTROS := {
 }
 
 # Tutorial: se muestra una sola vez, antes del primer nivel jugado.
-const TUTORIAL := [
-	{"speaker": "Sofía", "emotion": "happy", "text": "Es simple: tocá la pantalla justo encima de un bicho y le doy con el zapato."},
-	{"speaker": "Sofía", "emotion": "worried", "text": "Ojo con errarle. Si tocás al vacío, los que están cerca se dan cuenta, se burlan y salen disparados."},
-	{"speaker": "Sofía", "emotion": "happy", "text": "Si encadenás golpes sin fallar hacés combo: más puntos y más monedas al terminar."},
-	{"speaker": "Sofía", "emotion": "surprised", "text": "Y cada tanto aparece uno todo oscuro, que no se deja ver. A ese hay que insistirle hasta descubrir qué es."},
-	{"speaker": "Sofía", "emotion": "happy", "text": "Con las monedas comprás algo mejor que un zapato. Dale, que el huerto no se defiende solo."},
-]
 
 const ENDING := [
 	{"speaker": "Sofía", "emotion": "surprised", "text": "Ahí estaba. La Reina Primordial. Más grande que el galpón entero."},
@@ -118,6 +179,13 @@ static func get_difficulty_warning(tier: int) -> Array:
 	if DIFFICULTY_WARNINGS.is_empty():
 		return []
 	return DIFFICULTY_WARNINGS[(maxi(tier, 1) - 1) % DIFFICULTY_WARNINGS.size()]
+
+## Beat de historia de ese nivel, o vacío si ese nivel no tiene.
+static func get_story_beat(level: int) -> Array:
+	return STORY_BEATS.get(level, [])
+
+static func get_tutorial(tutorial_id: String) -> Array:
+	return TUTORIALS.get(tutorial_id, [])
 
 ## Devuelve las líneas de intro del capítulo pedido, o un array vacío si
 ## ese capítulo no tiene intro definida.

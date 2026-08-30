@@ -44,6 +44,11 @@ var mystery_progress: Dictionary = {}
 # de la última regeneración y al cargar se calcula cuántas corresponden,
 # así también suma el tiempo con el juego cerrado.
 const MAX_LIVES := 3
+
+## Umbrales de los mini tutoriales por hito.
+const TUTORIAL_SHOP_COINS := 200
+const TUTORIAL_ITEMS_COINS := 400
+const TUTORIAL_COMBO_HITS := 5
 const LIFE_REGEN_SECONDS := 600  # 10 minutos por vida
 const REFILL_LIVES_COST := 150   # recargar todas pagando monedas
 
@@ -52,11 +57,13 @@ var lives_timestamp: int = 0     # Unix time de la última vez que se contaron
 
 # --- Historia / narrativa ---
 var story_seen: bool = false
-var tutorial_seen: bool = false
 var seen_chapter_intros: Array = []   # capítulos (int) cuya intro ya se mostró
 ## Escalones de dificultad (int) cuyo aviso ya se mostró. Se guarda para
 ## que rejugar el nivel 10 no repita el mismo cartel cada vez.
 var seen_difficulty_tiers: Array = []
+## Mini tutoriales por hito ya mostrados, e historias ya contadas.
+var seen_tutorials: Array = []
+var seen_story_beats: Array = []
 var force_show_story: bool = false    # flag transitorio (no se guarda), para "ver de nuevo" desde el menú
 ## Capítulo que el mapa de mundos pasa al selector de niveles. Transitorio.
 var selected_chapter: int = 1
@@ -93,9 +100,10 @@ func load_game_data() -> void:
 		shop_grid_view = bool(data.get("shop_grid_view", true))
 		mystery_progress = data.get("mystery_progress", {})
 		story_seen = bool(data.get("story_seen", false))
-		tutorial_seen = bool(data.get("tutorial_seen", false))
 		seen_chapter_intros = data.get("seen_chapter_intros", [])
 		seen_difficulty_tiers = data.get("seen_difficulty_tiers", [])
+		seen_tutorials = data.get("seen_tutorials", [])
+		seen_story_beats = data.get("seen_story_beats", [])
 		max_level_unlocked = int(data.get("max_level_unlocked", current_level))
 		player_lives = int(data.get("player_lives", MAX_LIVES))
 		lives_timestamp = int(data.get("lives_timestamp", Time.get_unix_time_from_system()))
@@ -118,9 +126,10 @@ func reset_game() -> void:
 	items = {}
 	mystery_progress = {}
 	story_seen = false
-	tutorial_seen = false
 	seen_chapter_intros = []
 	seen_difficulty_tiers = []
+	seen_tutorials = []
+	seen_story_beats = []
 	max_level_unlocked = 1
 	player_lives = MAX_LIVES
 	lives_timestamp = Time.get_unix_time_from_system()
@@ -222,10 +231,6 @@ func mark_story_seen() -> void:
 	story_seen = true
 	SaveManager.save_game(_build_save_dict())
 
-func mark_tutorial_seen() -> void:
-	tutorial_seen = true
-	SaveManager.save_game(_build_save_dict())
-
 func has_seen_chapter_intro(chapter: int) -> bool:
 	return chapter in seen_chapter_intros
 
@@ -246,6 +251,57 @@ func set_shop_grid_view(grid: bool) -> void:
 	shop_grid_view = grid
 	SaveManager.save_game(_build_save_dict())
 
+## Cuál es el próximo mini tutorial que corresponde mostrar, según el
+## estado real del jugador. Devuelve "" si no toca ninguno.
+##
+## El orden importa: se devuelve el PRIMERO que aplique, así nunca se
+## encadenan dos tutoriales seguidos en el mismo nivel.
+func get_pending_tutorial() -> String:
+	# Jefe: antes de entrar al primero. Es el que más se necesita, porque
+	# la pelea funciona distinto a un nivel normal.
+	if level_manager.is_boss_level(current_level) and not _seen("jefe"):
+		return "jefe"
+
+	# Poderes: apenas comprás uno, para que sepas que el botón existe y
+	# que cada uso cuesta monedas.
+	if not _seen("poderes") and not ItemSystem.get_owned_powers(items).is_empty():
+		return "poderes"
+
+	# Objetos pasivos: cuando ya tenés plata para el más barato y todavía
+	# no compraste ninguno.
+	if not _seen("objetos") and items.is_empty() and player_coins >= TUTORIAL_ITEMS_COINS:
+		return "objetos"
+
+	# Tienda: cuando te alcanza para la primera arma.
+	if not _seen("tienda") and unlocked_weapons.size() <= 1 and player_coins >= TUTORIAL_SHOP_COINS:
+		return "tienda"
+
+	# Vidas: la primera vez que perdés una.
+	if not _seen("vidas") and player_lives < MAX_LIVES:
+		return "vidas"
+
+	# Combo: la primera vez que encadenaste unos cuantos.
+	if not _seen("combo") and combo_max >= TUTORIAL_COMBO_HITS:
+		return "combo"
+
+	return ""
+
+func _seen(tutorial_id: String) -> bool:
+	return tutorial_id in seen_tutorials
+
+func mark_tutorial_shown(tutorial_id: String) -> void:
+	if tutorial_id not in seen_tutorials:
+		seen_tutorials.append(tutorial_id)
+		SaveManager.save_game(_build_save_dict())
+
+func has_seen_story_beat(level: int) -> bool:
+	return level in seen_story_beats
+
+func mark_story_beat_seen(level: int) -> void:
+	if level not in seen_story_beats:
+		seen_story_beats.append(level)
+		SaveManager.save_game(_build_save_dict())
+
 func _build_save_dict() -> Dictionary:
 	return {
 		"current_level": current_level,
@@ -258,9 +314,10 @@ func _build_save_dict() -> Dictionary:
 		"shop_grid_view": shop_grid_view,
 		"mystery_progress": mystery_progress,
 		"story_seen": story_seen,
-		"tutorial_seen": tutorial_seen,
 		"seen_chapter_intros": seen_chapter_intros,
 		"seen_difficulty_tiers": seen_difficulty_tiers,
+		"seen_tutorials": seen_tutorials,
+		"seen_story_beats": seen_story_beats,
 		"max_level_unlocked": max_level_unlocked,
 		"player_lives": player_lives,
 		"lives_timestamp": lives_timestamp,

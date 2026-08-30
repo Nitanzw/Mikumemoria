@@ -82,6 +82,18 @@ se abre su ficha. Con el botón de arriba se pasa a la vista de lista
 detallada. Y desde el resumen de un nivel se entra derecho a la tienda,
 sin volver al menú.
 
+**La historia ya no te frena al empezar**: la apertura son dos líneas y
+arrancás. El resto se cuenta de a poco mientras jugás, en niveles
+sueltos. Y los **mini tutoriales salen cuando hacen falta**: cómo usar la
+tienda cuando te alcanza para la primera arma, qué son los objetos
+pasivos cuando podés comprar uno, cómo funciona el botón de poder apenas
+comprás uno, y cómo va la pelea de jefe justo antes del primero.
+
+**Más insectos y más visibles**: antes se quedaban pegados a los bordes
+(nacían fuera de la pantalla y cambiaban de rumbo antes de entrar, así
+que se volvían). Ahora el rumbo tira hacia adentro, no se meten detrás
+del panel del HUD, y desde el nivel 1 hay bastantes más.
+
 **Vidas**: 3 corazones, se pierde uno solo al perder una pelea de jefe.
 Regeneran una cada 10 minutos de tiempo real (también con el juego
 cerrado) o se recargan pagando 150 monedas tocando los corazones en el
