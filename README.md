@@ -524,6 +524,76 @@ Y desde el resumen de un nivel se puede **ir derecho a la tienda**: antes
 había que volver al menú, entrar a la tienda y rehacer todo el camino
 hasta el nivel. El botón "Volver" de la tienda sabe de dónde viniste.
 
+## Rebalance de economía: el dinero sobraba
+
+Un tester llegó al nivel 7 con plata suficiente para el arma más cara del
+juego. Revisando de dónde salía, el problema no eran los precios: era el
+bonus de combo.
+
+La recompensa de nivel era `50 + nivel*2 + combo_max*5`. Cuando subí la
+cantidad de insectos en pantalla (de 9 a 14) y aceleré el spawn (2.0s a
+1.1s), las rachas se volvieron mucho más largas sin querer, y ese `*5` sin
+tope pasó a ser la mayor parte del ingreso. Es decir: el que rompió la
+economía fui yo, en otro cambio.
+
+Se ajustaron las dos puntas:
+
+| | Antes | Ahora |
+|---|---|---|
+| Base por nivel | 50 | 25 |
+| Bonus por nivel | `nivel * 2` | `nivel` |
+| Bonus por combo | `combo * 5`, sin tope | `combo * 2`, tope 60 |
+| Chancla / Matamoscas / Sartén / Pala | 200 / 500 / 900 / 1500 | 350 / 900 / 1800 / 3200 |
+| Objetos pasivos | — | ×1.5 sobre el precio base |
+
+El tope de combo (`MAX_COMBO_COINS`) es la parte importante: premia
+encadenar golpes, pero deja de escalar solo porque haya más bichos en
+pantalla.
+
+Simulando la progresión con los números viejos (combo máximo creciendo con
+el nivel) sale exactamente lo que reportó el tester: la **Sartén al nivel
+7** y la Pala al 11. Con los nuevos:
+
+| Arma | Antes | Ahora |
+|---|---|---|
+| Chancla | nivel 2 | nivel 6 |
+| Matamoscas | nivel 4 | nivel 13 |
+| Sartén | nivel 7 | nivel 22 |
+| Pala | nivel 11 | nivel 35 |
+| Lanzallamas (poder más caro) | — | nivel 47 |
+
+El ingreso por nivel terminado queda en ~52 monedas en el nivel 1, 70 en el
+7, 105 en el 20 y 185 en el 100 (antes: 117, 159, 250 y 810).
+
+## El resumen de nivel dejó de parecer un placeholder
+
+Era un panel gris con tres líneas de texto. Ahora usa el mismo lenguaje de
+madera y oro que el resto del juego:
+
+- Moño verde (`hud_ribbon`) con el título, que cambia según cómo te fue.
+- Cartel dorado con la racha máxima (`res_banner`), que **solo aparece con
+  combo 5 o más**: un "x2" en un cartel enorme queda ridículo. Cuando no
+  está, el bloque de abajo sube 90px solo, así no queda un agujero.
+- Placa de madera (`res_plaque`) con tres tiras (`res_row`), cada una con
+  su ícono: estrella para puntos, medalla para la racha y bolsa para las
+  monedas. Los números van con separador de miles (`12.500`, no `12500`).
+- Tres botones de madera: **Menú**, **Tienda** y **Seguir**.
+
+En la derrota se reusa la misma placa: desaparece el cartel de racha y la
+fila de monedas, los íconos pasan a corazones, y "Seguir" se convierte en
+"Otra vez" (o se esconde si no quedan vidas).
+
+## La tienda no scrolleaba bien
+
+Reportaron que la lista "se pega, o se mueve para un solo lado". El
+`ScrollContainer` tenía `scroll_deadzone = 0`, así que cualquier `Button`
+hijo se quedaba con el arrastre apenas lo tocabas: el scroll solo
+funcionaba si empezabas el gesto justo en un hueco entre tarjetas.
+
+Con `scroll_deadzone = 18` el contenedor deja pasar los primeros 18px de
+movimiento antes de decidir si es un scroll o un toque. Aplicado en
+`shop.tscn`, `skill_tree.tscn`, `level_select.tscn` y `world_map.tscn`.
+
 ## Objetos pasivos (`ItemSystem`)
 
 La tienda tiene dos secciones. Las **armas** se equipan de a una; los

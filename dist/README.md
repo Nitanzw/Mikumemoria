@@ -3,7 +3,7 @@
 `el_huerto_de_sofia.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-Versión 0.4.0, ~87MB, arquitectura arm64-v8a solamente.
+Versión 0.13.0 (versionCode 17), ~73MB, arquitectura arm64-v8a solamente.
 
 Este build ya es **completo**: incluye la música de los 10 capítulos,
 que los builds anteriores dejaban afuera para no pasarse del límite de
@@ -81,6 +81,23 @@ pelea paseando.
 se abre su ficha. Con el botón de arriba se pasa a la vista de lista
 detallada. Y desde el resumen de un nivel se entra derecho a la tienda,
 sin volver al menú.
+
+**Resumen de nivel rediseñado**: era un panel gris con tres líneas de
+texto. Ahora es un moño verde con el título, un cartel dorado con la
+racha máxima (solo si llegaste a x5 o más) y una placa de madera con tres
+tiras — puntos, racha y monedas, cada una con su ícono y los números con
+separador de miles. Abajo, tres botones de madera: Menú, Tienda y Seguir.
+La pantalla de derrota reusa la misma placa.
+
+**Precios rebalanceados**: un tester llegó al nivel 7 con plata para el
+arma más cara. El culpable era el bonus de combo, que no tenía tope y
+creció solo cuando subí la cantidad de bichos en pantalla. Ahora el bonus
+está topeado y las armas salen el doble. Con los números viejos la Sartén
+se compraba en el nivel 7 y la Pala en el 11; ahora en el 22 y el 35.
+
+**La tienda scrollea bien**: antes se pegaba o iba para un solo lado,
+porque los botones de las tarjetas se quedaban con el arrastre. Aplicado
+también al árbol de habilidades, al selector de niveles y al mapa.
 
 **La historia ya no te frena al empezar**: la apertura son dos líneas y
 arrancás. El resto se cuenta de a poco mientras jugás, en niveles

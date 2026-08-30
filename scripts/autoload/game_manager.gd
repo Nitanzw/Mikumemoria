@@ -189,8 +189,8 @@ func on_level_complete() -> int:
 	return reward
 
 func calculate_level_reward() -> int:
-	var base := 50
-	var level_bonus := current_level * 2
+	var base := 25
+	var level_bonus := current_level
 	var combo_bonus := ComboSystem.get_combo_bonus_coins(combo_max)
 	var total := base + level_bonus + combo_bonus
 	var multiplier := skill_system.get_coin_multiplier(skill_tree) * ItemSystem.get_coin_bonus(items)

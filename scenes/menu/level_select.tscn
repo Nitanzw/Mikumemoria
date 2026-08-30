@@ -61,6 +61,7 @@ text = "0 / 100 niveles"
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
+scroll_deadzone = 18
 
 [node name="Grid" type="GridContainer" parent="Margin/VBox/Scroll"]
 layout_mode = 2

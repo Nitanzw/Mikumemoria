@@ -199,6 +199,12 @@ UI_PIECES = {
     "hud_bottom_panel": ("ui_panel", "a long horizontal ornate game UI panel, dark carved wood planks with a thick bronze frame and corner brackets, symmetrical, completely empty flat surface with no text and no icons, seen straight from the front"),
     "hud_boss_icon": ("ui_icon", "a circular bronze medallion with an angry red beetle face emblem in the center, game boss health icon, seen straight from the front, no text"),
     "hud_heart_icon": ("ui_icon", "a circular bronze medallion with a bright red heart emblem in the center, game player health icon, seen straight from the front, no text"),
+    # Pantalla de fin de nivel.
+    "res_plaque": ("ui_panel", "a large RECTANGULAR ornate wooden panel for a game results screen, straight square edges and flat top and bottom, warm carved wood planks with a thick bronze border and decorative corner brackets with rivets, completely empty flat surface with no text and no icons, not a shield, seen straight from the front"),
+    "res_banner": ("ui_panel", "a golden ornate ribbon banner with scrolled forked ends and a decorative border, empty surface with no text, game reward banner, seen straight from the front"),
+    "res_row": ("ui_panel", "a horizontal dark recessed wooden slot strip with a thin bronze inner edge, empty, a row background for a game stats list, no text, seen straight from the front"),
+    "icon_medal": ("ui_icon", "a golden medal on a striped ribbon, award emblem, game icon, seen straight from the front, no text"),
+    "icon_coinbag": ("ui_icon", "a small brown cloth coin pouch tied with string, gold coins spilling from the top, game reward icon, seen straight from the front, no text"),
     "hud_star": ("ui_icon", "a golden five-pointed star with a small laurel wreath under it, game score emblem, seen straight from the front, no text"),
     "hud_ribbon": ("ui_panel", "a horizontal green cloth banner ribbon with bronze end caps and forked tails, empty surface with no text, game UI title banner, seen straight from the front"),
     "item_lanzallamas": ("ui_icon", "a homemade metal flamethrower nozzle shooting a burst of orange flame to the side, rustic and improvised, game item icon, readable at small size"),
