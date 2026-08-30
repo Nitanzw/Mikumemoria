@@ -252,8 +252,12 @@ func _spawn_boss() -> void:
 	insect_container.add_child(boss)
 	# Debajo de la barra del HUD; si no, aparece medio tapado el primer frame.
 	boss.global_position = Vector2(get_viewport_rect().size.x / 2.0, 250.0)
-	boss.setup(boss_config)
 
+	# Las señales van ANTES de setup(): setup() emite health_changed con la
+	# vida inicial, y conectando después ese primer aviso se perdía. Con
+	# la barra vieja no se notaba (arrancaba llena por defecto), pero
+	# ahora el número está a la vista y el jefe decía "0 / 0" hasta que
+	# le pegabas por primera vez.
 	boss.health_changed.connect(hud.set_boss_hp)
 	boss.shield_changed.connect(hud.set_boss_shield)
 	boss.ability_announced.connect(hud.announce)
@@ -262,6 +266,8 @@ func _spawn_boss() -> void:
 	boss.wants_projectile.connect(_on_boss_wants_projectile)
 	boss.hit_player.connect(_damage_player)
 	boss.stole_coins.connect(_on_boss_stole_coins)
+
+	boss.setup(boss_config)
 
 	hud.announce(str(boss_config.get("taunt", "")))
 

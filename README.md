@@ -384,10 +384,20 @@ corazones viejos) y sube con el escalón de dificultad y con la vuelta al
 roster. Los refuerzos y los escupitajos pegan una fracción de eso, así
 todo escala junto.
 
-Un bug de orden que esto destapó: `_setup_background()` decide a qué
-altura va Sofía según `is_boss_level`, pero esa variable se asignaba
-**después** de llamarla. Con el panel nuevo abajo, eso la dejaba tapada
-en todas las peleas. Ahora se asigna antes.
+Dos bugs de orden que esto destapó:
+
+- `_setup_background()` decide a qué altura va Sofía según
+  `is_boss_level`, pero esa variable se asignaba **después** de llamarla.
+  Con el panel nuevo abajo, eso la dejaba tapada en todas las peleas.
+- Las señales del jefe se conectaban **después** de `boss.setup()`, y
+  `setup()` es justo quien emite `health_changed` con la vida inicial: ese
+  primer aviso se perdía. Con la barra vieja no se notaba (arrancaba
+  llena por defecto), pero con el número a la vista el jefe decía
+  **"0 / 0"** hasta que le pegabas por primera vez.
+
+Nada entra debajo del panel de abajo tampoco: los insectos tienen pared
+dura arriba **y abajo** (el tirón del rumbo es blando y no alcanzaba), y
+el jefe ya estaba cubierto por `ARENA_BOTTOM_MARGIN`.
 
 ## El HUD de partida
 

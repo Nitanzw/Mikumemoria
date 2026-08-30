@@ -49,7 +49,7 @@ const ON_SCREEN_INSET := 24.0
 ## boss.gd también lee esta constante, para que haya un solo número.
 const PLAY_TOP_INSET := 150.0
 ## Franja de abajo donde está Sofía.
-const PLAY_BOTTOM_INSET := 120.0
+const PLAY_BOTTOM_INSET := 132.0
 
 const SplatEffectScene := preload("res://scenes/effects/splat_effect.tscn")
 
@@ -204,13 +204,20 @@ func _physics_process(delta: float) -> void:
 	velocity = direction * speed
 	move_and_slide()
 
-	# Pared dura contra la barra del HUD. Si algo lo empujó ahí arriba
-	# (el rebote, un dash del jefe, el spawn), se lo baja y se lo manda
-	# hacia adentro en vez de dejarlo pegado al techo.
+	# Paredes duras contra los dos paneles: la barra de arriba y, en las
+	# peleas de jefe, el panel de vidas de abajo. El tirón del rumbo hacia
+	# el centro es blando y no alcanza — un bicho metido debajo de un
+	# panel no se ve y tapearlo es a ciegas.
 	if global_position.y < PLAY_TOP_INSET:
 		global_position.y = PLAY_TOP_INSET
 		if direction.y < 0.0:
 			direction.y = absf(direction.y)
+
+	var floor_y := get_viewport_rect().size.y - PLAY_BOTTOM_INSET
+	if global_position.y > floor_y:
+		global_position.y = floor_y
+		if direction.y > 0.0:
+			direction.y = -absf(direction.y)
 
 	var viewport_size := get_viewport_rect().size
 	if global_position.x > viewport_size.x + SCREEN_MARGIN or \
