@@ -24,14 +24,17 @@ const CARD_MARGIN_Y := 44.0
 ## Aplica la textura de cartel de madera a un botón, con sus estados.
 ## Si el asset no existe, no toca nada y el botón queda con el tema por
 ## defecto (así el juego no se rompe si falta una imagen).
-static func style_wood_button(button: Button) -> void:
+## `tint` permite destacar el botón principal de una pantalla sin pedir
+## otra textura: se multiplica sobre la madera. Verde para "seguir",
+## que es la acción que uno busca con el pulgar sin leer.
+static func style_wood_button(button: Button, tint: Color = Color(1, 1, 1)) -> void:
 	if not ResourceLoader.exists(WOOD_BUTTON):
 		return
 	var wood: Texture2D = load(WOOD_BUTTON)
-	button.add_theme_stylebox_override("normal", _wood_box(wood, Color(1, 1, 1)))
-	button.add_theme_stylebox_override("hover", _wood_box(wood, Color(1.12, 1.12, 1.12)))
-	button.add_theme_stylebox_override("pressed", _wood_box(wood, Color(0.82, 0.82, 0.82)))
-	button.add_theme_stylebox_override("focus", _wood_box(wood, Color(1, 1, 1)))
+	button.add_theme_stylebox_override("normal", _wood_box(wood, tint))
+	button.add_theme_stylebox_override("hover", _wood_box(wood, tint * 1.12))
+	button.add_theme_stylebox_override("pressed", _wood_box(wood, tint * 0.82))
+	button.add_theme_stylebox_override("focus", _wood_box(wood, tint))
 	# Un botón deshabilitado (ya comprado, o sin monedas) se ve apagado
 	# pero conserva la madera, para que se lea como el mismo objeto.
 	button.add_theme_stylebox_override("disabled", _wood_box(wood, Color(0.55, 0.52, 0.5)))

@@ -570,18 +570,30 @@ El ingreso por nivel terminado queda en ~52 monedas en el nivel 1, 70 en el
 Era un panel gris con tres líneas de texto. Ahora usa el mismo lenguaje de
 madera y oro que el resto del juego:
 
-- Moño verde (`hud_ribbon`) con el título, que cambia según cómo te fue.
-- Cartel dorado con la racha máxima (`res_banner`), que **solo aparece con
-  combo 5 o más**: un "x2" en un cartel enorme queda ridículo. Cuando no
-  está, el bloque de abajo sube 90px solo, así no queda un agujero.
-- Placa de madera (`res_plaque`) con tres tiras (`res_row`), cada una con
-  su ícono: estrella para puntos, medalla para la racha y bolsa para las
-  monedas. Los números van con separador de miles (`12.500`, no `12500`).
-- Tres botones de madera: **Menú**, **Tienda** y **Seguir**.
+- Cartel dorado arriba (`res_banner`) con **"¡COMBO PERFECTO!"** y la
+  racha en grande. **Solo aparece con combo 5 o más**: un "x2" en un
+  cartel enorme queda ridículo. Cuando no está, todo el bloque de abajo
+  sube 100px solo, así no queda un agujero.
+- Moño verde (`hud_ribbon`) montado **sobre el borde de la placa**, con el
+  título en mayúscula ("¡PERFECCIÓN EN EL HUERTO!"), que cambia según cómo
+  te fue. Antes flotaba suelto arriba y el panel se leía como tres piezas
+  sueltas en vez de un objeto.
+- Placa de madera (`res_plaque`) con cuatro tiras (`res_row`): **medalla
+  del nivel** (Huerto Perfecto / Buena Mano / Jardinero, según la racha),
+  puntos, racha y recompensa, cada una con su ícono. Los números van con
+  separador de miles (`1.725`, no `1725`).
+- Tres botones: Menú y Tienda en madera, y **Seguir en verde** — es la
+  acción que uno busca con el pulgar sin leer. El verde sale de tintar la
+  misma textura de madera, no de un asset nuevo.
 
-En la derrota se reusa la misma placa: desaparece el cartel de racha y la
-fila de monedas, los íconos pasan a corazones, y "Seguir" se convierte en
-"Otra vez" (o se esconde si no quedan vidas).
+El velo de fondo bajó de 0.72 a 0.45 de opacidad: el huerto se sigue
+viendo detrás, que es lo que hace que la pantalla se sienta parte del
+juego y no un cartel pegado encima.
+
+En la derrota se reusa la misma placa: desaparecen el cartel de racha, la
+medalla y la fila de monedas, la placa **se encoge** lo que ocupaban esas
+filas (si no queda madera vacía), los íconos pasan a corazones, y "Seguir"
+se convierte en "Otra vez" (o se esconde si no quedan vidas).
 
 ## La tienda no scrolleaba bien
 

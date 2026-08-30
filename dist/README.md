@@ -3,7 +3,7 @@
 `el_huerto_de_sofia.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-Versión 0.13.0 (versionCode 17), ~73MB, arquitectura arm64-v8a solamente.
+Versión 0.13.1 (versionCode 18), ~73MB, arquitectura arm64-v8a solamente.
 
 Este build ya es **completo**: incluye la música de los 10 capítulos,
 que los builds anteriores dejaban afuera para no pasarse del límite de
@@ -83,11 +83,14 @@ detallada. Y desde el resumen de un nivel se entra derecho a la tienda,
 sin volver al menú.
 
 **Resumen de nivel rediseñado**: era un panel gris con tres líneas de
-texto. Ahora es un moño verde con el título, un cartel dorado con la
-racha máxima (solo si llegaste a x5 o más) y una placa de madera con tres
-tiras — puntos, racha y monedas, cada una con su ícono y los números con
-separador de miles. Abajo, tres botones de madera: Menú, Tienda y Seguir.
-La pantalla de derrota reusa la misma placa.
+texto. Ahora arriba va un cartel dorado con "¡COMBO PERFECTO!" y la racha
+en grande (solo si llegaste a x5 o más), y debajo una placa de madera con
+un moño verde montado sobre el borde con el título en mayúscula. Adentro,
+cuatro tiras con ícono: la medalla del nivel (Huerto Perfecto, Buena Mano
+o Jardinero, según la racha), puntos, racha y recompensa. Abajo, Menú y
+Tienda en madera y **Seguir en verde**, que es el que uno busca sin leer.
+El fondo se ve a través del velo, así la pantalla se siente parte del
+juego. La derrota reusa la misma placa y se encoge sola.
 
 **Precios rebalanceados**: un tester llegó al nivel 7 con plata para el
 arma más cara. El culpable era el bonus de combo, que no tenía tope y
