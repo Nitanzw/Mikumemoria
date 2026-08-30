@@ -572,8 +572,12 @@ func _setup_background() -> void:
 		background.position = view_size / 2.0
 
 	if sofia_sprite:
-		# En las peleas de jefe el panel de vidas ocupa los 118px de abajo,
-		# así que Sofía sube para no quedar tapada por él.
+		# Sofía queda OCULTA durante la partida: abajo del todo, recortada
+		# por el borde y sin animación, se veía mal y no aportaba nada
+		# jugable. El nodo se conserva igual porque marca el punto al que
+		# apuntan las embestidas y los escupitajos del jefe, y ese punto
+		# tiene que seguir subiendo en las peleas para no caer detrás del
+		# panel de vidas de abajo.
 		var from_bottom: float = 265.0 if is_boss_level else 60.0
 		sofia_sprite.position = Vector2(view_size.x / 2.0, view_size.y - from_bottom)
 

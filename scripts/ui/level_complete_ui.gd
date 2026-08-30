@@ -25,6 +25,17 @@ const ROW_STEP := 56.0
 ## dos quedan en madera, así "Seguir" se distingue de un vistazo.
 const NEXT_TINT := Color(0.52, 1.05, 0.55)
 
+## Tiempos de la entrada. La pantalla aparecía de golpe, como un cartel
+## pegado encima; con el rebote corto se siente parte del juego sin
+## hacerte esperar para tocar "Seguir".
+const PANEL_POP := 0.30
+const ROW_FADE := 0.16
+const ROW_STAGGER := 0.06
+const COUNT_TIME := 0.55
+
+@onready var dim: ColorRect = $Dim
+@onready var panel: Control = $Dim/Panel
+@onready var inset: Panel = $Dim/Panel/Inset
 @onready var title_label: Label = $Dim/Panel/Title
 @onready var title_ribbon: NinePatchRect = $Dim/Panel/TitleRibbon
 @onready var combo_banner: NinePatchRect = $Dim/Panel/ComboBanner
@@ -101,6 +112,9 @@ const WIN_NOTES := {
 ## Posición original de cada nodo, para poder correrlo y devolverlo sin
 ## ir acumulando corrimientos entre un nivel y el siguiente.
 var _base_top: Dictionary = {}
+## La animación de entrada en curso, para cortarla si se vuelve a mostrar
+## la pantalla antes de que termine (reintento rápido).
+var _intro: Tween = null
 
 func _ready() -> void:
 	visible = false
@@ -114,7 +128,7 @@ func _ready() -> void:
 	shop_button.pressed.connect(func(): shop_pressed.emit())
 
 func _block() -> Array[Control]:
-	return [title_ribbon, title_label, plaque, rows_box, note_label, buttons_box]
+	return [title_ribbon, title_label, plaque, inset, rows_box, note_label, buttons_box]
 
 ## Acomoda el panel a lo que se muestra. `shift` sube todo el bloque
 ## cuando no hay cartel de racha; `hidden_rows` encoge la placa y sube lo
@@ -126,6 +140,7 @@ func _layout(shift: float, hidden_rows: int) -> void:
 		node.offset_top = _base_top[node] - shift
 		node.offset_bottom = node.offset_top + height
 	plaque.offset_bottom -= shrink
+	inset.offset_bottom -= shrink
 	note_label.offset_top -= shrink
 	note_label.offset_bottom -= shrink
 	buttons_box.offset_top -= shrink
@@ -154,15 +169,70 @@ func show_results(score: int, combo_max: int, reward: int, was_boss: bool = fals
 	medal_value.text = _pick_medal(combo_max)
 	score_icon.texture = ICON_STAR
 	combo_icon.texture = ICON_MEDAL
-	score_value.text = "Total de Puntos: %s" % _thousands(score)
+	_set_score(score)
 	combo_value.text = "Racha más Larga: x%d" % combo_max
 	reward_row.visible = true
-	reward_value.text = "Recompensa: %s Monedas" % _thousands(reward)
+	_set_reward(reward)
 	note_label.text = _pick_note(combo_max)
 	shop_button.visible = true
 	next_button.text = "Seguir"
 	next_button.visible = true
+	await _appear()
+	# Los números suben desde cero: el puntaje del nivel se siente ganado
+	# en vez de aparecer ya escrito.
+	var count := create_tween()
+	count.set_parallel(true)
+	count.tween_method(_set_score, 0, score, COUNT_TIME).set_delay(0.20)
+	count.tween_method(_set_reward, 0, reward, COUNT_TIME).set_delay(0.32)
+
+func _set_score(value: int) -> void:
+	score_value.text = "Total de Puntos: %s" % _thousands(value)
+
+func _set_reward(value: int) -> void:
+	reward_value.text = "Recompensa: %s Monedas" % _thousands(value)
+
+
+## Entrada del panel. Se arranca invisible y se deja pasar un cuadro para
+## que el contenedor de filas ya tenga medidas: sin eso los pivotes salen
+## en cero y las tiras escalan desde la esquina en vez del centro.
+func _appear() -> void:
+	if _intro and _intro.is_valid():
+		_intro.kill()
+	dim.modulate.a = 0.0
 	visible = true
+	await get_tree().process_frame
+
+	panel.pivot_offset = panel.size / 2.0
+	panel.scale = Vector2(0.9, 0.9)
+	var rows: Array[Control] = []
+	for row in rows_box.get_children():
+		var control := row as Control
+		if control == null or not control.visible:
+			continue
+		control.pivot_offset = control.size / 2.0
+		control.scale = Vector2(0.94, 0.94)
+		control.modulate.a = 0.0
+		rows.append(control)
+
+	var pops: Array[Control] = [combo_banner, combo_caption, combo_label]
+	for node in pops:
+		node.pivot_offset = node.size / 2.0
+		node.scale = Vector2(0.6, 0.6)
+
+	_intro = create_tween()
+	_intro.set_parallel(true)
+	_intro.tween_property(dim, "modulate:a", 1.0, 0.16)
+	_intro.tween_property(panel, "scale", Vector2.ONE, PANEL_POP) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	for node in pops:
+		_intro.tween_property(node, "scale", Vector2.ONE, PANEL_POP + 0.06) \
+			.set_delay(0.10).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var delay := 0.14
+	for row in rows:
+		_intro.tween_property(row, "modulate:a", 1.0, ROW_FADE).set_delay(delay)
+		_intro.tween_property(row, "scale", Vector2.ONE, ROW_FADE + 0.04) \
+			.set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		delay += ROW_STAGGER
 
 func _pick_title(combo_max: int, was_boss: bool) -> String:
 	var pool: Array = WIN_TITLES_OK
@@ -230,4 +300,4 @@ func show_defeat(reason: String, lives_left: int) -> void:
 	else:
 		note_label.text = "Te quedaste sin vidas.\nRegeneran solas, o las recargás en el menú."
 		next_button.visible = false
-	visible = true
+	await _appear()

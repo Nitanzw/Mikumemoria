@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/level_complete_ui.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/hud_ribbon.png" id="ribbon"]
@@ -8,6 +8,18 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/hud_star.png" id="star"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/icon_medal.png" id="medal"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/icon_coinbag.png" id="coinbag"]
+
+[sub_resource type="StyleBoxFlat" id="inset"]
+bg_color = Color(0.12, 0.06, 0.03, 0.62)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.07, 0.04, 0.01, 0.7)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
 
 [node name="LevelComplete" type="CanvasLayer"]
 script = ExtResource("1")
@@ -49,9 +61,9 @@ anchor_right = 0.5
 anchor_top = 0.0
 anchor_bottom = 0.0
 offset_left = -150.0
-offset_top = 156.0
+offset_top = 162.0
 offset_right = 150.0
-offset_bottom = 200.0
+offset_bottom = 206.0
 grow_horizontal = 2
 mouse_filter = 2
 horizontal_alignment = 1
@@ -138,6 +150,20 @@ theme_override_constants/outline_size = 6
 theme_override_colors/font_outline_color = Color(0.05, 0.16, 0.04, 0.95)
 theme_override_colors/font_color = Color(1, 0.87, 0.44, 1)
 text = "¡NIVEL SUPERADO!"
+
+[node name="Inset" type="Panel" parent="Dim/Panel"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0.0
+anchor_bottom = 0.0
+offset_left = -230.0
+offset_top = 334.0
+offset_right = 230.0
+offset_bottom = 660.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("inset")
 
 [node name="Rows" type="VBoxContainer" parent="Dim/Panel"]
 anchors_preset = 7
@@ -302,7 +328,7 @@ anchor_bottom = 0.0
 offset_left = -210.0
 offset_top = 580.0
 offset_right = 210.0
-offset_bottom = 664.0
+offset_bottom = 652.0
 grow_horizontal = 2
 mouse_filter = 2
 horizontal_alignment = 1

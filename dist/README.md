@@ -3,7 +3,7 @@
 `el_huerto_de_sofia.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-Versión 0.13.1 (versionCode 18), ~73MB, arquitectura arm64-v8a solamente.
+Versión 0.14.0 (versionCode 19), ~73MB, arquitectura arm64-v8a solamente.
 
 Este build ya es **completo**: incluye la música de los 10 capítulos,
 que los builds anteriores dejaban afuera para no pasarse del límite de
@@ -90,7 +90,14 @@ cuatro tiras con ícono: la medalla del nivel (Huerto Perfecto, Buena Mano
 o Jardinero, según la racha), puntos, racha y recompensa. Abajo, Menú y
 Tienda en madera y **Seguir en verde**, que es el que uno busca sin leer.
 El fondo se ve a través del velo, así la pantalla se siente parte del
-juego. La derrota reusa la misma placa y se encoge sola.
+juego, y las filas van dentro de un rebaje oscuro en vez de flotar sobre
+la madera. **Entra animada**: el panel rebota, las filas aparecen de a
+una y el puntaje y las monedas suben desde cero. La derrota reusa la
+misma placa y se encoge sola.
+
+**Sofía ya no se dibuja durante la partida**: aparecía abajo del todo,
+cortada por el borde y sin animación. Los ataques del jefe siguen
+apuntando al mismo lugar.
 
 **Precios rebalanceados**: un tester llegó al nivel 7 con plata para el
 arma más cara. El culpable era el bonus de combo, que no tenía tope y

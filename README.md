@@ -590,6 +590,36 @@ El velo de fondo bajó de 0.72 a 0.45 de opacidad: el huerto se sigue
 viendo detrás, que es lo que hace que la pantalla se sienta parte del
 juego y no un cartel pegado encima.
 
+Las filas y la nota van dentro de un **rebaje oscuro** (un `StyleBoxFlat`
+redondeado sobre la madera). Sin él las tiras flotaban sobre una tabla
+plana y el centro del panel se veía vacío.
+
+**Entra animado.** Antes aparecía de golpe. Ahora el panel entra con un
+rebote corto (`TRANS_BACK`), el cartel de racha hace su propio pop, las
+filas aparecen escalonadas de a una, y el puntaje y las monedas **suben
+desde cero** en medio segundo, así el número del nivel se siente ganado
+en vez de aparecer ya escrito. Todo dura menos de un segundo: no te hace
+esperar para tocar "Seguir".
+
+Un detalle de implementación que cuesta encontrar: los pivotes de escala
+se calculan **después de esperar un cuadro**. Los nodos viven en un
+`VBoxContainer` y hasta que el contenedor no acomoda, `size` vale cero,
+así que las tiras escalarían desde la esquina en vez del centro. Por eso
+la pantalla se hace visible con el velo en alpha 0 y recién al cuadro
+siguiente arranca la animación.
+
+## Sofía no se dibuja durante la partida
+
+Aparecía abajo del todo, recortada por el borde de la pantalla y sin
+animación. No aportaba nada jugable y se veía mal, así que el sprite va
+oculto.
+
+El nodo se conserva igual, porque marca el punto al que apuntan las
+embestidas y los escupitajos del jefe. Ese punto sigue subiendo 265px en
+las peleas de jefe (contra 60px en un nivel normal) para no quedar
+detrás del panel de vidas de abajo — si se borrara el nodo, el jefe
+apuntaría al fondo de la pantalla.
+
 En la derrota se reusa la misma placa: desaparecen el cartel de racha, la
 medalla y la fila de monedas, la placa **se encoge** lo que ocupaban esas
 filas (si no queda madera vacía), los íconos pasan a corazones, y "Seguir"
