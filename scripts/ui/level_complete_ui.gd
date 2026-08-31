@@ -36,6 +36,8 @@ const COUNT_TIME := 0.55
 @onready var dim: ColorRect = $Dim
 @onready var panel: Control = $Dim/Panel
 @onready var inset: Panel = $Dim/Panel/Inset
+@onready var frame: NinePatchRect = $Dim/Panel/Frame
+@onready var combo_plate: NinePatchRect = $Dim/Panel/ComboPlate
 @onready var title_label: Label = $Dim/Panel/Title
 @onready var title_ribbon: NinePatchRect = $Dim/Panel/TitleRibbon
 @onready var combo_banner: NinePatchRect = $Dim/Panel/ComboBanner
@@ -128,7 +130,7 @@ func _ready() -> void:
 	shop_button.pressed.connect(func(): shop_pressed.emit())
 
 func _block() -> Array[Control]:
-	return [title_ribbon, title_label, plaque, inset, rows_box, note_label, buttons_box]
+	return [title_ribbon, title_label, plaque, frame, inset, rows_box, note_label, buttons_box]
 
 ## Acomoda el panel a lo que se muestra. `shift` sube todo el bloque
 ## cuando no hay cartel de racha; `hidden_rows` encoge la placa y sube lo
@@ -140,6 +142,7 @@ func _layout(shift: float, hidden_rows: int) -> void:
 		node.offset_top = _base_top[node] - shift
 		node.offset_bottom = node.offset_top + height
 	plaque.offset_bottom -= shrink
+	frame.offset_bottom -= shrink
 	inset.offset_bottom -= shrink
 	note_label.offset_top -= shrink
 	note_label.offset_bottom -= shrink
@@ -160,6 +163,7 @@ func show_results(score: int, combo_max: int, reward: int, was_boss: bool = fals
 	var show_banner := combo_max >= BANNER_COMBO
 	combo_banner.visible = show_banner
 	combo_caption.visible = show_banner
+	combo_plate.visible = show_banner
 	combo_label.visible = show_banner
 	combo_caption.text = "¡COMBO PERFECTO!" if combo_max >= PERFECT_COMBO else "¡BUENA RACHA!"
 	combo_label.text = "x%d" % combo_max
@@ -214,7 +218,7 @@ func _appear() -> void:
 		control.modulate.a = 0.0
 		rows.append(control)
 
-	var pops: Array[Control] = [combo_banner, combo_caption, combo_label]
+	var pops: Array[Control] = [combo_banner, combo_caption, combo_plate, combo_label]
 	for node in pops:
 		node.pivot_offset = node.size / 2.0
 		node.scale = Vector2(0.6, 0.6)
@@ -283,6 +287,7 @@ func show_defeat(reason: String, lives_left: int) -> void:
 	# En una derrota no hay racha ni medalla que festejar.
 	combo_banner.visible = false
 	combo_caption.visible = false
+	combo_plate.visible = false
 	combo_label.visible = false
 	medal_row.visible = false
 	reward_row.visible = false

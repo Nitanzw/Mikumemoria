@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/level_complete_ui.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/hud_ribbon.png" id="ribbon"]
@@ -8,9 +8,14 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/hud_star.png" id="star"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/icon_medal.png" id="medal"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/icon_coinbag.png" id="coinbag"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/res_frame.png" id="frame"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/res_plate.png" id="plate"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/btn_menu.png" id="ic_menu"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/btn_shop.png" id="ic_shop"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/btn_next.png" id="ic_next"]
 
 [sub_resource type="StyleBoxFlat" id="inset"]
-bg_color = Color(0.12, 0.06, 0.03, 0.62)
+bg_color = Color(0.21, 0.13, 0.06, 0.97)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -74,6 +79,24 @@ theme_override_colors/font_outline_color = Color(1, 0.95, 0.75, 0.9)
 theme_override_colors/font_color = Color(0.5, 0.09, 0.03, 1)
 text = "¡COMBO PERFECTO!"
 
+[node name="ComboPlate" type="NinePatchRect" parent="Dim/Panel"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0.0
+anchor_bottom = 0.0
+offset_left = -116.0
+offset_top = 200.0
+offset_right = 116.0
+offset_bottom = 260.0
+grow_horizontal = 2
+mouse_filter = 2
+texture = ExtResource("plate")
+patch_margin_left = 60
+patch_margin_top = 30
+patch_margin_right = 60
+patch_margin_bottom = 30
+
 [node name="ComboLabel" type="Label" parent="Dim/Panel"]
 anchors_preset = 7
 anchor_left = 0.5
@@ -95,22 +118,41 @@ theme_override_colors/font_color = Color(1, 0.99, 0.93, 1)
 text = "x28"
 
 [node name="Plaque" type="NinePatchRect" parent="Dim/Panel"]
+visible = false
 anchors_preset = 7
 anchor_left = 0.5
 anchor_right = 0.5
 anchor_top = 0.0
 anchor_bottom = 0.0
-offset_left = -248.0
-offset_top = 284.0
-offset_right = 248.0
-offset_bottom = 696.0
+offset_left = -214.0
+offset_top = 312.0
+offset_right = 214.0
+offset_bottom = 648.0
 grow_horizontal = 2
 mouse_filter = 2
 texture = ExtResource("plaque")
-patch_margin_left = 52
-patch_margin_top = 44
-patch_margin_right = 52
-patch_margin_bottom = 44
+patch_margin_left = 30
+patch_margin_top = 26
+patch_margin_right = 30
+patch_margin_bottom = 26
+
+[node name="Frame" type="NinePatchRect" parent="Dim/Panel"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0.0
+anchor_bottom = 0.0
+offset_left = -264.0
+offset_top = 268.0
+offset_right = 264.0
+offset_bottom = 692.0
+grow_horizontal = 2
+mouse_filter = 2
+texture = ExtResource("frame")
+patch_margin_left = 40
+patch_margin_top = 40
+patch_margin_right = 40
+patch_margin_bottom = 40
 
 [node name="TitleRibbon" type="NinePatchRect" parent="Dim/Panel"]
 anchors_preset = 7
@@ -157,10 +199,10 @@ anchor_left = 0.5
 anchor_right = 0.5
 anchor_top = 0.0
 anchor_bottom = 0.0
-offset_left = -230.0
-offset_top = 334.0
-offset_right = 230.0
-offset_bottom = 660.0
+offset_left = -216.0
+offset_top = 316.0
+offset_right = 216.0
+offset_bottom = 644.0
 grow_horizontal = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("inset")
@@ -171,10 +213,10 @@ anchor_left = 0.5
 anchor_right = 0.5
 anchor_top = 0.0
 anchor_bottom = 0.0
-offset_left = -216.0
-offset_top = 348.0
-offset_right = 216.0
-offset_bottom = 564.0
+offset_left = -200.0
+offset_top = 332.0
+offset_right = 200.0
+offset_bottom = 548.0
 grow_horizontal = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
@@ -325,10 +367,10 @@ anchor_left = 0.5
 anchor_right = 0.5
 anchor_top = 0.0
 anchor_bottom = 0.0
-offset_left = -210.0
-offset_top = 580.0
-offset_right = 210.0
-offset_bottom = 652.0
+offset_left = -196.0
+offset_top = 560.0
+offset_right = 196.0
+offset_bottom = 630.0
 grow_horizontal = 2
 mouse_filter = 2
 horizontal_alignment = 1
@@ -356,14 +398,26 @@ theme_override_constants/separation = 8
 [node name="MenuButton" type="Button" parent="Dim/Panel/Buttons"]
 custom_minimum_size = Vector2(154, 68)
 theme_override_font_sizes/font_size = 20
+icon = ExtResource("ic_menu")
+expand_icon = true
+theme_override_constants/h_separation = 6
+theme_override_constants/icon_max_width = 34
 text = "Menú"
 
 [node name="ShopButton" type="Button" parent="Dim/Panel/Buttons"]
 custom_minimum_size = Vector2(154, 68)
 theme_override_font_sizes/font_size = 20
+icon = ExtResource("ic_shop")
+expand_icon = true
+theme_override_constants/h_separation = 6
+theme_override_constants/icon_max_width = 34
 text = "Tienda"
 
 [node name="NextButton" type="Button" parent="Dim/Panel/Buttons"]
 custom_minimum_size = Vector2(154, 68)
 theme_override_font_sizes/font_size = 20
+icon = ExtResource("ic_next")
+expand_icon = true
+theme_override_constants/h_separation = 6
+theme_override_constants/icon_max_width = 34
 text = "Seguir"

@@ -207,6 +207,14 @@ UI_PIECES = {
     "icon_coinbag": ("ui_icon", "a small brown cloth coin pouch tied with string, gold coins spilling from the top, game reward icon, seen straight from the front, no text"),
     "hud_star": ("ui_icon", "a golden five-pointed star with a small laurel wreath under it, game score emblem, seen straight from the front, no text"),
     "hud_ribbon": ("ui_panel", "a horizontal green cloth banner ribbon with bronze end caps and forked tails, empty surface with no text, game UI title banner, seen straight from the front"),
+    # Marco verde con guardas de hojas para el resumen de nivel, y los
+    # íconos de sus tres botones. Van aparte del res_plaque de madera:
+    # el marco encuadra todo y la placa queda adentro.
+    "res_frame": ("ui_panel", "a large RECTANGULAR ornate game panel frame, deep olive green painted wood with a polished gold inner edge and gold corner brackets, small carved leaf and vine ornaments along the border, the whole center completely hollow and empty, straight square edges, no text no icons, seen straight from the front"),
+    "res_plate": ("ui_panel", "a small horizontal golden plaque with a decorated scrolled border and a flat empty center, a nameplate for a game score number, no text, seen straight from the front"),
+    "btn_menu": ("ui_icon", "a rolled parchment scroll tied with a red ribbon, seen straight from the front, game menu button icon, readable at small size, no text"),
+    "btn_shop": ("ui_icon", "a woven wicker market basket with a few vegetables and a gold coin inside, seen straight from the front, game shop button icon, readable at small size, no text"),
+    "btn_next": ("ui_icon", "a bold golden double chevron arrow pointing right, thick beveled metal with a dark outline, seen straight from the front, game continue button icon, readable at small size, no text"),
     "item_lanzallamas": ("ui_icon", "a homemade metal flamethrower nozzle shooting a burst of orange flame to the side, rustic and improvised, game item icon, readable at small size"),
 }
 

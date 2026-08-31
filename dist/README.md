@@ -3,7 +3,7 @@
 `el_huerto_de_sofia.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-Versión 0.16.1 (versionCode 22), ~73MB, arquitectura arm64-v8a solamente.
+Versión 0.17.0 (versionCode 23), ~73MB, arquitectura arm64-v8a solamente.
 
 Este build ya es **completo**: incluye la música de los 10 capítulos,
 que los builds anteriores dejaban afuera para no pasarse del límite de
@@ -98,6 +98,11 @@ misma placa y se encoge sola.
 **Sofía ya no se dibuja durante la partida**: aparecía abajo del todo,
 cortada por el borde y sin animación. Los ataques del jefe siguen
 apuntando al mismo lugar.
+
+**Resumen de nivel con marco verde**: el panel pasa a un marco verde con
+guardas de hojas y labio dorado, con las filas en un rebaje oscuro
+adentro. Los tres botones llevan ícono (pergamino, canasta y doble
+flecha) y la racha va sobre una placa dorada.
 
 **Tienda con barras de nivel**: cada casillero muestra el ícono, el nivel
 sobre 10, el precio con la moneda y una barra de progreso que se pone

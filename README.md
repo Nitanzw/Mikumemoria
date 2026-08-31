@@ -580,6 +580,29 @@ Termina en el 970 de 1000, con ~36.000 monedas de sobra — que es justo el
 colchón para los usos de poderes (se pagan cada vez) y las recargas de
 vidas.
 
+### El marco verde del resumen, y una trampa que ya estaba documentada
+
+El resumen ahora usa `res_frame`: un marco verde con guardas de hojas y
+labio dorado, con el interior en un rebaje oscuro. Los tres botones
+llevan ícono (pergamino, canasta, doble flecha) y el `x28` va sobre una
+placa dorada.
+
+Montarlo costó cinco intentos y el motivo es una trampa que **ya estaba
+escrita en `UITheme`**: los márgenes de 9-slice se miden sobre la textura
+**ya recortada a su contenido opaco**. El generador devuelve las imágenes
+con mucho margen transparente alrededor — `res_frame` traía el marco en
+331×206 dentro de un lienzo de 512×256 — así que el 9-slice estiraba el
+vacío y el marco salía chico y corrido, no donde decían sus offsets.
+
+Recortar al `getbbox()` y medir el grosor real del borde (34px) lo
+resolvió de una. Lo anoto acá porque perdí cuatro iteraciones moviendo
+offsets a mano cuando el problema no era la geometría de la escena.
+
+La otra: **no se pueden encimar dos marcos ornamentados**. La placa de
+madera tenía su propio borde tallado y competía con el del marco verde;
+ninguno de los dos se leía, en ninguna combinación de tamaños. La placa
+queda oculta y el marco verde es el único marco.
+
 ### La cuadrícula de la tienda muestra el avance
 
 Con 10 niveles por artículo, un "3/10" en texto chico no alcanza para ver
