@@ -3,7 +3,7 @@
 `el_huerto_de_sofia.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-Versión 0.15.0 (versionCode 20), ~73MB, arquitectura arm64-v8a solamente.
+Versión 0.16.0 (versionCode 21), ~73MB, arquitectura arm64-v8a solamente.
 
 Este build ya es **completo**: incluye la música de los 10 capítulos,
 que los builds anteriores dejaban afuera para no pasarse del límite de
@@ -98,6 +98,20 @@ misma placa y se encoge sola.
 **Sofía ya no se dibuja durante la partida**: aparecía abajo del todo,
 cortada por el borde y sin animación. Los ataques del jefe siguen
 apuntando al mismo lugar.
+
+**Progresión para los 1000 niveles**: antes se compraba todo antes del
+nivel 40 y después no quedaba nada. Ahora cada arma tiene **10 niveles de
+mejora** y hay que llevarla al 10 para poder comprar la siguiente. Lo
+mismo con los objetos, en dos cadenas: los pasivos (guantes → botiquín →
+lupa → frasco → repelente → reloj de arena → trébol → delantal → botas) y
+los poderes (reloj de bolsillo → campo → tormenta → lanzallamas). Son
+**180 compras** en total, un hito cada 25 o 30 niveles. Simulado de punta
+a punta: el último se completa en el nivel 970 de 1000.
+
+El daño del arma va de 1 (Zapato nivel 1) a 107 (Pala nivel 10), así que
+mejorar se nota. Y el árbol de habilidades pasa a sumar daño plano en vez
+de multiplicarlo: multiplicando, sus 4.800 monedas regalaban +107 de daño
+y dejaban sin sentido las 50 mejoras de arma.
 
 **Los insectos se ponen duros y las mejoras hacen falta**: antes una
 hormiga tenía 1 de vida hasta el nivel 29 — un toque, siempre. Ahora suman

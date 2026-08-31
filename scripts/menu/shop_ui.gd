@@ -172,12 +172,16 @@ func _icon_path(item_id: String, is_weapon: bool) -> String:
 
 func _tile_status(item_id: String, is_weapon: bool) -> String:
 	if is_weapon:
-		if item_id == GameManager.equipped_weapon:
-			return "Equipado"
-		if item_id in GameManager.unlocked_weapons:
-			return "Tenés"
-		return str(int(WeaponSystem.get_price(item_id)))
+		if not WeaponSystem.is_unlocked(GameManager.weapon_levels, item_id):
+			return "🔒"
+		var wl := GameManager.get_weapon_level(item_id)
+		var wcost := WeaponSystem.get_upgrade_cost(item_id, wl)
+		if wcost < 0:
+			return "MAX %d/%d" % [wl, WeaponSystem.MAX_LEVEL]
+		return "%d/%d\n%d" % [wl, WeaponSystem.MAX_LEVEL, wcost]
 
+	if not ItemSystem.is_unlocked(GameManager.items, item_id):
+		return "🔒"
 	var level := ItemSystem.get_level(GameManager.items, item_id)
 	var cost := ItemSystem.get_cost(GameManager.items, item_id)
 	if cost < 0:
@@ -284,7 +288,10 @@ func _build_item_row(item_id: String) -> Control:
 	UITheme.style_wood_button(button)
 
 	var cost := ItemSystem.get_cost(GameManager.items, item_id)
-	if cost < 0:
+	if not ItemSystem.is_unlocked(GameManager.items, item_id):
+		button.text = ItemSystem.get_lock_reason(item_id)
+		button.disabled = true
+	elif cost < 0:
 		button.text = "Al máximo"
 		button.disabled = true
 	else:
@@ -301,8 +308,11 @@ func _build_item_row(item_id: String) -> Control:
 
 func _build_row(weapon_name: String) -> Control:
 	var data := WeaponSystem.get_weapon_data(weapon_name)
-	var owned: bool = weapon_name in GameManager.unlocked_weapons
+	var level := GameManager.get_weapon_level(weapon_name)
+	var owned := level > 0
 	var equipped: bool = weapon_name == GameManager.equipped_weapon
+	var unlocked := WeaponSystem.is_unlocked(GameManager.weapon_levels, weapon_name)
+	var cost := WeaponSystem.get_upgrade_cost(weapon_name, level)
 
 	var card := PanelContainer.new()
 	card.add_theme_stylebox_override("panel", UITheme.card_style())
@@ -330,12 +340,19 @@ func _build_row(weapon_name: String) -> Control:
 
 	var name_label := Label.new()
 	name_label.text = str(data.get("display_name", weapon_name))
+	if owned:
+		name_label.text += "  ·  nivel %d/%d" % [level, WeaponSystem.MAX_LEVEL]
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UITheme.style_body(name_label, 22)
 	info.add_child(name_label)
 
 	var stats := Label.new()
-	stats.text = "Daño %d · Radio %d" % [int(data.get("damage", 1)), int(data.get("radius", 50))]
+	var damage := WeaponSystem.get_damage(weapon_name, level)
+	stats.text = "Daño %d · Radio %d" % [damage, int(data.get("radius", 50))]
+	if owned and cost > 0:
+		# Ver el salto antes de pagar es lo que hace que la mejora se
+		# entienda: "Daño 7 → 9" dice más que "nivel 4".
+		stats.text += "   (sube a %d)" % WeaponSystem.get_damage(weapon_name, level + 1)
 	stats.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UITheme.style_body(stats, 17)
 	stats.add_theme_color_override("font_color", Color(0.92, 0.88, 0.78))
@@ -350,27 +367,43 @@ func _build_row(weapon_name: String) -> Control:
 	button.add_theme_font_size_override("font_size", 20)
 	UITheme.style_wood_button(button)
 
-	if equipped:
-		button.text = "Equipado"
+	if not unlocked:
+		button.text = WeaponSystem.get_lock_reason(weapon_name)
 		button.disabled = true
-	elif owned:
-		button.text = "Equipar"
-		button.pressed.connect(func():
-			GameManager.equip_weapon(weapon_name)
-			AudioManager.play_sfx("unlock")
-			_refresh()
-		)
+	elif cost < 0:
+		button.text = "Al máximo" if equipped else "Equipar (máximo)"
+		button.disabled = equipped
+		if not equipped:
+			button.pressed.connect(func():
+				GameManager.equip_weapon(weapon_name)
+				AudioManager.play_sfx("unlock")
+				_refresh()
+			)
 	else:
-		var price := int(data.get("price", 0))
-		button.text = "Comprar · %d" % price
-		button.disabled = GameManager.player_coins < price
+		button.text = ("Mejorar · %d" % cost) if owned else ("Comprar · %d" % cost)
+		button.disabled = GameManager.player_coins < cost
 		button.pressed.connect(func():
-			if GameManager.purchase_weapon(weapon_name):
+			if GameManager.upgrade_weapon(weapon_name):
 				AudioManager.play_sfx("unlock")
 				_refresh()
 		)
 
 	box.add_child(button)
+
+	# Un arma comprada pero no equipada necesita su propio botón: el de
+	# arriba ahora es el de mejorar, no el de equipar.
+	if owned and not equipped and cost >= 0:
+		var equip_button := Button.new()
+		equip_button.custom_minimum_size = Vector2(0, 48)
+		equip_button.add_theme_font_size_override("font_size", 18)
+		UITheme.style_wood_button(equip_button)
+		equip_button.text = "Equipar"
+		equip_button.pressed.connect(func():
+			GameManager.equip_weapon(weapon_name)
+			AudioManager.play_sfx("unlock")
+			_refresh()
+		)
+		box.add_child(equip_button)
 	return card
 
 

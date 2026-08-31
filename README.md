@@ -524,6 +524,92 @@ Y desde el resumen de un nivel se puede **ir derecho a la tienda**: antes
 había que volver al menú, entrar a la tienda y rehacer todo el camino
 hasta el nivel. El botón "Volver" de la tienda sabe de dónde viniste.
 
+## Progresión para 1000 niveles, no para 35
+
+El juego tiene `MAX_LEVEL = 1000`, pero se compraba todo antes del nivel
+40 y después no quedaba nada en qué gastar durante 960 niveles. Ahora hay
+**180 compras** repartidas a lo largo de todo el juego: un hito cada 25 o
+30 niveles.
+
+**Las armas tienen 10 niveles y forman una cadena.** No se puede comprar
+la siguiente hasta tener la anterior al nivel 10. El daño es una escalera
+pareja de 50 escalones:
+
+| Arma | Daño nivel 1 → 10 | Subirla entera |
+|---|---|---|
+| Zapato Viejo | 1 → 19 | 11.550 |
+| Chancla de Goma | 23 → 41 | 30.550 |
+| Matamoscas Metálico | 45 → 63 | 49.550 |
+| Sartén de Hierro | 67 → 85 | 68.550 |
+| Pala Electrificada | 89 → 107 | 87.550 |
+
+El costo del escalón es lineal (`300 + 190 × escalón`) a propósito: el
+ingreso por nivel también crece lineal, así el ritmo de compra queda
+parejo en vez de acelerarse al final.
+
+**Los objetos también tienen 10 niveles y van en cadena**, pero en **dos
+cadenas separadas** — pasivos por un lado y poderes por otro. Si fueran
+una sola, el lanzallamas quedaría detrás de los nueve pasivos y no se
+vería nunca.
+
+- Pasivos: guantes → botiquín → lupa → frasco → repelente → reloj de
+  arena → trébol → delantal → botas (249.916 monedas, 90 compras)
+- Poderes: reloj de bolsillo → campo → tormenta → lanzallamas (192.005
+  monedas, 40 compras)
+
+### Cómo se eligieron los números
+
+Simulando la partida completa: el ingreso de 1000 niveles da ~690.000
+monedas, y el costo total de las 180 compras es 689.671. Con un jugador
+que compra apenas puede, la progresión queda así:
+
+| Hito | Nivel |
+|---|---|
+| Zapato al máximo | 105 |
+| Chancla | 124 |
+| Guantes al máximo | 167 |
+| Matamoscas | 343 |
+| Campo expansivo | 407 |
+| Sartén | 586 |
+| Pala | 789 |
+| Pala al máximo | 887 |
+| Lanzallamas | 899 |
+| Lanzallamas al máximo | **970** |
+
+Termina en el 970 de 1000, con ~36.000 monedas de sobra — que es justo el
+colchón para los usos de poderes (se pagan cada vez) y las recargas de
+vidas.
+
+### El árbol de habilidades rompía el tuning
+
+`get_damage_multiplier` devolvía `1.0 + tier × 0.2`, o sea **×2 al
+máximo**. Cuando las armas hacían 1 o 2 de daño eso era un empujón chico.
+Con la escalera nueva, ese mismo ×2 regalaba **+107 de daño por 4.800
+monedas** — el árbol entero cuesta menos que un escalón de arma tardío — y
+dejaba sin sentido las 50 mejoras.
+
+Ahora la rama Fuerza suma **daño plano** (+3 por escalón, +15 al máximo),
+igual que los guantes. Nada multiplica al arma: el arma pone la base y
+todo lo demás suma encima.
+
+### Efectos reescalados
+
+Los objetos tenían 2 o 3 niveles; con 10, varios efectos se pasaban de
+rosca. `+5s de tiempo por nivel` eran +50 segundos en un nivel de 30;
+`+10% de crítico` era 100% de crítico. Quedaron: crítico 5%/nivel (50% al
+máximo), monedas 6% (60%), tiempo 1,5s (15s), radio 5 (50), lentitud de
+refuerzos 5% (50%), daño de guantes 2 (20), vida del botiquín 250 (2.500).
+
+El delantal usaba una tabla `[0, 4, 3]` indexada por nivel, que con 10
+niveles no cierra. Ahora es fórmula: bloquea 1 golpe de cada 6 en el nivel
+1 y 1 de cada 2 en el 10 — nunca 1 de cada 1, porque invulnerable no.
+
+### Guardados viejos
+
+`unlocked_weapons` era una lista sin niveles. `_load_weapon_levels()` la
+convierte dándole nivel 1 a cada arma que ya estaba comprada, en vez de
+perder el progreso.
+
 ## Las mejoras ahora hacen falta de verdad
 
 El rebalance de precios anterior estaba incompleto y el tester tenía razón

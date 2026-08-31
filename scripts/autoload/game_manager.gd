@@ -20,7 +20,10 @@ var _combo_forgives_left: int = 0
 
 # --- Desbloqueos ---
 var unlocked_insects: Array = []          # índices de insectos incógnito revelados
-var unlocked_weapons: Array = ["zapato_viejo"]
+## Nivel de cada arma, 1..WeaponSystem.MAX_LEVEL. Una que no está acá
+## todavía está bloqueada. El Zapato arranca en 1 porque es con lo que
+## se juega el primer nivel.
+var weapon_levels: Dictionary = {"zapato_viejo": 1}
 var equipped_weapon: String = "zapato_viejo"
 var skill_tree: Dictionary = {}
 ## Objetos pasivos comprados: {id: nivel}. Ver ItemSystem.
@@ -93,7 +96,7 @@ func load_game_data() -> void:
 		current_level = int(data.get("current_level", 1))
 		player_coins = int(data.get("coins", 0))
 		unlocked_insects = data.get("unlocked_insects", [])
-		unlocked_weapons = data.get("unlocked_weapons", ["zapato_viejo"])
+		weapon_levels = _load_weapon_levels(data)
 		equipped_weapon = data.get("equipped_weapon", "zapato_viejo")
 		skill_tree = data.get("skill_tree", {})
 		items = data.get("items", {})
@@ -120,7 +123,7 @@ func reset_game() -> void:
 	combo_hits = 0
 	combo_max = 0
 	unlocked_insects = []
-	unlocked_weapons = ["zapato_viejo"]
+	weapon_levels = {"zapato_viejo": 1}
 	equipped_weapon = "zapato_viejo"
 	skill_tree = {}
 	items = {}
@@ -273,7 +276,7 @@ func get_pending_tutorial() -> String:
 		return "objetos"
 
 	# Tienda: cuando te alcanza para la primera arma.
-	if not _seen("tienda") and unlocked_weapons.size() <= 1 and player_coins >= TUTORIAL_SHOP_COINS:
+	if not _seen("tienda") and weapon_levels.size() <= 1 and player_coins >= TUTORIAL_SHOP_COINS:
 		return "tienda"
 
 	# Vidas: la primera vez que perdés una.
@@ -307,7 +310,7 @@ func _build_save_dict() -> Dictionary:
 		"current_level": current_level,
 		"coins": player_coins,
 		"unlocked_insects": unlocked_insects,
-		"unlocked_weapons": unlocked_weapons,
+		"weapon_levels": weapon_levels,
 		"equipped_weapon": equipped_weapon,
 		"skill_tree": skill_tree,
 		"items": items,
@@ -407,19 +410,22 @@ func get_max_chapter_unlocked() -> int:
 # --- Armas ---
 
 func get_weapon_damage() -> int:
-	var base_damage := int(WeaponSystem.get_weapon_data(equipped_weapon).get("damage", 1))
-	var scaled := base_damage * skill_system.get_damage_multiplier(skill_tree)
-	# Los guantes suman daño PLANO y se aplican después del multiplicador
-	# del árbol: si se sumaran antes, la rama Fuerza los escalaría y dos
-	# mejoras baratas se volverían enormes juntas.
-	return int(round(scaled)) + ItemSystem.get_bonus_damage(items)
+	# Todo suma plano: el arma pone la base (1 a 107 según arma y nivel) y
+	# el árbol y los guantes agregan un empujón fijo encima. Nada
+	# multiplica al arma, para que las 50 mejoras sigan siendo el eje.
+	var base_damage := WeaponSystem.get_damage(equipped_weapon, get_weapon_level(equipped_weapon))
+	return base_damage \
+		+ skill_system.get_bonus_damage(skill_tree) \
+		+ ItemSystem.get_bonus_damage(items)
 
 func get_weapon_radius() -> float:
-	var base_radius := float(WeaponSystem.get_weapon_data(equipped_weapon).get("radius", 50.0))
+	var base_radius := WeaponSystem.get_radius(equipped_weapon)
 	return base_radius + skill_system.get_radius_bonus(skill_tree) + ItemSystem.get_bonus_radius(items)
 
 ## Compra (o sube un nivel de) un objeto pasivo. Devuelve si se pudo.
 func purchase_item(item_id: String) -> bool:
+	if not ItemSystem.is_unlocked(items, item_id):
+		return false
 	var cost := ItemSystem.get_cost(items, item_id)
 	if cost < 0 or player_coins < cost:
 		return false
@@ -433,22 +439,58 @@ func purchase_item(item_id: String) -> bool:
 func get_boss_max_hp(base_hp: int) -> int:
 	return base_hp + ItemSystem.get_bonus_hp(items)
 
-func purchase_weapon(weapon_name: String) -> bool:
-	if weapon_name in unlocked_weapons:
+func get_weapon_level(weapon_name: String) -> int:
+	return WeaponSystem.get_level(weapon_levels, weapon_name)
+
+func has_weapon(weapon_name: String) -> bool:
+	return get_weapon_level(weapon_name) > 0
+
+## Compra el arma (nivel 0 -> 1) o le sube un nivel. Es la misma
+## operación: la única diferencia es que el primer nivel además la
+## desbloquea, y para eso la anterior tiene que estar al máximo.
+func upgrade_weapon(weapon_name: String) -> bool:
+	if not WeaponSystem.WEAPONS.has(weapon_name):
 		return false
-	var price := WeaponSystem.get_price(weapon_name)
-	if player_coins < price:
+	if not WeaponSystem.is_unlocked(weapon_levels, weapon_name):
 		return false
-	player_coins -= price
-	unlocked_weapons.append(weapon_name)
+	var level := get_weapon_level(weapon_name)
+	var cost := WeaponSystem.get_upgrade_cost(weapon_name, level)
+	if cost < 0 or player_coins < cost:
+		return false
+	player_coins -= cost
+	weapon_levels[weapon_name] = level + 1
+	# La primera compra además la equipa: nadie compra un arma para
+	# seguir usando la anterior, y obligar a un toque extra sólo genera
+	# que la mejora "no se note".
+	if level == 0:
+		equipped_weapon = weapon_name
 	coins_changed.emit(player_coins)
+	SaveManager.save_game(_build_save_dict())
 	return true
 
 func equip_weapon(weapon_name: String) -> bool:
-	if weapon_name not in unlocked_weapons:
+	if not has_weapon(weapon_name):
 		return false
 	equipped_weapon = weapon_name
 	return true
+
+## Guardados viejos tenían una lista `unlocked_weapons` sin niveles. Se
+## convierten dándole nivel 1 a cada arma que ya estaba comprada, en vez
+## de perder el progreso.
+func _load_weapon_levels(data: Dictionary) -> Dictionary:
+	var stored: Dictionary = data.get("weapon_levels", {})
+	if not stored.is_empty():
+		var levels: Dictionary = {}
+		for name in stored:
+			levels[name] = clampi(int(stored[name]), 0, WeaponSystem.MAX_LEVEL)
+		if not levels.has("zapato_viejo"):
+			levels["zapato_viejo"] = 1
+		return levels
+
+	var migrated: Dictionary = {"zapato_viejo": 1}
+	for name in data.get("unlocked_weapons", []):
+		migrated[name] = 1
+	return migrated
 
 # --- Habilidades ---
 

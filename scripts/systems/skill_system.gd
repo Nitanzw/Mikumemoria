@@ -53,8 +53,14 @@ func purchase(skill_tree: Dictionary, branch: String) -> Dictionary:
 	skill_tree[branch] = current_tier + 1
 	return skill_tree
 
-func get_damage_multiplier(skill_tree: Dictionary) -> float:
-	return 1.0 + get_tier(skill_tree, "fuerza") * 0.2
+## Daño PLANO, no multiplicador. Cuando las armas hacían 1 o 2 de daño un
+## x2 era un empujón chico; ahora que la escalera va de 1 a 107 el mismo
+## x2 regalaba +107 de daño por 4.800 monedas y dejaba sin sentido las
+## 50 mejoras de arma. Sumado queda como lo que es: un empujón temprano.
+const DAMAGE_PER_TIER := 3
+
+func get_bonus_damage(skill_tree: Dictionary) -> int:
+	return get_tier(skill_tree, "fuerza") * DAMAGE_PER_TIER
 
 func get_coin_multiplier(skill_tree: Dictionary) -> float:
 	return 1.0 + get_tier(skill_tree, "fortuna") * 0.15
