@@ -1,18 +1,33 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/dialogue_box.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ui/sofia_portrait.tscn" id="2"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
-bg_color = Color(0.1, 0.09, 0.13, 0.96)
-border_width_top = 4
-border_color = Color(1, 0.8, 0.2, 1)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-content_margin_left = 16
-content_margin_top = 14
-content_margin_right = 16
-content_margin_bottom = 14
+[sub_resource type="StyleBoxFlat" id="bubble"]
+bg_color = Color(0.96, 0.92, 0.84, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.83, 0.75, 0.62, 1)
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 10
+shadow_offset = Vector2(0, 5)
+content_margin_left = 26
+content_margin_top = 20
+content_margin_right = 26
+content_margin_bottom = 20
+
+[sub_resource type="StyleBoxFlat" id="tail"]
+bg_color = Color(0.96, 0.92, 0.84, 1)
+border_width_left = 3
+border_width_bottom = 3
+border_color = Color(0.83, 0.75, 0.62, 1)
+corner_radius_bottom_left = 8
 
 [node name="DialogueBox" type="CanvasLayer"]
 script = ExtResource("1")
@@ -22,55 +37,74 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
-color = Color(0, 0, 0, 0.35)
+color = Color(0.03, 0.05, 0.02, 0.28)
 
-[node name="Panel" type="PanelContainer" parent="Dim"]
-layout_mode = 1
-anchors_preset = 12
+[node name="SofiaPortrait" parent="." instance=ExtResource("2")]
+position = Vector2(372, 858)
+scale = Vector2(1.7, 1.7)
+
+[node name="Tail" type="Panel" parent="."]
+anchors_preset = 0
+offset_left = 300.0
+offset_top = 300.0
+offset_right = 348.0
+offset_bottom = 348.0
+rotation = -0.785398
+pivot_offset = Vector2(24, 24)
+mouse_filter = 2
+theme_override_styles/panel = SubResource("tail")
+
+[node name="Bubble" type="Panel" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 22.0
+offset_top = 78.0
+offset_right = -22.0
+offset_bottom = 322.0
+mouse_filter = 2
+pivot_offset = Vector2(248, 122)
+theme_override_styles/panel = SubResource("bubble")
+
+[node name="VBox" type="VBoxContainer" parent="Bubble"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 26.0
+offset_top = 20.0
+offset_right = -26.0
+offset_bottom = -20.0
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="NameLabel" type="Label" parent="Bubble/VBox"]
+mouse_filter = 2
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.55, 0.36, 0.16, 1)
+text = "Sofía"
+
+[node name="TextLabel" type="Label" parent="Bubble/VBox"]
+size_flags_vertical = 3
+mouse_filter = 2
+autowrap_mode = 3
+vertical_alignment = 0
+theme_override_font_sizes/font_size = 25
+theme_override_colors/font_color = Color(0.16, 0.13, 0.1, 1)
+
+[node name="ContinueHint" type="Label" parent="Bubble"]
+anchors_preset = 3
+anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 16.0
-offset_top = -260.0
-offset_right = -16.0
-offset_bottom = -24.0
+offset_left = -56.0
+offset_top = -50.0
+offset_right = -22.0
+offset_bottom = -16.0
+grow_horizontal = 0
+grow_vertical = 0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_1")
-
-[node name="SofiaPortrait" parent="Dim/Panel" instance=ExtResource("2")]
-position = Vector2(80, 118)
-scale = Vector2(0.35, 0.35)
-
-[node name="HBox" type="HBoxContainer" parent="Dim/Panel"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 12
-
-[node name="PortraitSpacer" type="Control" parent="Dim/Panel/HBox"]
-custom_minimum_size = Vector2(140, 0)
-layout_mode = 2
-
-[node name="VBox" type="VBoxContainer" parent="Dim/Panel/HBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 6
-
-[node name="NameLabel" type="Label" parent="Dim/Panel/HBox/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
-text = "Sofía"
-
-[node name="TextLabel" type="Label" parent="Dim/Panel/HBox/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-autowrap_mode = 3
-theme_override_font_sizes/font_size = 22
-vertical_alignment = 0
-
-[node name="ContinueHint" type="Label" parent="Dim/Panel/HBox/VBox"]
-layout_mode = 2
-horizontal_alignment = 2
-theme_override_font_sizes/font_size = 16
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 0.8)
-text = "toca para continuar ▸"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.62, 0.44, 0.2, 1)
+text = "▶"

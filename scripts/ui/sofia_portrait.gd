@@ -7,7 +7,10 @@ extends Node2D
 ## el sprite neutral con un tinte de color como antes, para que nunca
 ## quede un retrato roto. Encima de eso: un salto de énfasis al cambiar
 ## de línea y un parpadeo periódico (achique vertical breve) para que no
-## se vea estático.
+## se vea estático, más una respiración lenta (el pecho se ensancha y se
+## angosta) y un balanceo casi imperceptible. Con el retrato chico dentro
+## de un panel eso no se notaba; ahora que va grande en escena es la
+## diferencia entre un personaje y un JPG pegado.
 
 const EMOTION_TEXTURES := {
 	"neutral": "res://assets/sprites/character/sofia_neutral.png",
@@ -30,9 +33,30 @@ const EMOTION_TINTS := {
 const BLINK_MIN_INTERVAL := 2.5
 const BLINK_MAX_INTERVAL := 5.0
 
+## Respiración: el eje Y se estira y el X se angosta a la vez, que es
+## como se ve respirar de verdad. Si los dos crecieran juntos parecería
+## que la imagen hace zoom.
+const BREATH_SPEED := 1.15
+const BREATH_Y := 0.016
+const BREATH_X := 0.007
+const BOB_PIXELS := 3.0
+## El balanceo va mucho más lento que la respiración, si no marea.
+const SWAY_SPEED := 0.41
+const SWAY_PIXELS := 2.5
+## Mientras habla se le suma un cabeceo corto, para que el texto no
+## aparezca sobre alguien inmóvil.
+const TALK_SPEED := 7.5
+const TALK_PIXELS := 1.6
+
 @onready var sprite: Sprite2D = $Sprite2D
 
 var _idle_phase: float = 0.0
+var _sway_phase: float = 0.0
+var _talk_phase: float = 0.0
+var _talking: bool = false
+## El parpadeo y el énfasis pisan la escala; mientras corren, la
+## respiración se aparta para no pelear con el tween.
+var _scale_locked: bool = false
 var _blink_timer: float = randf_range(BLINK_MIN_INTERVAL, BLINK_MAX_INTERVAL)
 var _base_scale: Vector2
 
@@ -40,8 +64,21 @@ func _ready() -> void:
 	_base_scale = sprite.scale
 
 func _process(delta: float) -> void:
-	_idle_phase += delta * 1.6
-	sprite.position.y = sin(_idle_phase) * 2.5
+	_idle_phase += delta * BREATH_SPEED
+	_sway_phase += delta * SWAY_SPEED
+	var breath := sin(_idle_phase)
+
+	var bob := breath * BOB_PIXELS
+	if _talking:
+		_talk_phase += delta * TALK_SPEED
+		bob += sin(_talk_phase) * TALK_PIXELS
+	sprite.position.y = bob
+	sprite.position.x = sin(_sway_phase) * SWAY_PIXELS
+
+	if not _scale_locked:
+		sprite.scale = Vector2(
+			_base_scale.x * (1.0 - breath * BREATH_X),
+			_base_scale.y * (1.0 + breath * BREATH_Y))
 
 	_blink_timer -= delta
 	if _blink_timer <= 0.0:
@@ -62,10 +99,18 @@ func set_emotion(emotion: String) -> void:
 	tween.tween_property(sprite, "modulate", tint, 0.2)
 	_play_emphasis(emotion)
 
+## Se avisa cuando está tipeando texto, para sumarle el cabeceo.
+func set_talking(talking: bool) -> void:
+	_talking = talking
+	if not talking:
+		_talk_phase = 0.0
+
 func _play_emphasis(emotion: String) -> void:
+	_scale_locked = true
 	var tween := create_tween()
-	tween.tween_property(sprite, "scale", _base_scale * 1.12, 0.1)
+	tween.tween_property(sprite, "scale", _base_scale * 1.10, 0.1)
 	tween.tween_property(sprite, "scale", _base_scale, 0.15)
+	tween.finished.connect(func(): _scale_locked = false)
 
 	if emotion == "angry":
 		var shake := create_tween()
@@ -75,6 +120,10 @@ func _play_emphasis(emotion: String) -> void:
 		shake.tween_property(sprite, "position:x", 0.0, 0.04)
 
 func _play_blink() -> void:
+	if _scale_locked:
+		return
+	_scale_locked = true
 	var tween := create_tween()
 	tween.tween_property(sprite, "scale:y", _base_scale.y * 0.85, 0.06)
 	tween.tween_property(sprite, "scale:y", _base_scale.y, 0.08)
+	tween.finished.connect(func(): _scale_locked = false)

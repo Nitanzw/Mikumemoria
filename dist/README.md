@@ -3,7 +3,7 @@
 `el_huerto_de_sofia.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-Versión 0.17.1 (versionCode 24), ~73MB, arquitectura arm64-v8a solamente.
+Versión 0.18.0 (versionCode 25), ~73MB, arquitectura arm64-v8a solamente.
 
 Este build ya es **completo**: incluye la música de los 10 capítulos,
 que los builds anteriores dejaban afuera para no pasarse del límite de
@@ -98,6 +98,13 @@ misma placa y se encoge sola.
 **Sofía ya no se dibuja durante la partida**: aparecía abajo del todo,
 cortada por el borde y sin animación. Los ataques del jefe siguen
 apuntando al mismo lugar.
+
+**Los diálogos de Sofía**: era un panel oscuro abajo con un retrato
+chiquito adentro. Ahora Sofía aparece grande en la escena, cortada por el
+borde inferior, y el texto va en un globo crema arriba con la cola
+apuntándole. Y **respira**: se ensancha y se angosta al respirar, se
+balancea despacio, cabecea mientras habla y parpadea. El globo rebota en
+cada línea nueva y la flecha de continuar late.
 
 **Barras de nivel e íconos parejos**: las barras de la tienda pasan de
 rectángulos planos a arte real (ranura de bronce, relleno verde, y dorado

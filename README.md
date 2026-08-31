@@ -580,6 +580,48 @@ Termina en el 970 de 1000, con ~36.000 monedas de sobra — que es justo el
 colchón para los usos de poderes (se pagan cada vez) y las recargas de
 vidas.
 
+## Los diálogos: Sofía en escena y respirando
+
+El diálogo era un panel oscuro abajo con un retrato de Sofía a escala
+0.35 metido adentro. Ahora Sofía va **grande en la escena**, cortada por
+el borde de abajo, y el texto en un **globo color crema** arriba con su
+cola apuntándole — que es como se lee un diálogo, no como se lee un HUD.
+
+El globo es un `StyleBoxFlat`, no una textura generada: el de la
+referencia es crema plano con esquinas redondeadas, sin ornamento ni
+trama, así que dibujarlo sale idéntico y sin la trampa del 9-slice. La
+cola es un `Panel` cuadrado rotado 45°, por lo mismo.
+
+### Que respire
+
+Ya existían un bob y un parpadeo, pero a escala 0.35 dentro de un panel
+chico no se veían. A tamaño real se notan, y encima se agregó:
+
+- **Respiración**: el eje Y se estira mientras el X se angosta, a la vez.
+  Si los dos crecieran juntos parecería que la imagen hace zoom; que uno
+  suba mientras el otro baja es lo que se lee como respirar.
+- **Balanceo** horizontal a un tercio de la velocidad de la respiración.
+  Más rápido marea.
+- **Cabeceo mientras habla**, que arranca al empezar a tipear y para al
+  terminar la línea: el texto ya no aparece sobre alguien inmóvil.
+- El globo **rebota corto** en cada línea nueva, y la flechita de
+  continuar late. Verificado comparando dos capturas separadas por un
+  segundo: 51.758 píxeles distintos, todos en la zona de Sofía.
+
+La respiración se aparta sola mientras corre el parpadeo o el énfasis
+(`_scale_locked`): son tres cosas escribiendo la misma escala y si no se
+turnan, el tween y el `_process` se pisan y tiembla.
+
+### Un contenedor le pisa la posición a sus hijos
+
+La flecha ▶ saltó arriba, al lado del nombre. Estaba dentro de un
+`VBoxContainer` y yo le animaba `position`, que es justo lo que el
+contenedor reescribe en cada acomodada. Encima leía su posición base en
+`_ready()`, cuando el contenedor todavía no había acomodado y valía cero.
+
+Ahora el globo es un `Panel` (que no acomoda hijos) y la flecha va
+anclada abajo a la derecha, libre para latir.
+
 ### Las barras son arte, no rectángulos, y 14 assets estaban descuadrados
 
 Las barras de nivel las había dibujado con `StyleBoxFlat`: dos
