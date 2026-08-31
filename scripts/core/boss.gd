@@ -42,6 +42,17 @@ const STUN_SECONDS := 1.4
 ## que entra se multiplica por lo mismo, así los golpes-para-matar quedan
 ## exactamente igual que antes del cambio de escala.
 const HP_SCALE := 100
+
+## Escala del sprite del jefe. Las hojas de caminata pasaron de 128 a
+## 256px por cuadro (mismo dibujo, más resolución: se re-partió la hoja
+## cruda de 1024 que quedó cacheada), así que la escala baja a la mitad
+## para que el jefe se vea del mismo tamaño que antes. Las demás escalas
+## se expresan como múltiplos de ésta y no como números sueltos, que es
+## lo que hizo falta tocar en seis lugares esta vez.
+const BASE_SCALE := Vector2(0.85, 0.85)
+const BURROW_SCALE := BASE_SCALE * 0.18
+const DASH_SCALE := BASE_SCALE * 1.18
+const ENRAGE_SCALE := BASE_SCALE * 1.41
 const DASH_SPEED := 900.0
 const HEAL_IDLE_TIME := 5.0   # sin recibir golpes durante esto -> se cura
 const HEAL_AMOUNT := 2
@@ -55,7 +66,7 @@ const PHASE_ANNOUNCE := [
 ]
 const STEAL_AMOUNT := 25
 
-@onready var sprite: Sprite2D = $Sprite2D
+@onready var sprite: AnimatedSprite2D = $Sprite2D
 @onready var collision: CollisionShape2D = $CollisionShape2D
 
 var config: Dictionary = {}
@@ -110,12 +121,12 @@ func setup(boss_config: Dictionary) -> void:
 	speed = base_speed
 
 	var path: String = config.get("sprite", "")
-	if sprite and path != "" and ResourceLoader.exists(path):
-		sprite.texture = load(path)
+	if sprite and path != "":
+		_apply_boss_frames(path)
 
 	# El jefe se ve claramente más grande que un insecto normal.
 	if sprite:
-		sprite.scale = Vector2(1.7, 1.7)
+		sprite.scale = BASE_SCALE
 
 	_movement = str(config.get("movement", "patrol"))
 	_pattern = config.get("pattern", []).duplicate()
@@ -195,6 +206,37 @@ func _clamp_to_arena(view: Vector2) -> void:
 
 ## Altura mínima a la que puede llegar el jefe: justo debajo de la barra
 ## del HUD, más su medio alto para que no se le corte la cabeza.
+
+## Los jefes reusan el dibujo de un insecto. Antes cargaban su PNG fijo de
+## 128px y a escala grande se veía pixelado; ahora usan el ciclo de
+## caminata de ese mismo bicho, que existe en 256px. De paso el jefe deja
+## de ser una imagen quieta deslizándose por la pantalla.
+func _apply_boss_frames(sprite_path: String) -> void:
+	var type_name := sprite_path.get_file().get_basename()
+	var textures: Array[Texture2D] = []
+	for i in range(Insect.WALK_FRAME_COUNT):
+		var frame_path := "res://assets/sprites/insects/%s_walk_%d.png" % [type_name, i]
+		if ResourceLoader.exists(frame_path):
+			textures.append(load(frame_path))
+
+	# Sin ciclo, se cae al PNG fijo metido en un SpriteFrames de un cuadro,
+	# para que el nodo siga siendo el mismo tipo pase lo que pase.
+	if textures.is_empty() and ResourceLoader.exists(sprite_path):
+		textures.append(load(sprite_path))
+	if textures.is_empty():
+		return
+
+	var frames := SpriteFrames.new()
+	frames.add_animation("walk")
+	frames.set_animation_loop("walk", true)
+	# Más lento que un insecto común: un jefe grande moviéndose rápido se
+	# lee como nervioso, no como pesado.
+	frames.set_animation_speed("walk", 6.0)
+	for texture in textures:
+		frames.add_frame("walk", texture)
+	sprite.sprite_frames = frames
+	sprite.play("walk")
+
 func _ceiling() -> float:
 	return Insect.PLAY_TOP_INSET + BOSS_HALF_HEIGHT
 
@@ -446,8 +488,8 @@ func _start_dash() -> void:
 	# Aviso previo: se agranda un toque antes de salir disparado, para que
 	# el golpe sea esquivable y no se sienta injusto.
 	var tween := create_tween()
-	tween.tween_property(sprite, "scale", Vector2(2.0, 2.0), DASH_WINDUP * 0.5)
-	tween.tween_property(sprite, "scale", Vector2(1.7, 1.7), DASH_WINDUP * 0.5)
+	tween.tween_property(sprite, "scale", DASH_SCALE, DASH_WINDUP * 0.5)
+	tween.tween_property(sprite, "scale", BASE_SCALE, DASH_WINDUP * 0.5)
 
 	if not await _telegraph(DASH_WINDUP):
 		return
@@ -475,7 +517,7 @@ func _telegraph(seconds: float) -> bool:
 		_ability_timer = maxf(_ability_timer, STUN_SECONDS)
 		_flash(Color(1.6, 1.6, 0.6))
 		if sprite:
-			sprite.scale = Vector2(1.7, 1.7)
+			sprite.scale = BASE_SCALE
 		return false
 
 	return not (is_dead or is_burrowed)
@@ -590,7 +632,7 @@ func die() -> void:
 
 	var tween := create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(sprite, "scale", Vector2(2.4, 2.4), 0.5)
+	tween.tween_property(sprite, "scale", ENRAGE_SCALE, 0.5)
 	tween.tween_property(sprite, "modulate:a", 0.0, 0.5)
 	tween.tween_property(sprite, "rotation", 1.2, 0.5)
 	await get_tree().create_timer(0.6).timeout

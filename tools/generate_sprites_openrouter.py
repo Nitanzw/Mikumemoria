@@ -232,6 +232,10 @@ ICON_ASSET = ("icon", "a bold cute app icon: a cartoon shoe squashing an angry c
 # en una sola llamada para que los frames sean consistentes entre sí -
 # pedirle al modelo N imagenes separadas da resultados demasiado
 # distintos frame a frame). Se parte en celdas en post-proceso local. ---
+# 256 y no 128: los jefes se dibujan a escala 1.7 sobre un lienzo de 540
+# que en un celular de 1440 se escala otras 2.67 veces. Un cuadro de 128px
+# terminaba estirado casi 4,5 veces y se veía pixelado. La hoja cruda es de
+# 1024x1024, así que 256 por cuadro sale del mismo dibujo, sin regenerar.
 WALK_SHEETS: dict[str, dict] = {
         "hormiga_obrera_walk": {
         "prompt": (
@@ -245,7 +249,7 @@ WALK_SHEETS: dict[str, dict] = {
             "cells, no pink or magenta color anywhere on the ant's body or legs"
         ),
         "grid": (2, 2),
-        "frame_size": (128, 128),
+        "frame_size": (256, 256),
         "dest_dir": "insects",
         "dest_prefix": "hormiga_obrera_walk",
     },
@@ -260,7 +264,7 @@ WALK_SHEETS: dict[str, dict] = {
             "only the legs and the electric arcs change between poses"
         ),
         "grid": (2, 2),
-        "frame_size": (128, 128),
+        "frame_size": (256, 256),
         "dest_dir": "insects",
         "dest_prefix": "cucaracha_electrica_walk",
     },
@@ -274,7 +278,7 @@ WALK_SHEETS: dict[str, dict] = {
             "only the legs move between poses, in a different position of a walking cycle"
         ),
         "grid": (2, 2),
-        "frame_size": (128, 128),
+        "frame_size": (256, 256),
         "dest_dir": "insects",
         "dest_prefix": "escarabajo_blindado_walk",
     },
@@ -288,7 +292,7 @@ WALK_SHEETS: dict[str, dict] = {
             "only the wings change position between poses"
         ),
         "grid": (2, 2),
-        "frame_size": (128, 128),
+        "frame_size": (256, 256),
         "dest_dir": "insects",
         "dest_prefix": "mosca_pesada_walk",
     },
@@ -302,7 +306,7 @@ WALK_SHEETS: dict[str, dict] = {
             "the hind legs go through a leap: crouched, pushing off, extended in the air, landing"
         ),
         "grid": (2, 2),
-        "frame_size": (128, 128),
+        "frame_size": (256, 256),
         "dest_dir": "insects",
         "dest_prefix": "grillo_saltarin_walk",
     },
@@ -316,7 +320,7 @@ WALK_SHEETS: dict[str, dict] = {
             "only the legs move between poses, in a different position of a walking cycle"
         ),
         "grid": (2, 2),
-        "frame_size": (128, 128),
+        "frame_size": (256, 256),
         "dest_dir": "insects",
         "dest_prefix": "hormiga_ladrona_walk",
     },
@@ -330,7 +334,7 @@ WALK_SHEETS: dict[str, dict] = {
             "only the wings and the paper fringe move between poses"
         ),
         "grid": (2, 2),
-        "frame_size": (128, 128),
+        "frame_size": (256, 256),
         "dest_dir": "insects",
         "dest_prefix": "abejorro_pinata_walk",
     },
@@ -344,7 +348,7 @@ WALK_SHEETS: dict[str, dict] = {
             "only the legs move between poses, in a different position of a walking cycle"
         ),
         "grid": (2, 2),
-        "frame_size": (128, 128),
+        "frame_size": (256, 256),
         "dest_dir": "insects",
         "dest_prefix": "mantis_cronometro_walk",
     },
@@ -358,7 +362,7 @@ WALK_SHEETS: dict[str, dict] = {
             "only the legs move between poses, in a different position of a walking cycle"
         ),
         "grid": (2, 2),
-        "frame_size": (128, 128),
+        "frame_size": (256, 256),
         "dest_dir": "insects",
         "dest_prefix": "escarabajo_radiactivo_walk",
     },
@@ -372,7 +376,7 @@ WALK_SHEETS: dict[str, dict] = {
             "only the body coils and stretches between poses, like an earthworm crawling forward, the head stays the same"
         ),
         "grid": (2, 2),
-        "frame_size": (128, 128),
+        "frame_size": (256, 256),
         "dest_dir": "insects",
         "dest_prefix": "lombriz_gigante_walk",
     },
@@ -386,7 +390,7 @@ WALK_SHEETS: dict[str, dict] = {
             "only the four wings change position between poses"
         ),
         "grid": (2, 2),
-        "frame_size": (128, 128),
+        "frame_size": (256, 256),
         "dest_dir": "insects",
         "dest_prefix": "mutante_volador_walk",
     },
@@ -400,7 +404,7 @@ WALK_SHEETS: dict[str, dict] = {
             "only the legs and the energy arcs move between poses"
         ),
         "grid": (2, 2),
-        "frame_size": (128, 128),
+        "frame_size": (256, 256),
         "dest_dir": "insects",
         "dest_prefix": "centella_blindada_walk",
     },
@@ -414,7 +418,7 @@ WALK_SHEETS: dict[str, dict] = {
             "only the lightning arcs and the energy streaks change shape between poses, the silhouette stays the same"
         ),
         "grid": (2, 2),
-        "frame_size": (128, 128),
+        "frame_size": (256, 256),
         "dest_dir": "insects",
         "dest_prefix": "rayo_insecto_walk",
     },
@@ -428,7 +432,7 @@ WALK_SHEETS: dict[str, dict] = {
             "only the legs move between poses, in a different position of a walking cycle"
         ),
         "grid": (2, 2),
-        "frame_size": (128, 128),
+        "frame_size": (256, 256),
         "dest_dir": "insects",
         "dest_prefix": "coraza_antigua_walk",
     },
@@ -442,7 +446,7 @@ WALK_SHEETS: dict[str, dict] = {
             "only the wings and the legs move between poses"
         ),
         "grid": (2, 2),
-        "frame_size": (128, 128),
+        "frame_size": (256, 256),
         "dest_dir": "insects",
         "dest_prefix": "reina_primordial_walk",
     },

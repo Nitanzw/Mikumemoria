@@ -580,6 +580,56 @@ Termina en el 970 de 1000, con ~36.000 monedas de sobra — que es justo el
 colchón para los usos de poderes (se pagan cada vez) y las recargas de
 vidas.
 
+## Resolución: por qué se veía pixelado al agrandar
+
+El pipeline achicaba todo lo generado a 128x128 (insectos) o 200x320
+(Sofía). Eso alcanzaba cuando se dibujaban chicos. Después los agrandé —
+los jefes a escala 1.7, Sofía a 1.7 en el diálogo — y en un celular de
+1440px de ancho el lienzo de 540 se escala otras 2,67 veces. Resultado:
+**casi 4,5 aumentos** sobre el original.
+
+**Insectos y jefes: arreglado del todo, con el mismo dibujo.** Las hojas
+crudas de 1024x1024 quedaron cacheadas en `_sheets_raw/`, así que se
+volvieron a partir a 256px por cuadro con las mismas funciones de corte,
+croma y normalización. Cero llamadas a la API, cero cambio de dibujo, el
+doble de píxeles.
+
+**Los jefes además dejaron de ser una imagen quieta.** Cargaban el PNG
+fijo del insecto (128px); ahora usan el ciclo de caminata de ese mismo
+bicho, que existe en 256. Es la razón de fondo por la que se veían peor
+que los insectos comunes: los insectos ya usaban los cuadros de caminata
+y los jefes no.
+
+**Sofía: mitigado, no resuelto.** No quedan los originales de Drive (el
+contenedor se recrea) y tampoco hay una versión más grande en el
+historial de git. Se subió a 400x640 con Lanczos, que **no agrega
+detalle** — eso no existe — pero hace que la primera duplicación la haga
+Lanczos en vez de la interpolación bilineal de la GPU, que es peor en los
+bordes. Se ve menos blanda. El arreglo de verdad es volver a tener los
+archivos originales.
+
+### La escala hay que bajarla a la mitad, y estaba en seis lugares
+
+Duplicar la textura sin tocar la escala dibuja todo al doble. Las escalas
+del jefe eran seis números sueltos (1.7, 1.7, 1.7, 0.3, 2.0, 2.4)
+desparramados entre la escena y los tweens. Ahora hay un `BASE_SCALE` y
+las demás son múltiplos suyos, así el próximo cambio de resolución se
+hace en un solo lugar.
+
+Verificado midiendo el resultado, no a ojo: jefe 256px x 0.85 = **217px
+en pantalla**, exactamente lo que daba 128px x 1.70.
+
+### Dos trampas del entorno que me costaron tiempo
+
+`pkill -x Godot_v4.7.1-stable_linux.x86_64` **no matchea nada**: el nombre
+tiene más de 15 caracteres y `pkill -x` los rechaza con un warning que se
+pierde entre el ruido. Se me acumularon instancias zombis que después
+bloquearon las pruebas.
+
+Y Godot cachea las texturas importadas en `.godot/imported`: cambiar el
+PNG no alcanza, hay que re-importar. Medí el sprite del jefe y me daba
+128px cuando el archivo en disco ya era 256.
+
 ## Los diálogos: Sofía en escena y respirando
 
 El diálogo era un panel oscuro abajo con un retrato de Sofía a escala

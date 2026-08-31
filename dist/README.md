@@ -3,7 +3,7 @@
 `el_huerto_de_sofia.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-Versión 0.18.0 (versionCode 25), ~73MB, arquitectura arm64-v8a solamente.
+Versión 0.19.0 (versionCode 26), ~73MB, arquitectura arm64-v8a solamente.
 
 Este build ya es **completo**: incluye la música de los 10 capítulos,
 que los builds anteriores dejaban afuera para no pasarse del límite de
@@ -98,6 +98,15 @@ misma placa y se encoge sola.
 **Sofía ya no se dibuja durante la partida**: aparecía abajo del todo,
 cortada por el borde y sin animación. Los ataques del jefe siguen
 apuntando al mismo lugar.
+
+**Se veía pixelado al agrandar**: el pipeline achicaba los insectos a
+128px, y los jefes se dibujan a escala 1.7 sobre un lienzo que en un
+celular se escala otras 2,67 veces — casi 4,5 aumentos. Las hojas crudas
+de 1024px quedaron cacheadas, así que se volvieron a partir a **256px por
+cuadro**: mismo dibujo, el doble de resolución. Los jefes además usaban un
+PNG fijo y ahora usan el ciclo de caminata, así que **también se mueven**.
+Sofía subió a 400x640, que la deja menos blanda pero no le agrega detalle:
+para eso hacen falta los archivos originales.
 
 **Los diálogos de Sofía**: era un panel oscuro abajo con un retrato
 chiquito adentro. Ahora Sofía aparece grande en la escena, cortada por el
