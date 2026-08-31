@@ -6,25 +6,25 @@ extends CharacterBody2D
 
 const INSECT_DATA := {
 	# --- Los 5 básicos ---
-	"hormiga_obrera": {"speed": 100.0, "health": 1, "points": 50, "coin_reward": 10, "sprite": "res://assets/sprites/insects/hormiga_obrera.png"},
-	"cucaracha_electrica": {"speed": 200.0, "health": 1, "points": 75, "coin_reward": 15, "sprite": "res://assets/sprites/insects/cucaracha_electrica.png"},
-	"escarabajo_blindado": {"speed": 50.0, "health": 3, "points": 150, "coin_reward": 30, "sprite": "res://assets/sprites/insects/escarabajo_blindado.png"},
-	"mosca_pesada": {"speed": 150.0, "health": 1, "points": 100, "coin_reward": 20, "sprite": "res://assets/sprites/insects/mosca_pesada.png"},
-	"grillo_saltarin": {"speed": 120.0, "health": 1, "points": 80, "coin_reward": 16, "sprite": "res://assets/sprites/insects/grillo_saltarin.png"},
+	"hormiga_obrera": {"speed": 100.0, "health": 1, "points": 50, "coin_reward": 2, "sprite": "res://assets/sprites/insects/hormiga_obrera.png"},
+	"cucaracha_electrica": {"speed": 200.0, "health": 1, "points": 75, "coin_reward": 3, "sprite": "res://assets/sprites/insects/cucaracha_electrica.png"},
+	"escarabajo_blindado": {"speed": 50.0, "health": 3, "points": 150, "coin_reward": 6, "sprite": "res://assets/sprites/insects/escarabajo_blindado.png"},
+	"mosca_pesada": {"speed": 150.0, "health": 1, "points": 100, "coin_reward": 4, "sprite": "res://assets/sprites/insects/mosca_pesada.png"},
+	"grillo_saltarin": {"speed": 120.0, "health": 1, "points": 80, "coin_reward": 3, "sprite": "res://assets/sprites/insects/grillo_saltarin.png"},
 
 	# --- Variantes avanzadas. Reusan el arte de los incógnitos, que hasta
 	# ahora solo se veía al revelarlos. Cubren el rango completo: desde
 	# tanques lentísimos de 8 de vida hasta bichos de un solo golpe que
 	# cruzan la pantalla volando.
-	"mutante_volador": {"speed": 210.0, "health": 2, "points": 160, "coin_reward": 34, "sprite": "res://assets/sprites/insects/mutante_volador.png"},
-	"hormiga_ladrona": {"speed": 180.0, "health": 2, "points": 140, "coin_reward": 40, "sprite": "res://assets/sprites/insects/hormiga_ladrona.png"},
-	"lombriz_gigante": {"speed": 55.0, "health": 4, "points": 190, "coin_reward": 42, "sprite": "res://assets/sprites/insects/lombriz_gigante.png"},
-	"abejorro_pinata": {"speed": 140.0, "health": 3, "points": 175, "coin_reward": 46, "sprite": "res://assets/sprites/insects/abejorro_pinata.png"},
-	"mantis_cronometro": {"speed": 130.0, "health": 3, "points": 180, "coin_reward": 38, "sprite": "res://assets/sprites/insects/mantis_cronometro.png"},
-	"escarabajo_radiactivo": {"speed": 70.0, "health": 5, "points": 240, "coin_reward": 52, "sprite": "res://assets/sprites/insects/escarabajo_radiactivo.png"},
-	"centella_blindada": {"speed": 110.0, "health": 5, "points": 260, "coin_reward": 56, "sprite": "res://assets/sprites/insects/centella_blindada.png"},
-	"rayo_insecto": {"speed": 320.0, "health": 1, "points": 220, "coin_reward": 48, "sprite": "res://assets/sprites/insects/rayo_insecto.png"},
-	"coraza_antigua": {"speed": 45.0, "health": 8, "points": 320, "coin_reward": 70, "sprite": "res://assets/sprites/insects/coraza_antigua.png"},
+	"mutante_volador": {"speed": 210.0, "health": 2, "points": 160, "coin_reward": 7, "sprite": "res://assets/sprites/insects/mutante_volador.png"},
+	"hormiga_ladrona": {"speed": 180.0, "health": 2, "points": 140, "coin_reward": 8, "sprite": "res://assets/sprites/insects/hormiga_ladrona.png"},
+	"lombriz_gigante": {"speed": 55.0, "health": 4, "points": 190, "coin_reward": 9, "sprite": "res://assets/sprites/insects/lombriz_gigante.png"},
+	"abejorro_pinata": {"speed": 140.0, "health": 3, "points": 175, "coin_reward": 9, "sprite": "res://assets/sprites/insects/abejorro_pinata.png"},
+	"mantis_cronometro": {"speed": 130.0, "health": 3, "points": 180, "coin_reward": 8, "sprite": "res://assets/sprites/insects/mantis_cronometro.png"},
+	"escarabajo_radiactivo": {"speed": 70.0, "health": 5, "points": 240, "coin_reward": 11, "sprite": "res://assets/sprites/insects/escarabajo_radiactivo.png"},
+	"centella_blindada": {"speed": 110.0, "health": 5, "points": 260, "coin_reward": 11, "sprite": "res://assets/sprites/insects/centella_blindada.png"},
+	"rayo_insecto": {"speed": 320.0, "health": 1, "points": 220, "coin_reward": 10, "sprite": "res://assets/sprites/insects/rayo_insecto.png"},
+	"coraza_antigua": {"speed": 45.0, "health": 8, "points": 320, "coin_reward": 14, "sprite": "res://assets/sprites/insects/coraza_antigua.png"},
 }
 
 ## Los cuadros del ciclo de caminata se buscan por convención de nombre:

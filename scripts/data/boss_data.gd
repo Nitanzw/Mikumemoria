@@ -16,6 +16,13 @@ const CYCLE_HEALTH_MULT := 1.6
 const CYCLE_SPEED_MULT := 1.12
 
 ## Cuánta vida extra por escalón de dificultad del nivel (cada 10 niveles).
+## Las armas pasaron de hacer 1-2 de daño a 1-8 (ver WeaponSystem) para
+## que las mejoras se noten contra insectos con más vida. Los jefes comen
+## ese daño multiplicado por HP_SCALE, así que sin compensar una pelea de
+## 60 golpes pasaba a 15 y el jefe se derretía. Este factor mantiene los
+## golpes-para-matar en el mismo orden que antes del rebalanceo.
+const WEAPON_REBALANCE := 2.6
+
 const TIER_HEALTH_STEP := 0.18
 
 ## Daño que hace el jefe a Sofía, en puntos de vida (ella arranca con
@@ -243,6 +250,7 @@ static func get_boss_config(boss_id: int, cycle: int = 0, tier: int = 0) -> Dict
 		config["name"] = "%s +%d" % [base["name"], cycle]
 
 	health *= 1.0 + float(maxi(tier, 0)) * TIER_HEALTH_STEP
+	health *= WEAPON_REBALANCE
 	config["health"] = int(round(health))
 	config["speed"] = speed
 

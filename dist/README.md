@@ -3,7 +3,7 @@
 `el_huerto_de_sofia.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-Versión 0.14.0 (versionCode 19), ~73MB, arquitectura arm64-v8a solamente.
+Versión 0.15.0 (versionCode 20), ~73MB, arquitectura arm64-v8a solamente.
 
 Este build ya es **completo**: incluye la música de los 10 capítulos,
 que los builds anteriores dejaban afuera para no pasarse del límite de
@@ -98,6 +98,23 @@ misma placa y se encoge sola.
 **Sofía ya no se dibuja durante la partida**: aparecía abajo del todo,
 cortada por el borde y sin animación. Los ataques del jefe siguen
 apuntando al mismo lugar.
+
+**Los insectos se ponen duros y las mejoras hacen falta**: antes una
+hormiga tenía 1 de vida hasta el nivel 29 — un toque, siempre. Ahora suman
++2 de vida cada 10 niveles (hormiga: 3 en el nivel 10, 5 en el 20, 11 en
+el 50, 21 en el 100). Y las armas, que hacían 1/1/1/2/2 de daño (el
+Matamoscas de 900 monedas pegaba igual que el Zapato gratis), ahora hacen
+**1/2/3/5/8**. Si comprás, el juego se mantiene ágil: 1 toque por bicho
+hasta el nivel 10, 2 desde el 20. Si no comprás, esa misma hormiga te
+lleva 6 toques en el nivel 20 y 12 en el 50.
+
+La vida de los jefes se multiplicó para compensar el daño nuevo, si no se
+derretían: la Reina Primordial pasaba de 65 golpes a 16.
+
+**Precios rebalanceados (segunda pasada)**: la primera no alcanzó. Las
+monedas venían sobre todo de **matar bichos**, no del fin de nivel, y eso
+no lo había tocado. Bajaron a ~1/5. La Pala pasa de comprarse en el nivel
+14 a en el 35.
 
 **Precios rebalanceados**: un tester llegó al nivel 7 con plata para el
 arma más cara. El culpable era el bonus de combo, que no tenía tope y

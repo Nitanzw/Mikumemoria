@@ -524,6 +524,65 @@ Y desde el resumen de un nivel se puede **ir derecho a la tienda**: antes
 había que volver al menú, entrar a la tienda y rehacer todo el camino
 hasta el nivel. El botón "Volver" de la tienda sabe de dónde viniste.
 
+## Las mejoras ahora hacen falta de verdad
+
+El rebalance de precios anterior estaba incompleto y el tester tenía razón
+todavía. Yo había mirado sólo la recompensa de fin de nivel, pero
+`Insect.die()` también llama a `add_coins(coin_reward)` **por cada bicho
+muerto**, y ésa era la parte grande: con 31 muertes por nivel a 10 monedas
+cada una, el fin de nivel (~86) era el 20% del ingreso. Simulando la
+progresión con los números que había: la Pala se compraba en el nivel 14.
+
+Eran tres problemas encadenados, no uno:
+
+**1. La vida de los insectos casi no subía.** Era `+1 cada 3 escalones`, o
+sea +1 cada 30 niveles. Una hormiga tenía 1 de vida hasta el nivel 29:
+un toque, siempre. Ahora es `+2 por escalón` (un escalón cada 10 niveles):
+
+| Nivel | Hormiga | Coraza Antigua |
+|---|---|---|
+| 1 | 1 | 8 |
+| 10 | 3 | 10 |
+| 20 | 5 | 12 |
+| 50 | 11 | 18 |
+| 100 | 21 | 28 |
+
+**2. Las armas no servían para nada.** Hacían `1, 1, 1, 2, 2` de daño. El
+Matamoscas de 900 monedas pegaba igual que el Zapato gratis; lo único que
+cambiaba era el radio. Ahora la escalera es `1, 2, 3, 5, 8`, y la tienda
+ya mostraba "Daño N · Radio N", así que la diferencia se ve antes de
+comprar.
+
+**3. Sobraban monedas.** Las recompensas por bicho bajaron a ~1/5 (la
+hormiga de 10 a 2, el escarabajo de 30 a 6, la coraza de 70 a 14).
+
+El resultado, simulado sobre las constantes reales:
+
+| | Antes | Ahora |
+|---|---|---|
+| Ingreso por nivel (L1 / L20 / L100) | 396 / 728 / 543 | 148 / 188 / 258 |
+| Chancla / Matamoscas / Sartén / Pala | L1 / L4 / L8 / L14 | L3 / L9 / L19 / L35 |
+| Golpes por bicho **comprando** | 1 siempre | 1 hasta el 10, 2 desde el 20, 3 en el 100 |
+| Golpes por bicho **sin comprar** | 1 siempre | 6 en el nivel 20, 12 en el 50 |
+
+Esa última fila es el mecanismo: si comprás, el juego se mantiene ágil; si
+no, la misma hormiga te lleva 6 toques y matás 7 bichos por nivel en vez
+de 22. La presión no viene de un cartel, viene de que no llegás.
+
+### Los jefes había que compensarlos
+
+Un jefe come `daño × HP_SCALE`, así que cuadruplicar el daño de las armas
+le cuarteaba la pelea: la Reina Primordial pasaba de 65 golpes a 16 y se
+derretía. Por eso `BossData.WEAPON_REBALANCE = 2.6` multiplica la vida de
+todos los jefes. Golpes para matar, con el arma que te corresponde:
+
+| Nivel | Jefe | Golpes |
+|---|---|---|
+| 5 | Hormiga Ladrona de Diamantes | 26 |
+| 20 | Escarabajo Radiactivo | 43 |
+| 50 | Reina Primordial | 42 |
+| 100 | Reina Primordial | 62 |
+
 ## Rebalance de economía: el dinero sobraba
 
 Un tester llegó al nivel 7 con plata suficiente para el arma más cara del

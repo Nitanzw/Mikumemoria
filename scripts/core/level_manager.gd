@@ -16,7 +16,7 @@ const DIFFICULTY_PERIOD := 10
 const TIER_SPEED_STEP := 0.08     # +8% de velocidad por escalón
 const TIER_SPAWN_MULT := 0.94     # los bichos salen un 6% más seguido
 const MIN_SPAWN_RATE := 0.55      # piso, para que no sea imposible
-const TIERS_PER_EXTRA_HP := 3     # +1 de vida cada 3 escalones
+const HP_PER_TIER := 2            # +2 de vida por escalón
 ## Los jefes duran hasta que cae uno de los dos, pero con un techo: si se
 ## acaba el tiempo y el jefe sigue vivo, se pierde una vida.
 const BOSS_TIME_LIMIT := 90
@@ -76,7 +76,7 @@ func get_level_config(level: int) -> Dictionary:
 		"background": chapter_config.get("background", ""),
 		"spawn_rate": maxf(float(chapter_config.get("spawn_rate", 2.0)) * pow(TIER_SPAWN_MULT, tier), MIN_SPAWN_RATE),
 		"enemy_speed_mult": float(chapter_config.get("enemy_speed_mult", 1.0)) * (1.0 + tier * TIER_SPEED_STEP),
-		"enemy_health_bonus": int(tier / TIERS_PER_EXTRA_HP),
+		"enemy_health_bonus": tier * HP_PER_TIER,
 		"difficulty_tier": tier,
 		"time_limit": BOSS_TIME_LIMIT if is_boss_level(level) else 30,
 		"enemy_types": get_available_enemies(level),
