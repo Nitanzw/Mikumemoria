@@ -32,8 +32,15 @@ extends Control
 @onready var header: PanelContainer = $Margin/VBox/Header
 @onready var back_button: Button = $Margin/VBox/BackButton
 
-const GRID_COLUMNS := 3
-const TILE := Vector2(96, 108)
+const GRID_COLUMNS := 4
+const TILE := Vector2(114, 156)
+
+## Alto de la barrita de nivel de cada casillero.
+const BAR_HEIGHT := 11.0
+const BAR_FILLED := Color(0.44, 0.82, 0.24)
+const BAR_FULL := Color(1.0, 0.78, 0.24)
+const BAR_TRACK := Color(0.34, 0.23, 0.12, 1.0)
+const COIN_ICON := "res://assets/sprites/ui/coin.png"
 
 var _grid_view: bool = true
 var _view_button: Button
@@ -130,20 +137,27 @@ func _build_grid(ids: Array, are_weapons: bool) -> GridContainer:
 		grid.add_child(_build_tile(item_id, are_weapons))
 	return grid
 
-## Casillero de la cuadrícula: ícono grande, y abajo el estado (precio,
-## nivel comprado, o "Equipado"). Sin texto largo: para eso está la ficha.
+## Casillero de la cuadrícula: ícono, nivel, barra de progreso y precio
+## con la moneda. La barra es lo que hace que el avance se lea de un
+## vistazo — con 10 niveles por artículo, "3/10" en texto chico no
+## alcanza para ver de un barrido en qué estás cerca de completar.
 func _build_tile(item_id: String, is_weapon: bool) -> Control:
+	var info := _tile_info(item_id, is_weapon)
+
 	var button := Button.new()
 	button.custom_minimum_size = TILE
-	button.add_theme_stylebox_override("normal", UITheme.card_style())
-	button.add_theme_stylebox_override("hover", UITheme.card_style())
-	button.add_theme_stylebox_override("pressed", UITheme.card_style())
+	for state in ["normal", "hover", "pressed"]:
+		button.add_theme_stylebox_override(state, UITheme.card_style())
 	button.pressed.connect(_show_detail.bind(item_id, is_weapon))
 
 	var box := VBoxContainer.new()
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.set_anchors_preset(Control.PRESET_FULL_RECT)
-	box.add_theme_constant_override("separation", 2)
+	box.offset_left = 6.0
+	box.offset_right = -6.0
+	box.offset_top = 6.0
+	box.offset_bottom = -6.0
+	box.add_theme_constant_override("separation", 3)
 	button.add_child(box)
 
 	var icon := TextureRect.new()
@@ -151,34 +165,138 @@ func _build_tile(item_id: String, is_weapon: bool) -> Control:
 	if path != "" and ResourceLoader.exists(path):
 		icon.texture = load(path)
 	icon.custom_minimum_size = Vector2(0, 58)
+	icon.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Lo bloqueado se apaga: se distingue sin tener que leer el candado.
+	if info["locked"]:
+		icon.modulate = Color(0.5, 0.46, 0.42)
 	box.add_child(icon)
 
-	var status := Label.new()
-	status.text = _tile_status(item_id, is_weapon)
-	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	status.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	UITheme.style_body(status, 14)
-	box.add_child(status)
+	var level_label := Label.new()
+	level_label.text = info["level_text"]
+	level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	level_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UITheme.style_body(level_label, 13)
+	level_label.add_theme_color_override("font_color", info["level_color"])
+	box.add_child(level_label)
+
+	# Precio con la moneda al lado. Un número suelto no dice si es plata
+	# o si es el nivel; con el ícono se lee de una.
+	var cost_row := HBoxContainer.new()
+	cost_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	cost_row.add_theme_constant_override("separation", 4)
+	cost_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if int(info["cost"]) > 0 and ResourceLoader.exists(COIN_ICON):
+		var coin := TextureRect.new()
+		coin.texture = load(COIN_ICON)
+		coin.custom_minimum_size = Vector2(15, 15)
+		coin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		coin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		coin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cost_row.add_child(coin)
+	var cost_label := Label.new()
+	cost_label.text = str(info["cost_text"])
+	cost_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UITheme.style_body(cost_label, 14)
+	cost_label.add_theme_color_override("font_color", info["cost_color"])
+	cost_row.add_child(cost_label)
+	box.add_child(cost_row)
+
+	box.add_child(_level_bar(int(info["level"]), int(info["max_level"])))
+
+	if info["locked"]:
+		button.add_child(_lock_badge())
 	return button
+
+## Candado en la esquina, encima del casillero. Va como hijo aparte del
+## VBox para poder posicionarlo libre sin empujar el resto.
+func _lock_badge() -> Control:
+	var badge := Label.new()
+	badge.text = "🔒"
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	badge.offset_left = -32.0
+	badge.offset_top = 6.0
+	badge.offset_right = -8.0
+	badge.offset_bottom = 34.0
+	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UITheme.style_body(badge, 20)
+	return badge
+
+## Barra de nivel. Se pone dorada al estar completa, que es la señal de
+## que ya se puede pasar al siguiente eslabón de la cadena.
+func _level_bar(level: int, max_level: int) -> Control:
+	var track := Panel.new()
+	track.custom_minimum_size = Vector2(0, BAR_HEIGHT)
+	track.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var track_style := StyleBoxFlat.new()
+	track_style.bg_color = BAR_TRACK
+	track_style.set_corner_radius_all(int(BAR_HEIGHT / 2.0))
+	track_style.border_color = Color(0.10, 0.05, 0.02, 0.95)
+	track_style.set_border_width_all(2)
+	track.add_theme_stylebox_override("panel", track_style)
+
+	if level > 0 and max_level > 0:
+		var fill := Panel.new()
+		fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		fill.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+		fill.anchor_right = clampf(float(level) / float(max_level), 0.0, 1.0)
+		fill.offset_right = 0.0
+		var fill_style := StyleBoxFlat.new()
+		fill_style.bg_color = BAR_FULL if level >= max_level else BAR_FILLED
+		fill_style.set_corner_radius_all(3)
+		fill.add_theme_stylebox_override("panel", fill_style)
+		track.add_child(fill)
+	return track
+
+## Todo lo que el casillero necesita mostrar, en un solo lugar, para que
+## armas y objetos no tengan dos caminos distintos.
+func _tile_info(item_id: String, is_weapon: bool) -> Dictionary:
+	var level: int
+	var max_level: int
+	var cost: int
+	var locked: bool
+	if is_weapon:
+		level = GameManager.get_weapon_level(item_id)
+		max_level = WeaponSystem.MAX_LEVEL
+		cost = WeaponSystem.get_upgrade_cost(item_id, level)
+		locked = not WeaponSystem.is_unlocked(GameManager.weapon_levels, item_id)
+	else:
+		level = ItemSystem.get_level(GameManager.items, item_id)
+		max_level = ItemSystem.get_max_level(item_id)
+		cost = ItemSystem.get_cost(GameManager.items, item_id)
+		locked = not ItemSystem.is_unlocked(GameManager.items, item_id)
+
+	var cost_text := str(cost)
+	var cost_color := Color(1, 0.88, 0.5)
+	if locked:
+		cost_text = "Bloqueado"
+		cost_color = Color(0.72, 0.66, 0.6)
+		cost = 0
+	elif cost < 0:
+		cost_text = "Completo"
+		cost_color = Color(1, 0.82, 0.35)
+		cost = 0
+	elif GameManager.player_coins < cost:
+		cost_color = Color(0.85, 0.6, 0.5)
+
+	return {
+		"level": level,
+		"max_level": max_level,
+		"cost": cost,
+		"cost_text": cost_text,
+		"cost_color": cost_color,
+		"locked": locked,
+		"level_text": "Nivel %d/%d" % [level, max_level],
+		"level_color": Color(0.72, 0.66, 0.6) if locked else Color(0.96, 0.92, 0.84),
+	}
 
 func _icon_path(item_id: String, is_weapon: bool) -> String:
 	if is_weapon:
 		return str(WeaponSystem.get_weapon_data(item_id).get("sprite", ""))
 	return str(ItemSystem.get_item(item_id).get("icon", ""))
-
-func _tile_status(item_id: String, is_weapon: bool) -> String:
-	if is_weapon:
-		if not WeaponSystem.is_unlocked(GameManager.weapon_levels, item_id):
-			return "🔒"
-		var wl := GameManager.get_weapon_level(item_id)
-		var wcost := WeaponSystem.get_upgrade_cost(item_id, wl)
-		if wcost < 0:
-			return "MAX %d/%d" % [wl, WeaponSystem.MAX_LEVEL]
-		return "%d/%d\n%d" % [wl, WeaponSystem.MAX_LEVEL, wcost]
 
 	if not ItemSystem.is_unlocked(GameManager.items, item_id):
 		return "🔒"
@@ -225,13 +343,57 @@ func _show_detail(item_id: String, is_weapon: bool) -> void:
 
 ## Separador con el nombre de la sección: sin esto, armas y objetos
 ## quedaban mezclados en una sola lista larga y no se entendía qué era qué.
+## Encabezado de sección: el título entre dos filetes con una cuenta
+## dorada a cada lado. Antes era un Label suelto y las tres secciones se
+## leían como una lista larga sin cortes.
 func _build_section(title: String) -> Control:
+	var row := HBoxContainer.new()
+	row.custom_minimum_size = Vector2(0, 48)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 8)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	row.add_child(_rule())
+	row.add_child(_bead())
+
 	var label := Label.new()
 	label.text = title
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	UITheme.style_title(label, 24)
-	label.custom_minimum_size = Vector2(0, 44)
-	return label
+	row.add_child(label)
+
+	row.add_child(_bead())
+	row.add_child(_rule())
+	return row
+
+## Filete: se estira para llenar lo que sobra a cada lado del título.
+func _rule() -> Control:
+	var rule := Panel.new()
+	rule.custom_minimum_size = Vector2(0, 4)
+	rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.62, 0.44, 0.20, 0.9)
+	style.set_corner_radius_all(2)
+	style.border_color = Color(0.25, 0.15, 0.05, 0.8)
+	style.set_border_width_all(1)
+	rule.add_theme_stylebox_override("panel", style)
+	return rule
+
+func _bead() -> Control:
+	var bead := Panel.new()
+	bead.custom_minimum_size = Vector2(10, 10)
+	bead.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bead.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(1.0, 0.80, 0.30)
+	style.set_corner_radius_all(5)
+	style.border_color = Color(0.42, 0.26, 0.06)
+	style.set_border_width_all(1)
+	bead.add_theme_stylebox_override("panel", style)
+	return bead
 
 ## Fila de objeto pasivo. Igual que la de arma, pero muestra el nivel
 ## comprado sobre el máximo, porque son mejoras acumulables.

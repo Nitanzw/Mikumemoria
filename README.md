@@ -580,6 +580,27 @@ Termina en el 970 de 1000, con ~36.000 monedas de sobra — que es justo el
 colchón para los usos de poderes (se pagan cada vez) y las recargas de
 vidas.
 
+### La cuadrícula de la tienda muestra el avance
+
+Con 10 niveles por artículo, un "3/10" en texto chico no alcanza para ver
+de un barrido en qué estás cerca de completar. Cada casillero ahora
+tiene, de arriba a abajo: ícono, "Nivel X/10", el precio con la moneda al
+lado, y una **barra de progreso** que se pone **dorada** cuando el
+artículo está completo — que es la señal de que ya se desbloqueó el
+siguiente eslabón de la cadena.
+
+Lo bloqueado se apaga (el ícono va en gris) y lleva un candado en la
+esquina, así se distingue sin tener que leer. Las secciones se separan
+con un filete y dos cuentas doradas a cada lado del título: antes eran
+tres Labels sueltos y las tres secciones se leían como una lista larga
+sin cortes. La grilla pasó de 3 a 4 columnas para que entre todo sin
+scrollear tanto.
+
+**La cadena traba conseguir un artículo, no seguir mejorándolo.** Esto
+salió de probar con un guardado migrado: un arma que ya tenías de antes
+quedaba mostrando "Nivel 1/10" y "Bloqueado" al mismo tiempo, que no
+significa nada. Si el nivel es mayor que cero, se puede subir siempre.
+
 ### El árbol de habilidades rompía el tuning
 
 `get_damage_multiplier` devolvía `1.0 + tier × 0.2`, o sea **×2 al

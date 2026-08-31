@@ -224,6 +224,9 @@ static func get_previous(item_id: String) -> String:
 	return ""
 
 static func is_unlocked(items: Dictionary, item_id: String) -> bool:
+	# Igual que las armas: la cadena traba conseguirlo, no mejorarlo.
+	if get_level(items, item_id) > 0:
+		return true
 	var previous := get_previous(item_id)
 	if previous == "":
 		return true

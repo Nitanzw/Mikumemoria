@@ -108,6 +108,12 @@ static func get_upgrade_cost(weapon_name: String, level: int) -> int:
 
 ## Se puede tocar (comprar o mejorar) sólo si la anterior está al máximo.
 static func is_unlocked(levels: Dictionary, weapon_name: String) -> bool:
+	# La cadena traba CONSEGUIR el arma, no seguir mejorándola. Si ya la
+	# tenés (por ejemplo, viene de un guardado viejo migrado), podés
+	# subirla igual: si no, quedaba mostrando "Nivel 1/10" y "Bloqueado"
+	# a la vez, que no significa nada.
+	if get_level(levels, weapon_name) > 0:
+		return true
 	var previous := get_previous(weapon_name)
 	if previous == "":
 		return true
