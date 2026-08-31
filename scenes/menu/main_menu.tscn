@@ -192,3 +192,18 @@ theme_override_styles/hover = SubResource("StyleBoxEmpty_1")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_1")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_1")
 text = "Historia"
+
+[node name="SettingsButton" type="Button" parent="Margin/VBox/Buttons"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 70)
+theme_override_font_sizes/font_size = 24
+theme_override_constants/outline_size = 6
+theme_override_colors/font_outline_color = Color(0.24, 0.13, 0.05, 1)
+theme_override_colors/font_color = Color(1, 0.98, 0.9, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.9, 0.6, 1)
+theme_override_styles/normal = SubResource("StyleBoxEmpty_1")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_1")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_1")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_1")
+text = "Ajustes"

@@ -30,6 +30,7 @@ GameManager="*res://scripts/autoload/game_manager.gd"
 SaveManager="*res://scripts/autoload/save_manager.gd"
 AudioManager="*res://scripts/autoload/audio_manager.gd"
 EventManager="*res://scripts/autoload/event_manager.gd"
+SettingsManager="*res://scripts/autoload/settings_manager.gd"
 
 [display]
 
@@ -54,3 +55,8 @@ common/physics_ticks_per_second=60
 renderer/rendering_method="mobile"
 textures/canvas_textures/default_texture_filter=1
 textures/vram_compression/import_etc2_astc=true
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://assets/i18n/ui.es.translation", "res://assets/i18n/ui.en.translation")
+locale/fallback="es"

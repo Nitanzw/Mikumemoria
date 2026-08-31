@@ -580,6 +580,66 @@ Termina en el 970 de 1000, con ~36.000 monedas de sobra — que es justo el
 colchón para los usos de poderes (se pagan cada vez) y las recargas de
 vidas.
 
+## Ajustes
+
+Nueva pantalla, entrando desde el menú principal.
+
+**El audio arranca al 50%.** Salía al 100% y era demasiado. Es el default,
+no un tope: cada uno lo sube o lo baja con tres barras separadas (general,
+música, efectos). Al soltar la barra de efectos suena un golpe, para poder
+calibrarla escuchando en vez de adivinando.
+
+Dos detalles que importan y son fáciles de errar:
+
+- El volumen se convierte con `linear_to_db`, no se asigna lineal. El oído
+  no es lineal: un 0.5 lineal se escucha casi igual de fuerte que el 1.0,
+  con lo que media barra no sonaría a la mitad de nada.
+- En 0% el bus se **silencia** además de bajarse. Un `volume_db` muy bajo
+  igual deja pasar un hilito audible.
+
+**Tamaño de texto**: cuatro pasos (chico, normal, grande, enorme). Se
+aplica enganchándose a `node_added` del árbol y no pantalla por pantalla,
+porque media UI se construye por código — la tienda arma sus casilleros a
+mano. Cada nodo guarda su tamaño original en metadata la primera vez, así
+reescalar dos veces no acumula.
+
+**Idioma**: español e inglés. Godot traduce solo la propiedad `text` de
+cualquier `Control` si la traducción está indexada por el texto original,
+así que los menús se traducen sin tocar una línea de código. Lo que **no**
+se traduce por ese camino son los textos armados con formato
+(`"Puntos: %s"`), porque el resultado ya no coincide con ninguna clave.
+Por eso el inglés cubre menús, botones y nombres de objetos, y la historia
+y las descripciones siguen en español — está dicho en la propia pantalla.
+
+Las preferencias van en `user://settings.json`, **aparte de la partida**:
+si alguien borra el progreso no tiene sentido que además se le vuelva a
+poner el audio al mango y el texto chico.
+
+### La fila de opciones no entraba
+
+Los cuatro botones de tamaño de texto en una sola fila medían más que los
+540px de ancho, y al no entrar estiraban el contenedor entero: se cortaban
+por la derecha hasta el botón de "Volver", que no tenía nada que ver. La
+culpa es de la madera, que lleva 40px de margen a cada lado. Van en grilla
+de dos columnas.
+
+Y la opción activa se veía **apagada** en vez de destacada: la tenía
+`disabled` para que no se pudiera re-elegir, pero el estado deshabilitado
+de la madera es gris y pisaba el verde. Ahora queda habilitada — volver a
+elegir lo mismo ya no hacía nada de todos modos.
+
+## Las imágenes de Drive no eran los originales
+
+Se bajó la carpeta compartida (48 archivos) buscando una Sofía de más
+resolución. **Son los archivos crudos, previos al procesado**: mismo
+tamaño que los del juego (200x320) pero con el fondo verde todavía puesto
+(RGB 2,247,3) y, en el caso de Sofía, de cuerpo entero en vez del busto
+recortado que usa el juego.
+
+O sea que la carpeta es la **entrada** del pipeline, no una fuente mejor.
+No hay de dónde sacar más píxeles para Sofía sin volver a generarla, y eso
+le cambia la cara.
+
 ## Resolución: por qué se veía pixelado al agrandar
 
 El pipeline achicaba todo lo generado a 128x128 (insectos) o 200x320

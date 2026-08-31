@@ -23,6 +23,7 @@ const WOOD_MARGIN := 46.0
 @onready var shop_button: Button = $Margin/VBox/Buttons/ShopButton
 @onready var skills_button: Button = $Margin/VBox/Buttons/SkillsButton
 @onready var story_button: Button = $Margin/VBox/Buttons/StoryButton
+@onready var settings_button: Button = $Margin/VBox/Buttons/SettingsButton
 
 var _logo_phase: float = 0.0
 ## Cada cuánto se refresca el texto de vidas, para que la cuenta regresiva
@@ -42,6 +43,7 @@ func _ready() -> void:
 	shop_button.pressed.connect(_on_shop_pressed)
 	skills_button.pressed.connect(_on_skills_pressed)
 	story_button.pressed.connect(_on_story_pressed)
+	settings_button.pressed.connect(_on_settings_pressed)
 
 func _process(delta: float) -> void:
 	# El logo flota apenas, para que el menú no se vea congelado.
@@ -57,7 +59,7 @@ func _style_buttons() -> void:
 	if not ResourceLoader.exists(WOOD_TEXTURE):
 		return
 	var wood: Texture2D = load(WOOD_TEXTURE)
-	for button in [play_button, shop_button, skills_button, story_button]:
+	for button in [play_button, shop_button, skills_button, story_button, settings_button]:
 		button.add_theme_stylebox_override("normal", _wood_style(wood, Color(1, 1, 1)))
 		button.add_theme_stylebox_override("hover", _wood_style(wood, Color(1.12, 1.12, 1.12)))
 		button.add_theme_stylebox_override("pressed", _wood_style(wood, Color(0.82, 0.82, 0.82)))
@@ -106,6 +108,9 @@ func _on_shop_pressed() -> void:
 
 func _on_skills_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/menu/skill_tree.tscn")
+
+func _on_settings_pressed() -> void:
+	get_tree().change_scene_to_file("res://scenes/menu/settings.tscn")
 
 func _on_story_pressed() -> void:
 	GameManager.force_show_story = true
