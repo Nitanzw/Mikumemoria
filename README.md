@@ -580,6 +580,39 @@ Termina en el 970 de 1000, con ~36.000 monedas de sobra — que es justo el
 colchón para los usos de poderes (se pagan cada vez) y las recargas de
 vidas.
 
+### Las barras son arte, no rectángulos, y 14 assets estaban descuadrados
+
+Las barras de nivel las había dibujado con `StyleBoxFlat`: dos
+rectángulos planos de color. Se veían de plástico al lado del resto del
+arte. Ahora son tres texturas generadas — `bar_track` (una ranura
+recessada con reborde de bronce), `bar_fill` (verde) y `bar_fill_gold`
+(dorada, para cuando el artículo está completo).
+
+Y auditando por el mismo problema del marco, **14 assets tenían el mismo
+defecto**: lienzo de 128×128 con el dibujo ocupando 50×102. Como se
+muestran con `STRETCH_KEEP_ASPECT_CENTERED`, cada ícono se dibujaba al
+tamaño de su contenido, así que el trébol salía a la mitad del tamaño del
+delantal. Por eso se veían descuadrados y de tamaños distintos. Recortados
+al `getbbox()`, todos los casilleros quedan parejos.
+
+Tres cosas del montaje de la barra que no son obvias:
+
+- **Un `NinePatchRect` no puede dibujarse más angosto que sus dos puntas
+  juntas.** Con el nivel 1 de 10 el relleno se salía de la ranura por la
+  izquierda. Se resuelve recortando contra el contenedor (`clip_contents`).
+- **El relleno va en un hijo del tamaño exacto del hueco**, no del track
+  entero: si no, arranca sobre la punta redondeada y se ve verde asomando
+  fuera del canal.
+- **Los márgenes verticales del 9-slice no pueden sumar más que el alto.**
+  Con 8 arriba y 8 abajo en una barra de 14px, el 9-slice se degeneraba y
+  se veía sólo el reborde. Y el `bar_track` generado traía un reborde de
+  piedra de 20px sobre 89: recortado a la parte útil, la ranura se lee.
+
+**Lo que NO se recortó: los insectos.** Sus cuadros de caminata están
+normalizados a una altura común a propósito, para que la animación no
+palpite. Recortar cada cuadro a su propio contenido los recentraría uno
+por uno y el bicho temblaría. Quedan con su lienzo de 128×128.
+
 ### El marco verde del resumen, y una trampa que ya estaba documentada
 
 El resumen ahora usa `res_frame`: un marco verde con guardas de hojas y

@@ -215,6 +215,13 @@ UI_PIECES = {
     "btn_menu": ("ui_icon", "a rolled parchment scroll tied with a red ribbon, seen straight from the front, game menu button icon, readable at small size, no text"),
     "btn_shop": ("ui_icon", "a woven wicker market basket with a few vegetables and a gold coin inside, seen straight from the front, game shop button icon, readable at small size, no text"),
     "btn_next": ("ui_icon", "a bold golden double chevron arrow pointing right, thick beveled metal with a dark outline, seen straight from the front, game continue button icon, readable at small size, no text"),
+    # Barra de nivel de los casilleros de la tienda. Van MUY anchas y
+    # bajas: se 9-slicean a lo largo, así que sólo el centro se estira.
+    "bar_track": ("ui_panel", "an extremely wide and very short empty horizontal progress bar slot for a game UI, like a thin trough, a dark recessed groove carved into stone with a thin polished bronze rim and fully rounded ends, completely dark and empty inside, ten times wider than tall, seen straight from the front, no text no icons no fill"),
+    # Ojo: pedirlo como "barra" devolvía una línea hueca. Describirlo como
+    # una pastilla SÓLIDA rellena de punta a punta es lo que funciona.
+    "bar_fill": ("ui_panel", "a solid filled rounded-rectangle pill shape, completely filled edge to edge with bright glossy leaf-green, like a green plastic lozenge, a soft lighter glossy highlight along the upper half, fully opaque solid green with no hollow center and no outline, wide and short proportions, seen straight from the front, no text no icons"),
+    "bar_fill_gold": ("ui_panel", "an extremely wide and very short horizontal progress bar fill for a game UI, like a thin bright bar, solid glossy warm polished gold with a lighter glossy highlight stripe along the top and fully rounded ends, fully opaque with no transparency, ten times wider than tall, seen straight from the front, no text no icons no container"),
     "item_lanzallamas": ("ui_icon", "a homemade metal flamethrower nozzle shooting a burst of orange flame to the side, rustic and improvised, game item icon, readable at small size"),
 }
 

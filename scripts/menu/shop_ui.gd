@@ -36,10 +36,16 @@ const GRID_COLUMNS := 4
 const TILE := Vector2(114, 156)
 
 ## Alto de la barrita de nivel de cada casillero.
-const BAR_HEIGHT := 11.0
-const BAR_FILLED := Color(0.44, 0.82, 0.24)
-const BAR_FULL := Color(1.0, 0.78, 0.24)
-const BAR_TRACK := Color(0.34, 0.23, 0.12, 1.0)
+const BAR_HEIGHT := 18.0
+const BAR_TRACK_TEX := "res://assets/sprites/ui/bar_track.png"
+const BAR_FILL_TEX := "res://assets/sprites/ui/bar_fill.png"
+const BAR_FULL_TEX := "res://assets/sprites/ui/bar_fill_gold.png"
+## Los extremos redondeados no se pueden estirar: el 9-slice deja las
+## puntas fijas y estira sólo el tramo del medio.
+const BAR_CAP := 30
+## Cuánto entra la ranura respecto del borde del track.
+const GROOVE_INSET_X := 13.0
+const GROOVE_INSET_Y := 4.0
 const COIN_ICON := "res://assets/sprites/ui/coin.png"
 
 var _grid_view: bool = true
@@ -156,7 +162,7 @@ func _build_tile(item_id: String, is_weapon: bool) -> Control:
 	box.offset_left = 6.0
 	box.offset_right = -6.0
 	box.offset_top = 6.0
-	box.offset_bottom = -6.0
+	box.offset_bottom = -15.0
 	box.add_theme_constant_override("separation", 3)
 	button.add_child(box)
 
@@ -164,7 +170,7 @@ func _build_tile(item_id: String, is_weapon: bool) -> Control:
 	var path: String = _icon_path(item_id, is_weapon)
 	if path != "" and ResourceLoader.exists(path):
 		icon.texture = load(path)
-	icon.custom_minimum_size = Vector2(0, 58)
+	icon.custom_minimum_size = Vector2(0, 50)
 	icon.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -226,29 +232,55 @@ func _lock_badge() -> Control:
 	return badge
 
 ## Barra de nivel. Se pone dorada al estar completa, que es la señal de
-## que ya se puede pasar al siguiente eslabón de la cadena.
+## que ya se puede pasar al siguiente eslabón de la cadena. Antes eran
+## dos rectángulos planos dibujados a mano y se veían de plástico; ahora
+## son texturas 9-sliceadas, con las puntas redondeadas fijas.
 func _level_bar(level: int, max_level: int) -> Control:
-	var track := Panel.new()
+	var track := NinePatchRect.new()
 	track.custom_minimum_size = Vector2(0, BAR_HEIGHT)
 	track.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var track_style := StyleBoxFlat.new()
-	track_style.bg_color = BAR_TRACK
-	track_style.set_corner_radius_all(int(BAR_HEIGHT / 2.0))
-	track_style.border_color = Color(0.10, 0.05, 0.02, 0.95)
-	track_style.set_border_width_all(2)
-	track.add_theme_stylebox_override("panel", track_style)
+	if ResourceLoader.exists(BAR_TRACK_TEX):
+		track.texture = load(BAR_TRACK_TEX)
+	track.patch_margin_left = BAR_CAP
+	track.patch_margin_right = BAR_CAP
+	# Un 9-slice no puede dibujarse más angosto que sus dos puntas
+	# juntas: con el nivel 1 de 10 el relleno se salía de la ranura por
+	# la izquierda. Recortar contra la ranura lo resuelve sin tener que
+	# renunciar a las puntas redondeadas.
+	track.clip_contents = true
+	track.patch_margin_top = 5
+	track.patch_margin_bottom = 5
+
+	# El hueco real de la ranura, sin las puntas redondeadas: el relleno
+	# vive acá adentro. Sin esto arrancaba sobre la punta izquierda y se
+	# veía verde asomando fuera del canal.
+	var groove := Control.new()
+	groove.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	groove.set_anchors_preset(Control.PRESET_FULL_RECT)
+	groove.offset_left = GROOVE_INSET_X
+	groove.offset_right = -GROOVE_INSET_X
+	groove.offset_top = GROOVE_INSET_Y
+	groove.offset_bottom = -GROOVE_INSET_Y
+	groove.clip_contents = true
+	track.add_child(groove)
 
 	if level > 0 and max_level > 0:
-		var fill := Panel.new()
+		var fill := NinePatchRect.new()
 		fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var texture_path := BAR_FULL_TEX if level >= max_level else BAR_FILL_TEX
+		if ResourceLoader.exists(texture_path):
+			fill.texture = load(texture_path)
+		fill.patch_margin_left = 10
+		fill.patch_margin_right = 10
+		fill.patch_margin_top = 4
+		fill.patch_margin_bottom = 4
 		fill.set_anchors_preset(Control.PRESET_LEFT_WIDE)
 		fill.anchor_right = clampf(float(level) / float(max_level), 0.0, 1.0)
+		fill.offset_left = 0.0
 		fill.offset_right = 0.0
-		var fill_style := StyleBoxFlat.new()
-		fill_style.bg_color = BAR_FULL if level >= max_level else BAR_FILLED
-		fill_style.set_corner_radius_all(3)
-		fill.add_theme_stylebox_override("panel", fill_style)
-		track.add_child(fill)
+		fill.offset_top = 0.0
+		fill.offset_bottom = 0.0
+		groove.add_child(fill)
 	return track
 
 ## Todo lo que el casillero necesita mostrar, en un solo lugar, para que
