@@ -18,9 +18,13 @@ vertical** (ver más abajo — fue un bug real, ya corregido), HUD con
 fuente grande y contorno para que se lea bien, niveles de 30 segundos,
 historia narrada por **Sofía** con retratos reales por emoción
 (neutral/feliz/triste/enojada/preocupada/sorprendida). Los **5 insectos
-comunes** y los **10 incógnitos** tienen ciclo de caminata animado de 4
-cuadros, en el mismo estilo pulido que el resto del arte y con el tamaño
-emparejado entre cuadros, más el balanceo procedural que llevan todos.
+comunes** y los **10 incógnitos del capítulo 1** tienen ciclo de caminata
+animado de 4 cuadros, en el mismo estilo pulido que el resto del arte y
+con el tamaño emparejado entre cuadros, más el balanceo procedural que
+llevan todos. Los **100 incógnitos** están completos: uno por cada
+ventana de diez niveles hasta el 1000, diez por capítulo y con el tema
+del capítulo (los del invernadero son plagas de invernadero, los del
+búnker vienen blindados, y así).
 
 **Jefes cada 5 niveles**: los niveles múltiplo de 5 son pelea de jefe,
 con **dos barras de vida** (la del jefe arriba, la de Sofía abajo) y 90

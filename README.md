@@ -239,7 +239,9 @@ estilo viejo — los buenos están en `ARTE_PEDIDO.md`.
   progreso de revelación se guarda por índice en `GameManager`, así que
   persiste entre los 10 niveles de su ventana (esto corrige un bug del
   documento original: ahí el progreso vivía solo en la instancia de la
-  escena y se perdía al cambiar de nivel).
+  escena y se perdía al cambiar de nivel). Están los **100**, uno por cada
+  ventana de diez niveles hasta el 1000, agrupados de a diez por capítulo
+  y con el tema del capítulo (ver `tools/mystery_bugs.py`).
 - **Arma / daño / radio** centralizados en `WeaponSystem`, para que la
   tienda y el jugador nunca queden desincronizados.
 - **Árbol de habilidades** con 3 ramas (Fuerza, Fortuna, Precisión) y costo
@@ -1449,8 +1451,9 @@ caminata de 4 frames de `hormiga_obrera`, ver más arriba), la **música**
   vez de depender de metadata de loop del archivo. `AudioManager` tolera
   archivos faltantes (imprime un aviso y continúa).
 - **Capítulos 2-10**: `LevelManager` ya tiene su configuración (velocidad,
-  cadencia de spawn, fondo), pero solo hay biomas gameplay-probados para
-  el capítulo 1; conviene revisar el ritmo de dificultad real al jugar.
+  cadencia de spawn, fondo) y los diez fondos y los diez incógnitos de
+  cada capítulo están, pero solo hay biomas gameplay-probados para el
+  capítulo 1; conviene revisar el ritmo de dificultad real al jugar.
 - **Rotación de incógnitos revelados**: hoy, al revelarse, un incógnito se
   suma a la colección (`unlocked_insects`) pero no vuelve a aparecer como
   enemigo "normal" en niveles futuros — eso requeriría escenas/sprites
