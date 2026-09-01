@@ -472,7 +472,7 @@ func _burrow() -> void:
 	is_burrowed = true
 	ability_announced.emit("¡Se enterró!")
 	var tween := create_tween()
-	tween.tween_property(sprite, "scale", Vector2(0.3, 0.3), 0.3)
+	tween.tween_property(sprite, "scale", BURROW_SCALE, 0.3)
 	await get_tree().create_timer(BURROW_TIME).timeout
 	if is_dead:
 		return
@@ -481,7 +481,7 @@ func _burrow() -> void:
 	global_position.x = randf_range(EDGE_MARGIN, view.x - EDGE_MARGIN)
 	is_burrowed = false
 	var out := create_tween()
-	out.tween_property(sprite, "scale", Vector2(1.7, 1.7), 0.3)
+	out.tween_property(sprite, "scale", BASE_SCALE, 0.3)
 
 func _start_dash() -> void:
 	ability_announced.emit("¡Se prepara para embestir! Pegale para frenarlo")
