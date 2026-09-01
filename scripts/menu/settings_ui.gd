@@ -5,8 +5,18 @@ extends Control
 ## juego de celular hacer que el jugador confirme un slider es fricción
 ## para nada, y además así escucha el cambio mientras arrastra.
 
-const ROW_HEIGHT := 34
 const SLIDER_HEIGHT := 44
+## Los dos estados del botón de mute. Salieron de una sola generación y
+## recortados con el mismo encuadre, así que la corneta cae en el mismo
+## lugar en los dos: al togglear cambian las ondas por la cruz y nada más.
+const ICONO_SONIDO_ON := preload("res://assets/sprites/ui/ui_sonido_on.png")
+const ICONO_SONIDO_OFF := preload("res://assets/sprites/ui/ui_sonido_off.png")
+## Aire entre el ícono y el marco de madera del botón.
+const ICONO_MARGEN := 5
+## El botón va casi cuadrado a propósito. El TextureRect ajusta por el
+## lado que sobra, así que en un botón chato la corneta se dibujaba a la
+## mitad del alto y no se leía qué era.
+const MUTE_BOTON := Vector2(56, 48)
 
 @onready var rows: VBoxContainer = $Margin/VBox/Scroll/Rows
 @onready var back_button: Button = $Margin/VBox/BackButton
@@ -82,16 +92,31 @@ func _volume_row(label_text: String, bus_name: String, value: float) -> Control:
 	box.add_theme_constant_override("separation", 2)
 
 	var header := HBoxContainer.new()
-	header.custom_minimum_size = Vector2(0, ROW_HEIGHT)
+	header.custom_minimum_size = Vector2(0, MUTE_BOTON.y)
 	header.add_theme_constant_override("separation", 8)
 
 	# Mute a un toque. Va acá arriba y no como un paso más de la barra
 	# porque son dos cosas distintas: "callate un rato" y "dejalo bajito".
 	var mute := Button.new()
-	mute.custom_minimum_size = Vector2(58, ROW_HEIGHT + 6)
-	mute.add_theme_font_size_override("font_size", 26)
+	mute.custom_minimum_size = MUTE_BOTON
 	mute.focus_mode = Control.FOCUS_NONE
 	header.add_child(mute)
+
+	# El ícono va como hijo y no en `mute.icon`: la propiedad del Button lo
+	# mete adentro del layout del texto y lo achica contra el borde. Un
+	# TextureRect estirado al botón menos el margen lo deja centrado y del
+	# tamaño que uno pide. IGNORE para que el toque siga siendo del botón.
+	var mute_icon := TextureRect.new()
+	mute_icon.name = "Icono"
+	mute_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
+	mute_icon.offset_left = ICONO_MARGEN
+	mute_icon.offset_top = ICONO_MARGEN
+	mute_icon.offset_right = -ICONO_MARGEN
+	mute_icon.offset_bottom = -ICONO_MARGEN
+	mute_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	mute_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	mute_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mute.add_child(mute_icon)
 
 	var name_label := Label.new()
 	name_label.text = label_text
@@ -138,8 +163,15 @@ func _volume_row(label_text: String, bus_name: String, value: float) -> Control:
 func _refresh_mute(mute: Button, slider: HSlider, value_label: Label,
 		bus_name: String, value: float) -> void:
 	var silenced := SettingsManager.is_muted(bus_name)
-	mute.text = "🔇" if silenced else "🔊"
-	UITheme.style_wood_button(mute, Color(0.95, 0.55, 0.5) if silenced else Color(1, 1, 1))
+	var icon := mute.get_node_or_null("Icono") as TextureRect
+	if icon:
+		icon.texture = ICONO_SONIDO_OFF if silenced else ICONO_SONIDO_ON
+	# Verde prendido / rojo apagado, el mismo par que usan los botones de
+	# tamaño de texto e idioma más abajo. Así el estado se lee de una por
+	# el color de la tabla, sin tener que mirar el ícono: la corneta de
+	# bronce sobre madera es linda pero a 56px tiene poco contraste.
+	UITheme.style_wood_button(mute,
+		Color(0.95, 0.55, 0.5) if silenced else Color(0.52, 1.05, 0.55))
 	value_label.text = "%d%%" % int(round(value * 100.0))
 	value_label.add_theme_color_override("font_color",
 		Color(0.7, 0.64, 0.58) if silenced else Color(1, 0.88, 0.5))

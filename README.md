@@ -712,6 +712,14 @@ muestra en gris — el nivel sigue ahí, solo que no se oye. Y mover la barra
 desmutea sola: si alguien arrastra estando en mute y no pasa nada, lo
 lógico es pensar que el slider está roto.
 
+El botón muestra una corneta de bronce, con ondas cuando suena y tachada
+con una cruz roja cuando no. Los dos estados salieron de UNA sola
+generación y se recortaron con el mismo encuadre, así que la corneta cae
+en el mismo lugar en ambos: al togglear cambia el estado, no el dibujo.
+La tabla de madera además se pone verde o roja, el mismo par que usan los
+botones de tamaño de texto e idioma — a 56px la corneta de bronce sobre
+madera tiene poco contraste, y el color se lee antes que el ícono.
+
 Dos detalles que importan y son fáciles de errar:
 
 - El volumen se convierte con `linear_to_db`, no se asigna lineal. El oído
