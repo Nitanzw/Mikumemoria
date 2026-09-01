@@ -580,6 +580,77 @@ Termina en el 970 de 1000, con ~36.000 monedas de sobra — que es justo el
 colchón para los usos de poderes (se pagan cada vez) y las recargas de
 vidas.
 
+## Los sonidos de aplastar son grabaciones tuyas
+
+Llegaron dos tomas de voz (0,19s y 0,70s, mono 48kHz). Procesadas y
+metidas como `splat_1.ogg` y `splat_2.ogg`.
+
+El proceso, en este orden: **recorte de silencio** al principio y al final
+—en un sonido de muerte cualquier demora entre el toque y el golpe se
+siente como lag—, **compresor** para levantar el cuerpo de la voz sin
+romper el pico, y **ganancia calculada** para que la media quede en los
+mismos -17,4 dB que medía el splat que ya tenía el juego, así no salta el
+volumen entre un bicho y otro. Las dos venían a niveles bien distintos
+(-22,6 y -28,6 dB de media), así que normalizarlas a ojo no servía.
+
+`AudioManager` ahora entiende **tomas alternativas**: si existen
+`<nombre>_1`, `<nombre>_2`, etc., elige una al azar; si no, usa el archivo
+suelto de siempre. Un sonido de aplastar idéntico veinte veces por nivel
+se vuelve insoportable, y alternar dos tomas ya rompe la repetición. La
+búsqueda se resuelve una sola vez por nombre y queda cacheada.
+
+## Sofía regenerada: las 6 emociones en UNA sola imagen
+
+El problema de resolución se resolvió regenerando, con permiso explícito.
+La parte difícil no era la resolución sino la **consistencia**: la API es
+texto a imagen y no acepta una imagen de referencia, así que seis
+generaciones sueltas devuelven seis caras distintas.
+
+La solución es la misma que mantiene idéntico al insecto entre los cuadros
+de caminata: **una sola generación con las seis expresiones adentro**, en
+grilla de 3x2. Si salen del mismo dibujo, son la misma persona.
+`SOFIA_DESIGN` guarda la descripción del personaje en un solo lugar para
+que cualquier hoja futura la reuse textual.
+
+La hoja volvió en 1264x848 (más de los 1024 habituales), así que cada
+celda quedó en ~421px. Resultado tras recortar: **364x410 por emoción**,
+contra los 200x320 de antes con la figura ocupando ~200. Casi el doble de
+píxeles reales, y las seis alineadas dentro de un píxel o dos.
+
+### Tres cosas del recorte
+
+**No se usa `split_walk_sheet` tal cual**: reescala cada celda a un tamaño
+fijo, que para un ciclo de caminata está bien pero acá tiraba resolución
+(el sujeto venía en ~380px y salía en 307). Se reusan su detector de
+divisorias y su croma, pero el recorte final es un bounding box **común a
+las seis** y sin reescalar. Común y no individual: si cada una se recorta a
+lo suyo, la cabeza salta de posición al cambiar de emoción.
+
+**El despill de 3px no alcanzaba.** El rodete deja pasar el croma entre
+los mechones, así que quedaba un halo verde alrededor del pelo. Se subió a
+9px para Sofía.
+
+**Y aun así quedaba verde ATRAPADO adentro de la silueta**, donde el pelo
+es fino y el fondo se ve a través: eso el despill no lo toca porque
+trabaja sobre un anillo alrededor del recorte. Hizo falta una pasada
+dirigida que baja el verde solo donde supera a rojo Y a azul por más de
+35. El margen no es arbitrario: el overol de Sofía es verde oliva apagado
+(diferencia con el rojo de ~10) y sus ojos son avellana, así que ninguno de
+los dos entra en la regla.
+
+### Lo que cambió de tamaño arrastra escalas
+
+El retrato pasó de 400x640 con la figura arriba y espacio vacío abajo, a
+364x410 recortado al contenido: cambia el alto, el ancho y dónde cae el
+centro del sprite. Hubo que recalcular escala y posición en el diálogo
+para que se viera del mismo tamaño y en el mismo lugar.
+
+Y la del menú, ahora de cuerpo entero (442x1207), entraba diminuta en un
+hueco pensado para un busto de 200x320: con la cabeza detrás de los
+botones. Se recortó a la misma proporción del hueco (0.624). El menú tiene
+cinco botones y poco aire, así que cualquier figura ahí queda parcialmente
+tapada — eso ya pasaba antes.
+
 ## Ajustes
 
 Nueva pantalla, entrando desde el menú principal.

@@ -103,6 +103,28 @@ GREEN_SCREEN_BG_INSTRUCTION = (
     "shadow, no gradient, no other objects, no floor"
 )
 
+## Sofía va en UNA sola generación con las seis emociones adentro. Generar
+## seis imágenes sueltas devuelve seis caras distintas: la API es texto a
+## imagen y no acepta una referencia, así que la única forma de que sea la
+## misma persona es que salgan todas del mismo dibujo. Es el mismo truco
+## que mantiene idéntico al bicho entre los cuadros de caminata.
+SOFIA_DESIGN = (
+    "a young latina woman gardener about twenty years old, warm tan skin, light freckles across the nose, hazel-green eyes, thick dark brown wavy hair tied up in a loose messy bun with a few strands loose at the temples, wearing a mustard-yellow hoodie with the sleeves pushed up and olive-green denim overalls, white and orange over-ear headphones resting around her neck"
+)
+
+SOFIA_SHEET_PROMPT = (
+    "a 3x2 character expression sheet of 6 head-and-shoulders portraits in "
+    "three columns and two rows, with NO grid lines, NO borders and NO frames "
+    "between them, the portraits clearly separated by wide empty background. "
+    "Every portrait shows the exact same character: " + SOFIA_DESIGN + ". "
+    "Identical face, identical hair, identical clothes, identical camera angle "
+    "and identical size in all 6 portraits, front view, chest up. "
+    "Only the facial expression changes between cells. "
+    "Reading order left to right, top row: neutral calm, warm happy smile, sad "
+    "downcast. Bottom row: angry determined frown, worried anxious, surprised "
+    "wide-eyed open mouth"
+)
+
 CATEGORY_DEFAULTS = {
     # Pantallas de menú (tienda, habilidades, mapa). Opacas y verticales.
     "ui_background": {"dir": "ui", "size": (1080, 1920), "transparent": False, "aspect_ratio": "9:16"},
@@ -111,7 +133,7 @@ CATEGORY_DEFAULTS = {
     "ui_icon": {"dir": "ui", "size": (128, 128), "transparent": True, "aspect_ratio": "1:1"},
     "insect": {"dir": "insects", "size": (128, 128), "transparent": True, "aspect_ratio": "1:1"},
     "weapon": {"dir": "weapons", "size": (128, 128), "transparent": True, "aspect_ratio": "1:1"},
-    "character": {"dir": "character", "size": (200, 320), "transparent": True, "aspect_ratio": "9:16"},
+    "character": {"dir": "character", "size": (512, 768), "transparent": True, "aspect_ratio": "9:16"},
     "background": {"dir": "backgrounds", "size": (540, 960), "transparent": False, "aspect_ratio": "9:16"},
     "icon": {"dir": "", "size": (256, 256), "transparent": False, "aspect_ratio": "1:1"},
 }

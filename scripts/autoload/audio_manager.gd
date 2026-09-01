@@ -16,6 +16,9 @@ const AUDIO_EXTENSIONS := ["ogg", "mp3", "wav"]
 var sfx_players: Array[AudioStreamPlayer] = []
 var current_music: AudioStreamPlayer
 var sfx_cache: Dictionary = {}
+## Nombres que tienen varias tomas (`splat_1`, `splat_2`, ...). Se resuelve
+## una sola vez por nombre y queda cacheado.
+var sfx_variants: Dictionary = {}
 
 func _ready() -> void:
 	print("[AudioManager] Inicializando...")
@@ -35,7 +38,27 @@ func _resolve_path(dir: String, base_name: String) -> String:
 			return path
 	return ""
 
+## Cuántas tomas alternativas se buscan como máximo por nombre.
+const MAX_SFX_VARIANTS := 6
+
+## Devuelve el nombre a reproducir. Si hay tomas numeradas se elige una al
+## azar: un sonido de aplastar que suena idéntico veinte veces por nivel
+## se vuelve insoportable, y alternar dos tomas ya rompe la repetición.
+func _pick_variant(sfx_name: String) -> String:
+	if not sfx_variants.has(sfx_name):
+		var found: Array[String] = []
+		for i in range(1, MAX_SFX_VARIANTS + 1):
+			var candidate := "%s_%d" % [sfx_name, i]
+			if _resolve_path(SFX_DIR, candidate) != "":
+				found.append(candidate)
+		sfx_variants[sfx_name] = found
+	var variants: Array = sfx_variants[sfx_name]
+	if variants.is_empty():
+		return sfx_name
+	return str(variants[randi() % variants.size()])
+
 func play_sfx(sfx_name: String) -> void:
+	sfx_name = _pick_variant(sfx_name)
 	if not sfx_cache.has(sfx_name):
 		var path := _resolve_path(SFX_DIR, sfx_name)
 		if path == "":

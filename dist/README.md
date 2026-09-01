@@ -3,7 +3,7 @@
 `el_huerto_de_sofia.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-Versión 0.20.0 (versionCode 27), ~73MB, arquitectura arm64-v8a solamente.
+Versión 0.21.0 (versionCode 28), ~73MB, arquitectura arm64-v8a solamente.
 
 Este build ya es **completo**: incluye la música de los 10 capítulos,
 que los builds anteriores dejaban afuera para no pasarse del límite de
@@ -98,6 +98,14 @@ misma placa y se encoge sola.
 **Sofía ya no se dibuja durante la partida**: aparecía abajo del todo,
 cortada por el borde y sin animación. Los ataques del jefe siguen
 apuntando al mismo lugar.
+
+**El sonido de aplastar ahora es una voz grabada**, con dos tomas que se
+alternan al azar para que no suene idéntico veinte veces por nivel.
+
+**Sofía regenerada en alta**: los retratos pasaron de 200x320 a 364x410 y
+se ven bastante más definidos. Las seis emociones salieron de **una sola
+generación** con las seis caras adentro — generándolas sueltas cada una
+habría salido con una cara distinta.
 
 **Ajustes**: pantalla nueva desde el menú principal. El **audio arranca al
 50%** en vez del 100%, con tres barras separadas (general, música,
