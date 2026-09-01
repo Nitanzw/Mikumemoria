@@ -35,6 +35,13 @@ var sfx_volume: float = DEFAULT_VOLUME
 var text_size: String = "normal"
 var language: String = "es"
 
+## El mute va SEPARADO del volumen a propósito: si mutear pusiera la barra
+## en cero, al volver no habría a dónde volver. Así el nivel se conserva y
+## desmutear lo devuelve donde estaba.
+var master_muted: bool = false
+var music_muted: bool = false
+var sfx_muted: bool = false
+
 func _ready() -> void:
 	load_settings()
 	apply_all()
@@ -59,7 +66,7 @@ func _apply_bus(bus_name: String, value: float) -> void:
 	var index := AudioServer.get_bus_index(bus_name)
 	if index < 0:
 		return
-	if value <= MUTE_THRESHOLD:
+	if is_muted(bus_name) or value <= MUTE_THRESHOLD:
 		AudioServer.set_bus_mute(index, true)
 		return
 	AudioServer.set_bus_mute(index, false)
@@ -72,9 +79,38 @@ func set_volume(bus_name: String, value: float) -> void:
 		"Music": music_volume = value
 		"SFX": sfx_volume = value
 		_: return
+	if value > MUTE_THRESHOLD:
+		set_muted(bus_name, false)
 	_apply_bus(bus_name, value)
 	save_settings()
 	settings_changed.emit()
+
+func get_volume(bus_name: String) -> float:
+	match bus_name:
+		"Master": return master_volume
+		"Music": return music_volume
+		"SFX": return sfx_volume
+	return 1.0
+
+func is_muted(bus_name: String) -> bool:
+	match bus_name:
+		"Master": return master_muted
+		"Music": return music_muted
+		"SFX": return sfx_muted
+	return false
+
+func set_muted(bus_name: String, muted: bool) -> void:
+	match bus_name:
+		"Master": master_muted = muted
+		"Music": music_muted = muted
+		"SFX": sfx_muted = muted
+		_: return
+	_apply_bus(bus_name, get_volume(bus_name))
+	save_settings()
+	settings_changed.emit()
+
+func toggle_mute(bus_name: String) -> void:
+	set_muted(bus_name, not is_muted(bus_name))
 
 func set_text_size(size_name: String) -> void:
 	if not TEXT_SCALES.has(size_name) or size_name == text_size:
@@ -140,6 +176,9 @@ func save_settings() -> void:
 		"sfx_volume": sfx_volume,
 		"text_size": text_size,
 		"language": language,
+		"master_muted": master_muted,
+		"music_muted": music_muted,
+		"sfx_muted": sfx_muted,
 	}))
 	file.close()
 
@@ -160,6 +199,9 @@ func load_settings() -> void:
 	text_size = size_name if TEXT_SCALES.has(size_name) else "normal"
 	var code := str(parsed.get("language", "es"))
 	language = code if LANGUAGES.has(code) else "es"
+	master_muted = bool(parsed.get("master_muted", false))
+	music_muted = bool(parsed.get("music_muted", false))
+	sfx_muted = bool(parsed.get("sfx_muted", false))
 
 func reset_to_defaults() -> void:
 	master_volume = DEFAULT_VOLUME
@@ -167,6 +209,9 @@ func reset_to_defaults() -> void:
 	sfx_volume = DEFAULT_VOLUME
 	text_size = "normal"
 	language = "es"
+	master_muted = false
+	music_muted = false
+	sfx_muted = false
 	apply_all()
 	_rescale_tree(get_tree().root)
 	save_settings()

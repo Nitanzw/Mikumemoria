@@ -657,8 +657,16 @@ Nueva pantalla, entrando desde el menú principal.
 
 **El audio arranca al 50%.** Salía al 100% y era demasiado. Es el default,
 no un tope: cada uno lo sube o lo baja con tres barras separadas (general,
-música, efectos). Al soltar la barra de efectos suena un golpe, para poder
-calibrarla escuchando en vez de adivinando.
+música, efectos), sobre tres buses independientes. Al soltar la barra de
+efectos suena un golpe, para poder calibrarla escuchando en vez de
+adivinando.
+
+**Cada fila tiene su botón de mute**, y el mute va **separado** del
+volumen a propósito: si mutear pusiera la barra en cero, al volver no
+habría a dónde volver. Muteado, la barra se apaga y el porcentaje se
+muestra en gris — el nivel sigue ahí, solo que no se oye. Y mover la barra
+desmutea sola: si alguien arrastra estando en mute y no pasa nada, lo
+lógico es pensar que el slider está roto.
 
 Dos detalles que importan y son fáciles de errar:
 
@@ -667,6 +675,13 @@ Dos detalles que importan y son fáciles de errar:
   con lo que media barra no sonaría a la mitad de nada.
 - En 0% el bus se **silencia** además de bajarse. Un `volume_db` muy bajo
   igual deja pasar un hilito audible.
+
+### Y el globo de diálogo tapaba el HUD
+
+Arrancaba en y=78 y se comía la barra de arriba entera (nivel, puntaje,
+reloj, monedas), con la cola apuntando a 250px de la cabeza de Sofía, o
+sea al aire. Bajó a y=216: despeja el HUD y la cola le queda a unos 50px
+de la cabeza.
 
 **Tamaño de texto**: cuatro pasos (chico, normal, grande, enorme). Se
 aplica enganchándose a `node_added` del árbol y no pantalla por pantalla,

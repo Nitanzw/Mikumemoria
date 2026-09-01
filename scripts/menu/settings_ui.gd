@@ -83,6 +83,16 @@ func _volume_row(label_text: String, bus_name: String, value: float) -> Control:
 
 	var header := HBoxContainer.new()
 	header.custom_minimum_size = Vector2(0, ROW_HEIGHT)
+	header.add_theme_constant_override("separation", 8)
+
+	# Mute a un toque. Va acá arriba y no como un paso más de la barra
+	# porque son dos cosas distintas: "callate un rato" y "dejalo bajito".
+	var mute := Button.new()
+	mute.custom_minimum_size = Vector2(58, ROW_HEIGHT + 6)
+	mute.add_theme_font_size_override("font_size", 26)
+	mute.focus_mode = Control.FOCUS_NONE
+	header.add_child(mute)
+
 	var name_label := Label.new()
 	name_label.text = label_text
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -100,20 +110,40 @@ func _volume_row(label_text: String, bus_name: String, value: float) -> Control:
 
 	var slider := HSlider.new()
 	_style_slider(slider)
+	_refresh_mute(mute, slider, value_label, bus_name, value)
+	mute.pressed.connect(func():
+		SettingsManager.toggle_mute(bus_name)
+		_refresh_mute(mute, slider, value_label, bus_name, slider.value)
+		if not SettingsManager.is_muted(bus_name) and bus_name != "Music":
+			AudioManager.play_sfx("splat"))
+
 	slider.min_value = 0.0
 	slider.max_value = 1.0
 	slider.step = 0.05
 	slider.value = value
 	slider.custom_minimum_size = Vector2(0, SLIDER_HEIGHT)
 	slider.value_changed.connect(func(new_value: float):
-		value_label.text = "%d%%" % int(round(new_value * 100.0))
-		SettingsManager.set_volume(bus_name, new_value))
+		SettingsManager.set_volume(bus_name, new_value)
+		_refresh_mute(mute, slider, value_label, bus_name, new_value))
 	# Un sonidito al soltar, para escuchar cómo quedaron los efectos.
 	slider.drag_ended.connect(func(changed: bool):
 		if changed and bus_name != "Music":
 			AudioManager.play_sfx("splat"))
 	box.add_child(slider)
 	return box
+
+## Pone el ícono, el porcentaje y el apagado de la fila según el estado.
+## Muteado se muestra el porcentaje que quedará al volver, en gris: el
+## nivel sigue ahí, solo que no se oye.
+func _refresh_mute(mute: Button, slider: HSlider, value_label: Label,
+		bus_name: String, value: float) -> void:
+	var silenced := SettingsManager.is_muted(bus_name)
+	mute.text = "🔇" if silenced else "🔊"
+	UITheme.style_wood_button(mute, Color(0.95, 0.55, 0.5) if silenced else Color(1, 1, 1))
+	value_label.text = "%d%%" % int(round(value * 100.0))
+	value_label.add_theme_color_override("font_color",
+		Color(0.7, 0.64, 0.58) if silenced else Color(1, 0.88, 0.5))
+	slider.modulate = Color(1, 1, 1, 0.45 if silenced else 1.0)
 
 ## La HSlider por defecto es una línea gris de 4px, invisible sobre el
 ## fondo de la tienda. Se le pone la misma ranura y el mismo verde que las

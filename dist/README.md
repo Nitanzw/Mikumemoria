@@ -3,7 +3,7 @@
 `el_huerto_de_sofia.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-Versión 0.21.0 (versionCode 28), ~73MB, arquitectura arm64-v8a solamente.
+Versión 0.21.1 (versionCode 29), ~73MB, arquitectura arm64-v8a solamente.
 
 Este build ya es **completo**: incluye la música de los 10 capítulos,
 que los builds anteriores dejaban afuera para no pasarse del límite de
@@ -107,7 +107,7 @@ se ven bastante más definidos. Las seis emociones salieron de **una sola
 generación** con las seis caras adentro — generándolas sueltas cada una
 habría salido con una cara distinta.
 
-**Ajustes**: pantalla nueva desde el menú principal. El **audio arranca al
+**Ajustes**: pantalla nueva desde el menú principal, con **botón de mute** en cada fila (mutear no pierde el nivel: al volver queda donde estaba). El **audio arranca al
 50%** en vez del 100%, con tres barras separadas (general, música,
 efectos) para que cada uno lo deje donde quiera. Se suma **tamaño de
 texto** en cuatro pasos y **idioma** español/inglés — el inglés cubre
