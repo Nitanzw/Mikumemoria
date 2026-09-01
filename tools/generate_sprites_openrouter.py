@@ -348,12 +348,7 @@ WALK_SHEETS: dict[str, dict] = {
     },
     "abejorro_pinata_walk": {
         "prompt": (
-            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
-            "lines, NO borders and NO frames between them, the poses clearly "
-            "separated by wide empty background, each pose shows the exact same cute cartoon bumblebee whose body is made of a colorful layered paper pinata, orange and black crepe-paper fringe, tiny paper wings, festive party look, "
-            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
-            "the character fills each pose the same amount, same color, "
-            "only the wings and the paper fringe move between poses"
+            'a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid lines, NO borders and NO frames between them, the poses clearly separated by wide empty background, each pose shows the exact same cute cartoon bumblebee whose body is made of a colorful layered paper pinata, orange and black crepe-paper fringe, paper wings, festive party look, identical character design, identical colors and identical camera angle in all 4 poses. CRITICAL: the creature is drawn at exactly the same SIZE in all 4 cells and fills the same amount of its cell in every pose, never closer and never further away. Its two wings are fully spread and clearly visible in ALL four poses, never folded away and never missing. Only the legs and the wing angle change.'
         ),
         "grid": (2, 2),
         "frame_size": (256, 256),
@@ -390,12 +385,7 @@ WALK_SHEETS: dict[str, dict] = {
     },
     "lombriz_gigante_walk": {
         "prompt": (
-            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
-            "lines, NO borders and NO frames between them, the poses clearly "
-            "separated by wide empty background, each pose shows the exact same cute cartoon giant earthworm, thick pink segmented glossy body, small simple friendly face at one end, damp soil crumbs stuck to its skin, "
-            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
-            "the character fills each pose the same amount, same color, "
-            "only the body coils and stretches between poses, like an earthworm crawling forward, the head stays the same"
+            'a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid lines, NO borders and NO frames between them, the poses clearly separated by wide empty background, each pose shows the exact same cute cartoon giant earthworm, thick pink segmented glossy body, small simple friendly face at one end, damp soil crumbs stuck to its skin, identical character design, identical colors and identical camera angle in all 4 poses. CRITICAL: the creature is drawn at exactly the same SIZE in all 4 cells and fills the same amount of its cell in every pose, never closer and never further away. The worm has exactly the same LENGTH and the same thickness in all four poses: only the curve of its body changes, it never stretches longer nor shrinks shorter between cells.'
         ),
         "grid": (2, 2),
         "frame_size": (256, 256),
@@ -404,12 +394,7 @@ WALK_SHEETS: dict[str, dict] = {
     },
     "mutante_volador_walk": {
         "prompt": (
-            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
-            "lines, NO borders and NO frames between them, the poses clearly "
-            "separated by wide empty background, each pose shows the exact same cute cartoon mutant flying insect with a reddish-brown body, four purple wings, an extra pair of asymmetric eyes on its forehead, slightly lumpy mutated body, brown and purple color scheme, no green body, "
-            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
-            "the character fills each pose the same amount, same color, "
-            "only the four wings change position between poses"
+            'a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid lines, NO borders and NO frames between them, the poses clearly separated by wide empty background, each pose shows the exact same cute cartoon mutant flying insect with a reddish-brown body, four purple wings, an extra pair of asymmetric eyes on its forehead, slightly lumpy mutated body, identical character design, identical colors and identical camera angle in all 4 poses. CRITICAL: the creature is drawn at exactly the same SIZE in all 4 cells and fills the same amount of its cell in every pose, never closer and never further away. All four wings are fully spread in ALL four poses. Only the legs and the wing angle change between cells.'
         ),
         "grid": (2, 2),
         "frame_size": (256, 256),
@@ -432,12 +417,7 @@ WALK_SHEETS: dict[str, dict] = {
     },
     "rayo_insecto_walk": {
         "prompt": (
-            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
-            "lines, NO borders and NO frames between them, the poses clearly "
-            "separated by wide empty background, each pose shows the exact same cute cartoon insect with a SOLID OPAQUE bright yellow and white body shaped from lightning bolts, sharp zigzag edges, crackling electric arcs around it, fully opaque with a clear dark outline, no transparency anywhere, no green tones, "
-            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
-            "the character fills each pose the same amount, same color, "
-            "only the lightning arcs and the energy streaks change shape between poses, the silhouette stays the same"
+            'a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid lines, NO borders and NO frames between them, the poses clearly separated by wide empty background, each pose shows the exact same cute cartoon insect with a SOLID OPAQUE bright yellow body, a clear head with two antennae, six legs and a segmented abdomen, shaped with sharp zigzag lightning edges, small electric sparks around it as an accent, identical character design, identical colors and identical camera angle in all 4 poses. CRITICAL: the creature is drawn at exactly the same SIZE in all 4 cells and fills the same amount of its cell in every pose, never closer and never further away. The insect body must be clearly recognizable as a creature with head, legs and antennae in ALL four poses: it is an insect made of lightning, NOT a cloud of lightning bolts. No transparency, no green tones. Only the legs move between cells.'
         ),
         "grid": (2, 2),
         "frame_size": (256, 256),
@@ -460,12 +440,7 @@ WALK_SHEETS: dict[str, dict] = {
     },
     "reina_primordial_walk": {
         "prompt": (
-            "a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid "
-            "lines, NO borders and NO frames between them, the poses clearly "
-            "separated by wide empty background, each pose shows the exact same majestic cartoon insect queen, large regal body in deep purple and gold, ornate crown-like antennae, layered iridescent wings, glowing amber eyes, commanding pose, "
-            "identical character design, IDENTICAL SIZE and camera angle in all 4 poses, "
-            "the character fills each pose the same amount, same color, "
-            "only the wings and the legs move between poses"
+            'a 2x2 sprite sheet of 4 poses in two rows and two columns, with NO grid lines, NO borders and NO frames between them, the poses clearly separated by wide empty background, each pose shows the exact same majestic cartoon insect queen, large regal body in deep purple and gold, ornate crown-like antennae, layered iridescent wings, glowing amber eyes, identical character design, identical colors and identical camera angle in all 4 poses. CRITICAL: the creature is drawn at exactly the same SIZE in all 4 cells and fills the same amount of its cell in every pose, never closer and never further away. Her wings are fully spread and identical in ALL four poses, never folded and never smaller in one cell. Only the legs and the wing angle change.'
         ),
         "grid": (2, 2),
         "frame_size": (256, 256),

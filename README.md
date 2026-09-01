@@ -580,6 +580,48 @@ Termina en el 970 de 1000, con ~36.000 monedas de sobra — que es justo el
 colchón para los usos de poderes (se pagan cada vez) y las recargas de
 vidas.
 
+## Auditoría de las animaciones de los 10 jefes
+
+No faltaba ninguna: los diez tenían sus cuatro cuadros. El problema era
+que **cinco no concordaban entre sí**, que se ve como parpadeo o como que
+el bicho se transforma mientras camina.
+
+| Jefe | Qué pasaba |
+|---|---|
+| Abejorro Piñata | en un cuadro perdía las alas y cambiaba de forma |
+| Mutagénesis Voladora | el tamaño saltaba: chico, grande, chico, grande |
+| Rayo Insecto | no era un bicho, era una nube de rayos sin cuerpo |
+| Reina Primordial | el primer cuadro tenía otras alas que los otros tres |
+| Lombriz Gigante | cambiaba de largo entre cuadros, parecía crecer |
+
+Los otros cinco (Hormiga Ladrona, Mantis Cronómetro, Escarabajo
+Radiactivo, Centella Blindada y Coraza Antigua) estaban bien y no se
+tocaron.
+
+### Por qué falló y qué se cambió
+
+Los prompts ya decían "identical character design" y no alcanzó. Lo que
+faltaba era hablar del **tamaño**, que es lo que se percibe como
+parpadeo: ahora dicen que la criatura se dibuja exactamente al mismo
+tamaño y ocupa la misma parte de su celda en las cuatro poses, nunca más
+cerca ni más lejos.
+
+Y cada uno lleva además una instrucción contra su falla puntual: alas
+siempre desplegadas y visibles en los cuatro cuadros para el abejorro, el
+mutante y la reina; "es un insecto HECHO de rayos, no una nube de rayos"
+con cabeza, patas y antenas para el rayo insecto; y mismo largo y mismo
+grosor, solo cambia la curva, para la lombriz.
+
+### El sprite fijo también quedaba desfasado
+
+Cada bicho tiene un PNG fijo que sirve de respaldo si faltara un cuadro de
+caminata. Al redibujar a esos cinco, su fijo mostraba **otro animal** que
+la animación. Se regeneró desde el cuadro 0 de cada uno, que es la única
+forma de garantizar que no puedan discrepar nunca.
+
+Verificado en el motor: los diez jefes cargan 4 cuadros de 256x256 y
+`is_playing()` da verdadero en los diez.
+
 ## Los sonidos de aplastar son grabaciones tuyas
 
 Llegaron dos tomas de voz (0,19s y 0,70s, mono 48kHz). Procesadas y
