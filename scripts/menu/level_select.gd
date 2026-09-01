@@ -57,17 +57,27 @@ func _build_grid() -> void:
 	for offset in range(LevelManager.LEVELS_PER_CHAPTER):
 		grid.add_child(_build_cell(first + offset))
 
-func _build_cell(level: int) -> Button:
+func _build_cell(level: int) -> Control:
 	var is_boss: bool = GameManager.level_manager.is_boss_level(level)
 	var unlocked: bool = GameManager.is_level_unlocked(level)
 	var completed: bool = level < GameManager.max_level_unlocked
 
-	var button := Button.new()
+	# Panel con Label adentro y no Button: un Button se come el arrastre y
+	# la grilla de 100 niveles solo se podía deslizar desde los huecos.
+	# Ver UITheme.make_tappable.
+	var button := Panel.new()
 	button.custom_minimum_size = CELL
-	button.add_theme_font_size_override("font_size", 20 if level < 100 else 17)
-	button.add_theme_constant_override("outline_size", 5)
-	button.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-	button.add_theme_color_override("font_color", Color(1, 0.98, 0.92))
+
+	var label := Label.new()
+	label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 20 if level < 100 else 17)
+	label.add_theme_constant_override("outline_size", 5)
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	label.add_theme_color_override("font_color", Color(1, 0.98, 0.92))
+	button.add_child(label)
 
 	var style := StyleBoxFlat.new()
 	style.corner_radius_top_left = 14
@@ -90,18 +100,18 @@ func _build_cell(level: int) -> Button:
 
 	if not unlocked:
 		style.bg_color = COLOR_BOSS.darkened(0.55) if is_boss else COLOR_LOCKED
-		button.text = "🔒"
-		button.disabled = true
+		label.text = "🔒"
+		label.modulate = Color(1, 1, 1, 0.7)
 	else:
 		if is_boss:
 			style.bg_color = COLOR_BOSS_DONE if completed else COLOR_BOSS
-			button.text = "💀\n%d" % level
+			label.text = "💀\n%d" % level
 		else:
 			style.bg_color = COLOR_DONE if completed else COLOR_CURRENT
-			button.text = str(level)
+			label.text = str(level)
 		if completed:
 			style.border_color = Color(1, 0.96, 0.85, 0.4)
-		button.pressed.connect(_on_level_pressed.bind(level))
+		UITheme.make_tappable(button, _on_level_pressed.bind(level))
 		if level == GameManager.max_level_unlocked:
 			# El nivel al que toca entrar: borde dorado grueso + latido.
 			style.border_width_top = 4
@@ -111,11 +121,7 @@ func _build_cell(level: int) -> Button:
 			style.border_color = Color(1, 0.92, 0.55)
 			_pulse(button)
 
-	button.add_theme_stylebox_override("normal", style)
-	button.add_theme_stylebox_override("hover", style)
-	button.add_theme_stylebox_override("pressed", style)
-	button.add_theme_stylebox_override("disabled", style)
-	button.add_theme_stylebox_override("focus", style)
+	button.add_theme_stylebox_override("panel", style)
 	return button
 
 func _pulse(node: Control) -> void:

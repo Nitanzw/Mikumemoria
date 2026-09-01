@@ -21,6 +21,69 @@ const WOOD_MARGIN_Y := 20.0
 const CARD_MARGIN_X := 48.0
 const CARD_MARGIN_Y := 44.0
 
+
+## Distancia que puede moverse el dedo y que el gesto siga contando como
+## toque. Más que esto es un arrastre y no dispara nada.
+const TAP_SLOP := 14.0
+
+## Hace que un Control responda al toque SIN comerse el arrastre.
+##
+## El problema que resuelve: un Button adentro de un ScrollContainer se
+## queda con el evento, así que el contenedor nunca ve el gesto y la lista
+## solo se puede deslizar desde los huecos entre casilleros. `scroll_deadzone`
+## no alcanza, porque el deadzone actúa sobre eventos que al contenedor
+## nunca le llegan.
+##
+## Con MOUSE_FILTER_PASS el nodo recibe el evento y además lo deja subir al
+## contenedor, así que se puede deslizar desde cualquier lado. A cambio hay
+## que detectar el toque a mano: se guarda dónde empezó y cuánto se movió,
+## y solo cuenta como toque si el dedo casi no se corrió.
+static func make_tappable(control: Control, on_tap: Callable) -> void:
+	control.mouse_filter = Control.MOUSE_FILTER_PASS
+	var state := {"holding": false, "start": Vector2.ZERO, "moved": 0.0}
+	control.gui_input.connect(func(event: InputEvent) -> void:
+		var position := Vector2.ZERO
+		var pressed := false
+		var is_click := false
+
+		var touch := event as InputEventScreenTouch
+		if touch:
+			is_click = true
+			pressed = touch.pressed
+			position = touch.position
+		else:
+			var mouse := event as InputEventMouseButton
+			if mouse and mouse.button_index == MOUSE_BUTTON_LEFT:
+				is_click = true
+				pressed = mouse.pressed
+				position = mouse.position
+
+		if is_click:
+			if pressed:
+				state["holding"] = true
+				state["start"] = position
+				state["moved"] = 0.0
+			elif state["holding"]:
+				state["holding"] = false
+				var corrido: float = maxf(
+					position.distance_to(state["start"]), float(state["moved"]))
+				if corrido <= TAP_SLOP:
+					on_tap.call()
+			return
+
+		# El acumulado importa además de la distancia final: si alguien
+		# baja, sube y suelta donde empezó, eso fue un scroll, no un toque.
+		if not state["holding"]:
+			return
+		var drag := event as InputEventScreenDrag
+		if drag:
+			state["moved"] = float(state["moved"]) + drag.relative.length()
+			return
+		var motion := event as InputEventMouseMotion
+		if motion:
+			state["moved"] = float(state["moved"]) + motion.relative.length()
+	)
+
 ## Aplica la textura de cartel de madera a un botón, con sus estados.
 ## Si el asset no existe, no toca nada y el botón queda con el tema por
 ## defecto (así el juego no se rompe si falta una imagen).

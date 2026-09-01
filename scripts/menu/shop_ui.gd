@@ -150,11 +150,13 @@ func _build_grid(ids: Array, are_weapons: bool) -> GridContainer:
 func _build_tile(item_id: String, is_weapon: bool) -> Control:
 	var info := _tile_info(item_id, is_weapon)
 
-	var button := Button.new()
+	# Panel y no Button: un Button se come el arrastre y la cuadrícula solo
+	# se podía deslizar tocando los huecos entre casilleros. Ver
+	# UITheme.make_tappable.
+	var button := Panel.new()
 	button.custom_minimum_size = TILE
-	for state in ["normal", "hover", "pressed"]:
-		button.add_theme_stylebox_override(state, UITheme.card_style())
-	button.pressed.connect(_show_detail.bind(item_id, is_weapon))
+	button.add_theme_stylebox_override("panel", UITheme.card_style())
+	UITheme.make_tappable(button, _show_detail.bind(item_id, is_weapon))
 
 	var box := VBoxContainer.new()
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
