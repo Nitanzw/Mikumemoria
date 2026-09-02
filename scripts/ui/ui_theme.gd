@@ -177,6 +177,27 @@ static func style_body(label: Label, size: int = 19) -> void:
 	label.add_theme_color_override("font_color", Color(1, 0.98, 0.94))
 
 ## Fila "🪙 1234" con el ícono real de moneda en vez del emoji.
+## Los íconos que reemplazaron a los emoji del sistema. Los emoji los
+## dibuja la fuente del celular: salen planos, de otro color y de otro
+## estilo que el resto del juego, y encima cambian según el teléfono.
+const ICON_LOCK := "res://assets/sprites/ui/ui_candado.png"
+const ICON_SKULL := "res://assets/sprites/ui/ui_calavera.png"
+const ICON_CHECK := "res://assets/sprites/ui/ui_tilde.png"
+
+## Un ícono suelto del tamaño pedido, listo para meter en cualquier lado.
+## Devuelve null si falta el archivo, para que quien llama pueda decidir
+## si pone otra cosa en vez de quedarse con un hueco.
+static func icon_rect(path: String, size: float) -> TextureRect:
+	if not ResourceLoader.exists(path):
+		return null
+	var rect := TextureRect.new()
+	rect.texture = load(path)
+	rect.custom_minimum_size = Vector2(size, size)
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return rect
+
 static func build_coin_row(amount: int, font_size: int = 22) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER

@@ -38,7 +38,7 @@ func _ready() -> void:
 
 	title.text = "%d. %s" % [chapter, GameManager.level_manager.get_chapter_name(chapter)]
 	var done := _levels_completed_in_chapter()
-	subtitle.text = "%d / %d niveles · los 💀 son jefes" % [done, LevelManager.LEVELS_PER_CHAPTER]
+	subtitle.text = "%d / %d niveles · los de calavera son jefes" % [done, LevelManager.LEVELS_PER_CHAPTER]
 
 	grid.columns = COLUMNS
 	_build_grid()
@@ -56,6 +56,17 @@ func _build_grid() -> void:
 	var first := (chapter - 1) * LevelManager.LEVELS_PER_CHAPTER + 1
 	for offset in range(LevelManager.LEVELS_PER_CHAPTER):
 		grid.add_child(_build_cell(first + offset))
+
+## Pega un ícono centrado sobre el casillero, con un corrimiento vertical
+## opcional. Si falta el archivo no pasa nada: el casillero se queda con
+## su número, que es lo importante.
+func _poner_icono(cell: Control, path: String, size: float, dy: float = 0.0) -> void:
+	var icono := UITheme.icon_rect(path, size)
+	if icono == null:
+		return
+	icono.set_anchors_preset(Control.PRESET_CENTER)
+	icono.position = Vector2(-size * 0.5, -size * 0.5 + dy)
+	cell.add_child(icono)
 
 func _build_cell(level: int) -> Control:
 	var is_boss: bool = GameManager.level_manager.is_boss_level(level)
@@ -100,12 +111,20 @@ func _build_cell(level: int) -> Control:
 
 	if not unlocked:
 		style.bg_color = COLOR_BOSS.darkened(0.55) if is_boss else COLOR_LOCKED
-		label.text = "🔒"
+		label.text = ""
+		_poner_icono(button, UITheme.ICON_LOCK, 30.0)
 		label.modulate = Color(1, 1, 1, 0.7)
 	else:
 		if is_boss:
 			style.bg_color = COLOR_BOSS_DONE if completed else COLOR_BOSS
-			label.text = "💀\n%d" % level
+			label.text = str(level)
+			# La calavera va como ícono ARRIBA del número, no como una
+			# línea de texto: el emoji lo dibujaba la fuente del celular,
+			# así que su alto cambiaba de teléfono en teléfono y con él
+			# se corría el número.
+			_poner_icono(button, UITheme.ICON_SKULL, 24.0, -16.0)
+			label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+			label.add_theme_constant_override("line_spacing", 0)
 		else:
 			style.bg_color = COLOR_DONE if completed else COLOR_CURRENT
 			label.text = str(level)

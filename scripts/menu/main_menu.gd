@@ -18,6 +18,14 @@ const WOOD_MARGIN := 46.0
 @onready var level_label: Label = $Margin/VBox/Stats/StatsVBox/LevelLabel
 @onready var collection_label: Label = $Margin/VBox/Stats/StatsVBox/CollectionLabel
 @onready var lives_label: Label = $Margin/VBox/Stats/StatsVBox/LivesLabel
+## Fila de corazones y botón de recarga, armados con arte propio. Se
+## construyen por código y se insertan alrededor del label viejo.
+var _hearts_row: HBoxContainer
+var _refill_button: Button
+
+const HEART_FULL := preload("res://assets/sprites/ui/ui_corazon.png")
+const HEART_EMPTY := preload("res://assets/sprites/ui/ui_corazon_vacio.png")
+const HEART_SIZE := 34
 @onready var logo: TextureRect = $Margin/VBox/Logo
 @onready var play_button: Button = $Margin/VBox/Buttons/PlayButton
 @onready var shop_button: Button = $Margin/VBox/Buttons/ShopButton
@@ -33,11 +41,11 @@ var _lives_refresh: float = 0.0
 
 func _ready() -> void:
 	AudioManager.play_music("menu_theme")
+	# La fila de vidas se arma ANTES del primer refresco: _refresh_lives
+	# escribe en los nodos que crea esta función.
+	_build_lives_row()
 	_refresh_labels()
 	_style_buttons()
-
-	lives_label.mouse_filter = Control.MOUSE_FILTER_STOP
-	lives_label.gui_input.connect(_on_lives_input)
 
 	play_button.pressed.connect(_on_play_pressed)
 	shop_button.pressed.connect(_on_shop_pressed)
@@ -80,25 +88,84 @@ func _refresh_labels() -> void:
 	collection_label.text = "Incógnitos: %d / 100" % GameManager.get_unlocked_insect_count()
 	_refresh_lives()
 
-## Muestra los corazones y, si faltan, cuánto queda para la próxima. Al
-## tocar el texto con vidas incompletas se ofrece recargar con monedas.
+## Arma la fila de corazones y el botón de recarga.
+##
+## Antes esto era UN solo Label con todo adentro: los corazones, el reloj
+## y "(tocá para recargar: 150 monedas)". Sin ajuste de línea y centrado,
+## al quedarte sin vidas el texto se salía de la pantalla POR LOS DOS
+## LADOS: no se leía ni el corazón de la izquierda ni el precio de la
+## derecha. Y encima los corazones y la moneda eran emoji del sistema,
+## que se dibujan con la fuente del celular y no pegan con nada del resto.
+##
+## Ahora son tres cosas separadas: corazones de arte propio, el reloj como
+## texto solo, y la recarga como BOTÓN. Que sea botón además arregla algo
+## que no era visual: un texto que dice "tocá para recargar" no se ve
+## tocable, y había que saberlo de antes.
+func _build_lives_row() -> void:
+	var padre := lives_label.get_parent()
+	var indice := lives_label.get_index()
+
+	_hearts_row = HBoxContainer.new()
+	_hearts_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_hearts_row.add_theme_constant_override("separation", 4)
+	_hearts_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for i in range(GameManager.MAX_LIVES):
+		var corazon := TextureRect.new()
+		corazon.custom_minimum_size = Vector2(HEART_SIZE, HEART_SIZE)
+		corazon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		corazon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		corazon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_hearts_row.add_child(corazon)
+	padre.add_child(_hearts_row)
+	padre.move_child(_hearts_row, indice)
+
+	_refill_button = Button.new()
+	_refill_button.custom_minimum_size = Vector2(0, 44)
+	_refill_button.add_theme_font_size_override("font_size", 17)
+	_refill_button.focus_mode = Control.FOCUS_NONE
+	# La moneda va en el `icon` del Button, que la pone a la izquierda del
+	# texto. Acá sí sirve esa propiedad (a diferencia del botón de mute,
+	# donde el ícono tenía que ocupar todo el botón).
+	if ResourceLoader.exists(UITheme.COIN_ICON):
+		_refill_button.icon = load(UITheme.COIN_ICON)
+		_refill_button.add_theme_constant_override("h_separation", 8)
+		# `icon_max_width` y NO `expand_icon`: la moneda es de 128px y
+		# expand_icon la estira a lo que dé el botón, que la tapaba. Esta
+		# constante la limita respetando la proporción.
+		_refill_button.add_theme_constant_override("icon_max_width", 24)
+	UITheme.style_wood_button(_refill_button)
+	_refill_button.pressed.connect(_on_refill_pressed)
+	padre.add_child(_refill_button)
+	padre.move_child(_refill_button, indice + 2)
+
+	# El label viejo queda, pero sólo con el reloj.
+	lives_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
 func _refresh_lives() -> void:
 	var lives := GameManager.get_lives()
-	var hearts := "❤".repeat(lives) + "♡".repeat(GameManager.MAX_LIVES - lives)
-	if lives >= GameManager.MAX_LIVES:
-		lives_label.text = hearts
-		return
-	var remaining := GameManager.seconds_until_next_life()
-	lives_label.text = "%s  próxima en %02d:%02d  (tocá para recargar: %d 🪙)" % [
-		hearts, int(remaining / 60), remaining % 60, GameManager.REFILL_LIVES_COST,
-	]
+	if _hearts_row:
+		for i in range(_hearts_row.get_child_count()):
+			var corazon := _hearts_row.get_child(i) as TextureRect
+			corazon.texture = HEART_FULL if i < lives else HEART_EMPTY
 
-func _on_lives_input(event: InputEvent) -> void:
-	var touch := event as InputEventScreenTouch
-	if touch and touch.pressed:
-		if GameManager.refill_lives_with_coins():
-			AudioManager.play_sfx("unlock")
-		_refresh_labels()
+	var completas := lives >= GameManager.MAX_LIVES
+	lives_label.visible = not completas
+	if _refill_button:
+		_refill_button.visible = not completas
+	if completas:
+		return
+
+	var remaining := GameManager.seconds_until_next_life()
+	lives_label.text = "Próxima vida en %02d:%02d" % [int(remaining / 60), remaining % 60]
+	_refill_button.text = "Llenar vidas por %d" % GameManager.REFILL_LIVES_COST
+	# Si no alcanza la plata el botón se apaga en vez de no hacer nada al
+	# tocarlo, que se siente como que el juego se colgó.
+	_refill_button.disabled = GameManager.player_coins < GameManager.REFILL_LIVES_COST
+
+func _on_refill_pressed() -> void:
+	if GameManager.refill_lives_with_coins():
+		AudioManager.play_sfx("unlock")
+	_refresh_labels()
 
 func _on_play_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/menu/world_map.tscn")

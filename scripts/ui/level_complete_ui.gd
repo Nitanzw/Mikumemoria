@@ -303,7 +303,7 @@ func show_defeat(reason: String, lives_left: int) -> void:
 	score_icon.texture = ICON_HEART
 	combo_icon.texture = ICON_HEART
 	score_value.text = reason
-	combo_value.text = "Vidas: %s" % ("❤".repeat(lives_left) if lives_left > 0 else "sin vidas")
+	combo_value.text = "Vidas: %d" % lives_left if lives_left > 0 else "Sin vidas"
 	shop_button.visible = true
 	if lives_left > 0:
 		note_label.text = "Sacudite y volvé a entrar.\nPasá por la tienda si querés mejorar algo."

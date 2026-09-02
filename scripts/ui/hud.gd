@@ -153,7 +153,7 @@ func setup_powers(power_ids: Array) -> void:
 		button.pressed.connect(_on_power_pressed.bind(power_id))
 		# El precio va EN el botón: hay que poder decidir si conviene
 		# gastarlo sin dejar de mirar la pantalla.
-		button.text = "%s\n%d 🪙" % [
+		button.text = "%s\n%d" % [
 			ItemSystem.get_power_label(power_id),
 			ItemSystem.get_power_use_cost(power_id),
 		]

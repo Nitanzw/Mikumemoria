@@ -180,8 +180,11 @@ func _build_tile(item_id: String, is_weapon: bool) -> Control:
 ## Candado en la esquina, encima del casillero. Va como hijo aparte del
 ## VBox para poder posicionarlo libre sin empujar el resto.
 func _lock_badge() -> Control:
-	var badge := Label.new()
-	badge.text = "🔒"
+	var badge: Control = UITheme.icon_rect(UITheme.ICON_LOCK, 26.0)
+	if badge == null:
+		var texto := Label.new()
+		texto.text = "-"
+		badge = texto
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	badge.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	badge.offset_left = -32.0
@@ -292,7 +295,7 @@ func _icon_path(item_id: String, is_weapon: bool) -> String:
 	return str(ItemSystem.get_item(item_id).get("icon", ""))
 
 	if not ItemSystem.is_unlocked(GameManager.items, item_id):
-		return "🔒"
+		return "Bloqueado"
 	var level := ItemSystem.get_level(GameManager.items, item_id)
 	var cost := ItemSystem.get_cost(GameManager.items, item_id)
 	if cost < 0:

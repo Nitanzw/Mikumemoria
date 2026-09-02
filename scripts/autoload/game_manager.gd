@@ -52,7 +52,10 @@ const TUTORIAL_SHOP_COINS := 200
 const TUTORIAL_ITEMS_COINS := 400
 const TUTORIAL_COMBO_HITS := 5
 const LIFE_REGEN_SECONDS := 600  # 10 minutos por vida
-const REFILL_LIVES_COST := 150   # recargar todas pagando monedas
+## Recargar todas las vidas pagando monedas. Barato a propósito: la
+## alternativa es esperar el reloj, y hacer esperar a alguien que quiere
+## seguir jugando no es dificultad, es fricción.
+const REFILL_LIVES_COST := 10
 
 var player_lives: int = MAX_LIVES
 var lives_timestamp: int = 0     # Unix time de la última vez que se contaron

@@ -964,6 +964,56 @@ Dos detalles:
 **Queda pendiente**: el multitap también infla el combo, porque cada dedo
 que acierta suma su propio golpe a la racha. No se tocó en este pase.
 
+## El menú al quedarte sin vidas
+
+Captura del tester: al perder todas las vidas, la fila de vidas se sale de
+la pantalla **por los dos lados** — no se leía ni el corazón de la
+izquierda ni el precio de la derecha.
+
+La causa: era **un solo Label** con todo adentro (los corazones, el reloj
+y "(tocá para recargar: 150 monedas)"), sin ajuste de línea y centrado.
+Mientras tenías las tres vidas el texto era corto y nunca se notó.
+
+Ahora son tres cosas separadas, cada una en su renglón: los corazones, el
+reloj, y la recarga como **botón**. Que sea botón no es sólo estética: un
+texto que dice "tocá para recargar" no se ve tocable, y había que saberlo
+de antes. Además se deshabilita solo si no te alcanza la plata, en vez de
+no hacer nada al tocarlo — que se siente como que el juego se colgó.
+
+La recarga bajó de **150 a 10 monedas**, a pedido del tester. Tiene
+sentido: la alternativa es esperar el reloj, y hacer esperar a alguien que
+quiere seguir jugando no es dificultad, es fricción.
+
+### Los emoji del sistema
+
+El mismo reporte decía que el menú estaba "fuera de tono". Los corazones,
+la moneda, los candados, las calaveras y el tilde eran **emoji del
+sistema**: los dibuja la fuente del celular, así que salen planos, de otro
+color y de otro estilo que el resto del juego — y encima cambian según el
+teléfono.
+
+Se generaron los cinco en **una sola hoja**, para que compartan grosor de
+línea, paleta y nivel de detalle. Sueltos salen cinco estilos distintos y
+se nota más que el emoji. Reemplazan a:
+
+| dónde | antes | ahora |
+|:--|:--|:--|
+| menú, vidas | `❤` `♡` | corazón lleno / vacío |
+| tienda, selector, mapa | `🔒` | candado de bronce |
+| selector de niveles | `💀` | calavera de insecto |
+| mapa de mundos | `✓` | tilde verde |
+| botón de poder del HUD | `🪙` | (se sacó, el precio ya se entiende) |
+
+Un detalle del selector de niveles: la calavera del jefe iba como una
+línea de texto **arriba** del número (`"💀\n%d"`). Como el emoji lo dibuja
+la fuente del celular, su alto cambiaba de teléfono en teléfono y con él
+se corría el número. Ahora es un ícono posicionado, y el número queda
+donde tiene que quedar.
+
+Y una trampa de Godot: para la moneda del botón de recarga hay que usar la
+constante de tema `icon_max_width` y **no** `expand_icon`. La moneda es de
+128px y `expand_icon` la estira a lo que dé el botón, tapándolo entero.
+
 ## La tienda, sólo en cuadrícula
 
 Había un botón para alternar entre cuadrícula y una vista de lista con una

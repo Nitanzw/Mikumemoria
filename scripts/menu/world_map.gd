@@ -45,6 +45,16 @@ func _build_map() -> void:
 		map_area.add_child(node)
 		_chapter_nodes[chapter] = node
 
+## Ícono centrado sobre el nodo del capítulo, en vez de un emoji de la
+## fuente del sistema.
+func _poner_icono(nodo: Control, path: String, size: float) -> void:
+	var icono := UITheme.icon_rect(path, size)
+	if icono == null:
+		return
+	icono.set_anchors_preset(Control.PRESET_CENTER)
+	icono.position = Vector2(-size * 0.5, -size * 0.5)
+	nodo.add_child(icono)
+
 func _build_chapter_node(chapter: int, total_height: int) -> Control:
 	var y: float = total_height - BOTTOM_MARGIN - chapter * NODE_SPACING_Y
 	var zigzag: float = ZIGZAG_X if chapter % 2 == 0 else -ZIGZAG_X
@@ -91,7 +101,8 @@ func _build_chapter_node(chapter: int, total_height: int) -> Control:
 		# Los capítulos ya superados quedan entrables: es la única forma
 		# de volver a jugar sus niveles desde el selector.
 		style.bg_color = COLOR_DONE
-		button.text = "✓"
+		button.text = ""
+		_poner_icono(button, UITheme.ICON_CHECK, NODE_SIZE * 0.5)
 		button.pressed.connect(_on_chapter_pressed.bind(chapter))
 	elif chapter == GameManager.get_max_chapter_unlocked():
 		style.bg_color = COLOR_CURRENT
@@ -99,7 +110,8 @@ func _build_chapter_node(chapter: int, total_height: int) -> Control:
 		_pulse(button)
 	else:
 		style.bg_color = COLOR_LOCKED
-		button.text = "🔒"
+		button.text = ""
+		_poner_icono(button, UITheme.ICON_LOCK, NODE_SIZE * 0.5)
 		button.disabled = true
 
 	button.add_theme_stylebox_override("normal", style)
