@@ -796,6 +796,73 @@ escena ni romper las rutas de nodo que usa `main_menu.gd`), y Sofía ocupa
 la franja derecha entera, de la cabeza a las botas. Los botones siguen
 midiendo 330px de ancho por 82 de alto, que como blanco táctil sobra.
 
+## Élites, y por qué la dificultad no mordía
+
+Reporte del tester en el nivel 40, con la primera arma al máximo: *"mató
+todo de un golpe, se vuelve aburrido, no está el estrés de golpear muchas
+veces un insecto"*. La tabla de golpes lo confirma: con el Zapato en nivel
+5 o 10, TODO moría de un toque entre el nivel 20 y el 90.
+
+La causa es una carrera perdida entre dos curvas. La vida sube +2 por
+escalón de dificultad, y un escalón son **10 niveles de juego**. El daño
+sube +2 por **mejora de arma**, y hay 10 mejoras por arma. En lo que
+tardás en ganar +2 de vida podés comprar varias mejoras de +2 de daño, así
+que el arma se despega y no vuelve.
+
+Dos cambios, y son complementarios:
+
+**`HP_PER_TIER` de 2 a 5.** Se puede subir sin miedo a trabar el juego
+porque un nivel normal se gana **sobreviviendo los 30 segundos**, no
+matando una cuota: más vida cambia cuántos matás, no si ganás. Y el
+ingreso casi no baja, porque el cuello de botella es cada cuánto aparece
+un bicho (~23 por nivel), no cuántas veces alcanzás a tapear (~90). Con el
+zapato al máximo en el nivel 42 los comunes pasaron de 1 golpe a 2.
+
+**Bichos élite, con aura roja.** De 3 a 6 por nivel, con el triple de vida
+y el doble de puntos y monedas. Son el pico de tensión: en el nivel 42 con
+el zapato al máximo cuestan 3 o 4 golpes contra 1 o 2 de un común. Y como
+son más difíciles de matar, pagan más — que es lo que compensa el tiempo
+que te comen.
+
+Tres detalles de implementación que importan:
+
+- El flag `is_elite` se marca **antes** de meter el insecto al árbol:
+  `initialize_by_type()` corre en `_ready()` y necesita saberlo para
+  calcular vida y recompensa.
+- Los élites se eligen por **índice de aparición**, sorteando cuáles de
+  las apariciones estimadas del nivel lo serán, en vez de tirar una moneda
+  por bicho. Con una probabilidad suelta un nivel puede salir sin ningún
+  élite y el siguiente con doce, y el jugador no puede contar con nada.
+  El primero nunca es élite: arrancar con uno en pantalla se siente
+  injusto.
+- El aura se dibuja en el `_draw()` del propio insecto, no como nodo
+  aparte: un `CanvasItem` dibuja lo suyo **antes** que sus hijos, así que
+  el círculo queda detrás del sprite sin agregar nodos ni texturas. La
+  primera versión era un relleno tenue y **no se veía**: contra el fondo
+  del huerto, que ya es verde y amarillo y tiene mucho detalle, un alfa
+  bajo se pierde. Lo que se ve es el anillo; el relleno sólo lo apoya.
+
+### Un fallo que no contaba como fallo
+
+También del tester: *"si pego al aire igual me dice que no erré"*. Eran
+tres bugs encadenados.
+
+**El combo no se cortaba al tapear lejos de todo.** El aviso a
+`GameManager` llegaba de rebote: al fallar se hacía burlar a los bichos
+cercanos, y era `taunt()` quien avisaba el fallo. Si tapeabas lejos no se
+burlaba nadie y el combo seguía intacto.
+
+**Y al tapear cerca de varios, se avisaba de más.** `taunt()` se llama una
+vez por bicho en el radio, así que un solo fallo al lado de tres bichos
+quemaba tres perdones de las Botas de Goma. Ahora la burla es sólo el
+gesto del bicho y el fallo se avisa una vez por tap, desde el Player.
+
+**Y el cartel del resumen miraba el combo, no los fallos.** El combo mide
+la racha más larga: se podía tapear al aire todo el nivel, encadenar
+quince al final y que igual te felicitara con "no erraste ni un golpe".
+Ahora ese cartel exige `misses == 0` de verdad. `Player` ya contaba bien
+los fallos — el dato existía y nadie lo miraba.
+
 ## Ajustes
 
 Nueva pantalla, entrando desde el menú principal.

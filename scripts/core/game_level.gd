@@ -93,6 +93,13 @@ func _ready() -> void:
 	# Reloj de Arena: segundos extra de nivel. En las peleas de jefe
 	# también suman, que es donde más se agradecen.
 	time_remaining = float(level_config.get("time_limit", 30)) + ItemSystem.get_bonus_seconds(GameManager.items)
+	_sortear_elites()
+	# Hoy cada nivel recarga la escena y el Player nace limpio, así que
+	# esto no cambia nada. Va igual porque el cartel del resumen ahora
+	# depende de que los fallos sean DE ESTE nivel: si algún día se deja
+	# de recargar, el dato se volvería acumulado sin que nadie lo note.
+	if player:
+		player.reset_stats()
 	hud.set_level_label(GameManager.current_level, level_config.get("chapter_name", ""))
 	hud.set_time(time_remaining)
 	hud.set_score(0)
@@ -603,6 +610,44 @@ func _on_spawn_timer_timeout() -> void:
 		return
 	_spawn_random_insect()
 
+## Cuántos élites por nivel. Pocos y siempre algunos: son el pico de
+## tensión del nivel, no la norma.
+const ELITES_MIN := 3
+const ELITES_MAX := 6
+
+## Índices de aparición que van a salir élite, y el contador que los va
+## consumiendo.
+var _elite_spawns: Dictionary = {}
+var _spawn_index: int = 0
+
+## Reparte los élites entre las apariciones estimadas del nivel.
+##
+## Se eligen índices y no se tira una moneda por bicho: con una
+## probabilidad suelta un nivel puede salir sin ningún élite y el
+## siguiente con doce, y el jugador no puede contar con nada.
+func _sortear_elites() -> void:
+	_elite_spawns.clear()
+	_spawn_index = 0
+	if is_boss_level:
+		return
+
+	var cadencia: float = maxf(float(level_config.get("spawn_rate", 2.0)), 0.1)
+	# Los primeros bichos ya están sembrados al arrancar (ver
+	# _spawn_initial_insects), así que entran en la cuenta.
+	var estimadas: int = INITIAL_INSECTS + int(time_remaining / cadencia)
+	var cuantos: int = mini(randi_range(ELITES_MIN, ELITES_MAX), estimadas)
+	if cuantos <= 0:
+		return
+
+	# El primero no: que el nivel arranque con un élite en pantalla antes
+	# de que el jugador se acomode se siente injusto.
+	var candidatos: Array[int] = []
+	for i in range(1, estimadas):
+		candidatos.append(i)
+	candidatos.shuffle()
+	for i in candidatos.slice(0, cuantos):
+		_elite_spawns[i] = true
+
 func _spawn_random_insect() -> Insect:
 	var types: Array = level_config.get("enemy_types", [])
 	if types.is_empty():
@@ -613,6 +658,10 @@ func _spawn_random_insect() -> Insect:
 	insect.insect_type = insect_type
 	insect.speed_mult = level_config.get("enemy_speed_mult", 1.0)
 	insect.health_bonus = int(level_config.get("enemy_health_bonus", 0))
+	# El élite se marca ANTES de meterlo al árbol: initialize_by_type corre
+	# en _ready y necesita el flag para calcular vida y recompensa.
+	insect.is_elite = _spawn_index in _elite_spawns
+	_spawn_index += 1
 
 	insect_container.add_child(insect)
 	var spawn_pos := _random_edge_position()
@@ -655,7 +704,11 @@ func _end_level() -> void:
 
 	AudioManager.play_sfx("level_complete")
 	var reward := GameManager.on_level_complete()
-	level_complete_ui.show_results(GameManager.player_score, GameManager.combo_max, reward, is_boss_level)
+	# Los fallos van aparte del combo: el combo es la racha más larga y no
+	# dice nada de cuántas veces se tapeó al aire.
+	var fallos: int = player.total_misses if player else -1
+	level_complete_ui.show_results(GameManager.player_score, GameManager.combo_max,
+		reward, is_boss_level, fallos)
 
 func _on_next_level_pressed() -> void:
 	if GameManager.current_chapter != _entry_chapter:

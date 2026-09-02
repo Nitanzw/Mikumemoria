@@ -62,7 +62,7 @@ func handle_tap(tap_position: Vector2) -> void:
 			total_hits += 1
 		else:
 			total_misses += 1
-			_trigger_nearby_taunts(tap_position)
+			_registrar_fallo(tap_position)
 	else:
 		var already_hit: Dictionary = {}
 		for result in results:
@@ -76,7 +76,7 @@ func handle_tap(tap_position: Vector2) -> void:
 			total_hits += 1
 		else:
 			total_misses += 1
-			_trigger_nearby_taunts(tap_position)
+			_registrar_fallo(tap_position)
 
 	_update_accuracy()
 
@@ -116,6 +116,22 @@ func _query_circle(pos: Vector2, radius: float, mask: int) -> Array:
 	query.collide_with_areas = true
 	query.collide_with_bodies = true
 	return space_state.intersect_shape(query)
+
+## Un golpe al aire corta el combo, haya o no un bicho cerca.
+##
+## Antes el corte llegaba de rebote: al fallar se hacía burlar a los
+## bichos cercanos, y era la burla la que avisaba a GameManager. Eso
+## fallaba de dos maneras a la vez. Si tapeabas lejos de todo no se
+## burlaba nadie y el combo seguía intacto, así que se podía terminar un
+## nivel errándole a todo y con el cartel de "no erraste ni un golpe". Y
+## si tapeabas al lado de tres bichos, avisaba tres veces y se quemaban
+## tres perdones de las Botas de Goma por un solo fallo.
+##
+## Ahora la burla es sólo el gesto del bicho y el fallo se avisa acá, una
+## vez por tap.
+func _registrar_fallo(tap_position: Vector2) -> void:
+	_trigger_nearby_taunts(tap_position)
+	GameManager.on_insect_missed()
 
 func _trigger_nearby_taunts(tap_position: Vector2) -> void:
 	var results := _query_circle(tap_position, TAUNT_RADIUS, INSECT_LAYER_MASK)

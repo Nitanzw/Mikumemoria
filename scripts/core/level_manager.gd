@@ -16,7 +16,19 @@ const DIFFICULTY_PERIOD := 10
 const TIER_SPEED_STEP := 0.08     # +8% de velocidad por escalón
 const TIER_SPAWN_MULT := 0.94     # los bichos salen un 6% más seguido
 const MIN_SPAWN_RATE := 0.55      # piso, para que no sea imposible
-const HP_PER_TIER := 2            # +2 de vida por escalón
+## +5 de vida por escalón (o sea, cada 10 niveles). Antes eran 2 y no
+## alcanzaba: el arma sube +2 de daño por MEJORA y hay 10 mejoras por
+## arma, así que en lo que tardás en subir un escalón de dificultad (+2
+## de vida) podías comprar varias mejoras (+2 cada una). Con la primera
+## arma al máximo en el nivel 40 matabas todo de un toque.
+##
+## Con 5 el jugador al día tarda 2 o 3 golpes, que es donde el nivel se
+## siente. Se puede subir sin miedo a trabar el juego porque un nivel
+## normal se gana sobreviviendo los 30 segundos, no matando una cuota:
+## más vida cambia cuántos matás, no si ganás. Y el ingreso casi no
+## cambia, porque el cuello de botella es cada cuánto aparece un bicho,
+## no cuántas veces alcanzás a tapear.
+const HP_PER_TIER := 5
 ## Los jefes duran hasta que cae uno de los dos, pero con un techo: si se
 ## acaba el tiempo y el jefe sigue vivo, se pierde una vida.
 const BOSS_TIME_LIMIT := 90

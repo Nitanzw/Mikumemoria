@@ -82,6 +82,23 @@ const SPLAT_COLORS := {
 ## el spawner antes de agregar el insecto al árbol.
 var health_bonus: int = 0
 
+## Bicho élite: aguanta ELITE_HEALTH_MULT veces más y paga el doble. La
+## marca el spawner ANTES de agregarlo al árbol, porque initialize_by_type
+## corre en _ready y necesita saberlo para calcular la vida.
+##
+## Existen porque el arma sube más rápido que la vida de los bichos: con
+## la primera arma al máximo ya matabas todo de un toque y el nivel se
+## volvía tapear al azar. El élite es el que obliga a insistir, y como es
+## más difícil que lo maten, paga más.
+var is_elite: bool = false
+
+const ELITE_HEALTH_MULT := 3
+const ELITE_REWARD_MULT := 2
+## El aura late entre estos dos radios, en píxeles.
+const ELITE_AURA_MIN := 26.0
+const ELITE_AURA_MAX := 33.0
+const ELITE_AURA_SPEED := 3.4
+
 const SPEED_VARIANCE_MIN := 0.82
 const SPEED_VARIANCE_MAX := 1.18
 
@@ -110,6 +127,7 @@ var lifetime_timer: float = LIFETIME
 # la velocidad real, así un insecto en "burla" (más rápido) se ve más
 # agitado.
 var _wiggle_phase: float = randf() * TAU
+var _aura_phase: float = randf() * TAU
 const WIGGLE_ROTATION := 0.14
 const WIGGLE_BOB_PX := 3.0
 
@@ -125,16 +143,43 @@ func _process(delta: float) -> void:
 	_wiggle_phase += delta * wiggle_speed
 	sprite.rotation = sin(_wiggle_phase) * WIGGLE_ROTATION
 	sprite.position.y = -absf(sin(_wiggle_phase)) * WIGGLE_BOB_PX
+	if is_elite:
+		_aura_phase += delta * ELITE_AURA_SPEED
+		queue_redraw()
+
+## El aura del élite. Va acá y no como nodo aparte porque un CanvasItem
+## dibuja lo suyo ANTES que sus hijos: el círculo queda detrás del sprite
+## sin agregar nodos ni texturas.
+func _draw() -> void:
+	if not is_elite or is_dead:
+		return
+	var t := (sin(_aura_phase) + 1.0) * 0.5
+	var radio: float = lerpf(ELITE_AURA_MIN, ELITE_AURA_MAX, t)
+	# Relleno tenue MÁS un anillo marcado. El relleno solo, en el alfa
+	# bajo que hace falta para no tapar al bicho, se pierde contra el
+	# fondo del huerto, que ya es verde y amarillo y tiene mucho detalle.
+	# El anillo es lo que se ve; el relleno sólo lo apoya.
+	draw_circle(Vector2.ZERO, radio, Color(0.95, 0.12, 0.10, 0.22))
+	draw_arc(Vector2.ZERO, radio, 0.0, TAU, 32, Color(1.0, 0.16, 0.12, 0.9), 3.5, true)
+	draw_arc(Vector2.ZERO, radio * 0.78, 0.0, TAU, 28, Color(1.0, 0.45, 0.30, 0.55), 2.0, true)
 
 func initialize_by_type() -> void:
 	var data: Dictionary = INSECT_DATA.get(insect_type, INSECT_DATA["hormiga_obrera"])
 	base_speed = float(data["speed"]) * speed_mult * randf_range(SPEED_VARIANCE_MIN, SPEED_VARIANCE_MAX)
 	speed = base_speed
 	health = int(data["health"]) + health_bonus
-	current_health = health
 	points = int(data["points"])
 	coin_reward = int(data["coin_reward"])
+	if is_elite:
+		health *= ELITE_HEALTH_MULT
+		points *= ELITE_REWARD_MULT
+		coin_reward *= ELITE_REWARD_MULT
+	current_health = health
 	_apply_sprite_data(sprite, data, insect_type)
+	if is_elite and sprite:
+		# Tinte rojizo encima del aura: a simple vista el aura sola se
+		# puede confundir con un efecto de fondo, el bicho teñido no.
+		sprite.modulate = Color(1.25, 0.72, 0.68)
 
 ## Arma un SpriteFrames para el insecto. Si están los
 ## `<tipo>_walk_N.png` arma el ciclo de caminata; si no, cae en un único
@@ -302,8 +347,6 @@ func taunt() -> void:
 
 	if animation_player and animation_player.has_animation("taunt"):
 		animation_player.play("taunt")
-
-	GameManager.on_insect_missed()
 
 func randomize_direction() -> void:
 	_set_direction(Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)).normalized())

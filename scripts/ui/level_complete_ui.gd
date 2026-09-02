@@ -156,7 +156,8 @@ func _on_next_pressed() -> void:
 	else:
 		next_level_pressed.emit()
 
-func show_results(score: int, combo_max: int, reward: int, was_boss: bool = false) -> void:
+func show_results(score: int, combo_max: int, reward: int, was_boss: bool = false,
+		misses: int = -1) -> void:
 	title_label.text = _pick_title(combo_max, was_boss)
 	# La racha se luce arriba, en el cartel dorado; las filas de abajo
 	# quedan para los números que se leen de un vistazo.
@@ -177,7 +178,7 @@ func show_results(score: int, combo_max: int, reward: int, was_boss: bool = fals
 	combo_value.text = "Racha más Larga: x%d" % combo_max
 	reward_row.visible = true
 	_set_reward(reward)
-	note_label.text = _pick_note(combo_max)
+	note_label.text = _pick_note(combo_max, misses)
 	shop_button.visible = true
 	next_button.text = "Seguir"
 	next_button.visible = true
@@ -257,8 +258,14 @@ func _pick_medal(combo_max: int) -> String:
 		return MEDALS[2]
 	return MEDALS[3]
 
-func _pick_note(combo_max: int) -> String:
-	if combo_max >= PERFECT_COMBO:
+## `misses` en -1 significa "no me lo pasaron": se cae al criterio viejo,
+## por combo. Con el dato real, "no erraste" exige justamente eso.
+func _pick_note(combo_max: int, misses: int = -1) -> String:
+	# El cartel decía "No erraste ni un golpe" mirando sólo el combo. El
+	# combo mide la racha más larga, no los fallos: se podía tapear al
+	# aire todo el nivel, encadenar quince al final y que igual te
+	# felicitara por no haber errado.
+	if combo_max >= PERFECT_COMBO and misses == 0:
 		return WIN_NOTES["perfect"]
 	if combo_max >= GOOD_COMBO:
 		return WIN_NOTES["great"]
