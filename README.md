@@ -1026,6 +1026,73 @@ que es donde se la busca. Con eso se fueron también el estado
 `shop_grid_view` del guardado y su setter: sin dos vistas no hay
 preferencia que recordar.
 
+## Sofía entera, como viñeta de cómic
+
+El tester mandó un mockup: Sofía **de cuerpo entero**, recortada con
+contorno blanco tipo calco, parada sobre una viñeta con rayos de velocidad
+y trama de puntos. Su idea, y es mejor que lo que había.
+
+Las bandas negras del pase anterior tapaban el problema; esto lo elimina.
+El retrato era un busto —terminaba en el pecho— y por eso había que
+esconderle el corte. Entera no hay nada que esconder.
+
+Y el cuerpo entero además **cuenta** algo que el busto no podía: cada
+emoción tiene su pose. La triste va de hombros caídos y brazos colgando,
+la sorprendida con las dos manos arriba, la enojada inclinada hacia
+adelante con los puños cerrados.
+
+### Por qué son seis generaciones y no una hoja
+
+Se intentó dos veces con una hoja de seis figuras y las dos fallaron:
+
+- La primera devolvió **ocho** figuras y dibujó barras verdes ENTRE ellas,
+  o sea leyó el croma como parte de la composición.
+- La segunda, con el fondo ya bien resuelto, seguía devolviendo ocho y
+  además **recortaba a la cintura**.
+
+El motivo de fondo es la resolución: para una imagen muy apaisada el
+modelo devuelve unos 416px de alto, y una figura entera a esa altura deja
+la cara en 90 píxeles. Directamente prefería recortar. De a una vuelven en
+848x1264 y la cara sale con detalle.
+
+Lo que se pierde al separarlas es el encuadre común, y eso se arregla en
+el pipeline. Acá **no sirve alinear por silueta** como en los retratos:
+entre "brazos caídos" y "manos arriba" la silueta cambia a propósito, y el
+registro trataría de compensar el cambio de pose. Para figuras paradas lo
+estable es otra cosa:
+
+1. cada una se recorta a su contenido y se escala a la misma altura,
+2. se apoyan todas sobre la misma línea de piso,
+3. se centran por las **piernas** (el tercio de abajo), que no se mueven
+   con la pose de los brazos.
+
+### El contorno y el fondo
+
+El contorno blanco se calcula del canal alfa: se dilata, se desenfoca
+apenas y se pinta debajo. El desenfoque importa — un dilatado a secas
+sigue las esquinas duras del píxel y se ve dentado en las curvas.
+
+Los rayos de velocidad y la trama de puntos van **dibujados por código**,
+no generados con la API: es geometría pura, así que sale exacto, sin croma
+que limpiar y con el grosor que uno quiera. La trama se hace más densa
+lejos del centro, que es como imita un cómic impreso sin necesitar un
+gradiente, y el centro se abre para que la figura no quede sobre un nudo
+de rayos.
+
+Al entrar, los rayos **giran y crecen** un poco. Es el golpe de viñeta que
+hace que la charla se sienta un momento y no una pausa.
+
+### Un detalle de la respiración
+
+El `Sprite2D` centra la textura, así que la respiración (que escala el eje
+Y) le movía los pies media amplitud hacia abajo: con un busto no se veía,
+con el cuerpo entero parecía que flotaba y se hundía. El origen del sprite
+se ancló a la **planta de los pies**, y ahora respira desde el piso, que
+es como respira alguien parado.
+
+Los seis bustos quedaron sin uso y se borraron: eran seis texturas de
+457x479 viajando en el APK sin que nadie las mirara.
+
 ## El diálogo, encuadrado como viñeta
 
 Reporte del tester, con captura: *"Sofía está cortada y flotando"*. Y

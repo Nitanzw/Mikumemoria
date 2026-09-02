@@ -12,13 +12,19 @@ extends Node2D
 ## de un panel eso no se notaba; ahora que va grande en escena es la
 ## diferencia entre un personaje y un JPG pegado.
 
+## Cuerpo entero, no busto. El busto había que taparlo abajo con una
+## banda para que no se viera cortado; entera se la puede mostrar como una
+## figura recortada sobre la viñeta, que es lo que pidió el tester.
+##
+## Cada pose acompaña a su emoción: la triste va de hombros caídos, la
+## sorprendida con las manos arriba. Con un busto eso no se podía contar.
 const EMOTION_TEXTURES := {
-	"neutral": "res://assets/sprites/character/sofia_neutral.png",
-	"happy": "res://assets/sprites/character/sofia_happy.png",
-	"sad": "res://assets/sprites/character/sofia_sad.png",
-	"angry": "res://assets/sprites/character/sofia_angry.png",
-	"worried": "res://assets/sprites/character/sofia_worried.png",
-	"surprised": "res://assets/sprites/character/sofia_surprised.png",
+	"neutral": "res://assets/sprites/character/sofia_cuerpo_neutral.png",
+	"happy": "res://assets/sprites/character/sofia_cuerpo_happy.png",
+	"sad": "res://assets/sprites/character/sofia_cuerpo_sad.png",
+	"angry": "res://assets/sprites/character/sofia_cuerpo_angry.png",
+	"worried": "res://assets/sprites/character/sofia_cuerpo_worried.png",
+	"surprised": "res://assets/sprites/character/sofia_cuerpo_surprised.png",
 }
 
 const EMOTION_TINTS := {
@@ -62,6 +68,17 @@ var _base_scale: Vector2
 
 func _ready() -> void:
 	_base_scale = sprite.scale
+	_anclar_a_los_pies()
+
+## Mueve el origen del sprite a la planta de los pies.
+##
+## El Sprite2D centra la textura, así que la respiración (que escala el
+## eje Y) le movía los pies media amplitud hacia abajo: parecía que
+## flotaba y se hundía. Anclada abajo, respira desde el piso, que es como
+## respira alguien parado.
+func _anclar_a_los_pies() -> void:
+	if sprite.texture:
+		sprite.offset.y = -sprite.texture.get_height() * 0.5
 
 func _process(delta: float) -> void:
 	_idle_phase += delta * BREATH_SPEED
@@ -98,6 +115,7 @@ func set_emotion(emotion: String) -> void:
 	var tween := create_tween()
 	tween.tween_property(sprite, "modulate", tint, 0.2)
 	_play_emphasis(emotion)
+	_anclar_a_los_pies()
 
 ## Se avisa cuando está tipeando texto, para sumarle el cabeceo.
 func set_talking(talking: bool) -> void:

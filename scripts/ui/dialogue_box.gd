@@ -32,9 +32,7 @@ const BUBBLE_PAD_Y := 40.0
 ## texto: con poco aire, la última línea le quedaba encima.
 const BUBBLE_SLACK := 42.0
 
-## Bandas tipo cómic. Tapan el corte de abajo de Sofía (el retrato es un
-## busto: termina en el pecho, y sin nada que lo cierre se ve flotando y
-## cortado) y encuadran la escena mientras habla.
+## Cuánto tarda en entrar el marco de la viñeta.
 const BAND_FADE := 0.22
 
 @onready var portrait: SofiaPortrait = $SofiaPortrait
@@ -43,8 +41,8 @@ const BAND_FADE := 0.22
 @onready var name_label: Label = $Bubble/VBox/NameLabel
 @onready var text_label: Label = $Bubble/VBox/TextLabel
 @onready var continue_hint: Label = $Bubble/ContinueHint
-@onready var band_top: Panel = $BandTop
-@onready var band_bottom: Panel = $BandBottom
+@onready var rayos: TextureRect = $Rayos
+@onready var marco: Array[ColorRect] = [$MarcoArriba, $MarcoAbajo, $MarcoIzq, $MarcoDer]
 
 var _arrow_phase: float = 0.0
 var _arrow_base_y: float = 0.0
@@ -61,17 +59,30 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_arrow_base_y = continue_hint.position.y
 
-## Las bandas entran deslizándose desde afuera. Aparecer de golpe se lee
-## como un glitch; entrar en un cuarto de segundo se lee como que la
-## escena se acomoda para la charla.
+## La viñeta entra: el marco aparece y los rayos giran un poco al entrar.
+##
+## Antes acá había dos bandas negras que tapaban a Sofía por arriba y por
+## abajo, porque el retrato era un busto y sin taparlo se veía cortado.
+## Ahora la figura va ENTERA, así que no hay nada que esconder: el marco
+## es marco de viñeta, no un parche.
 func _entrar_bandas() -> void:
-	for banda: Panel in [band_top, band_bottom]:
-		var destino := banda.position.y
-		var desde := -banda.size.y if banda == band_top else destino + banda.size.y
-		banda.position.y = desde
-		var tween := create_tween()
-		tween.tween_property(banda, "position:y", destino, BAND_FADE) \
-			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	for borde: ColorRect in marco:
+		borde.modulate.a = 0.0
+		var t := create_tween()
+		t.tween_property(borde, "modulate:a", 1.0, BAND_FADE)
+	# Los rayos entran girando un poco y creciendo: es el golpe de viñeta
+	# que hace que la charla se sienta un momento y no una pausa.
+	var desde := rayos.scale
+	rayos.modulate.a = 0.0
+	rayos.pivot_offset = rayos.size * 0.5
+	rayos.scale = desde * 0.86
+	rayos.rotation = -0.08
+	var tr := create_tween().set_parallel(true)
+	tr.tween_property(rayos, "modulate:a", 0.5, BAND_FADE * 1.4)
+	tr.tween_property(rayos, "scale", desde, BAND_FADE * 1.8) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tr.tween_property(rayos, "rotation", 0.0, BAND_FADE * 1.8) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 func show_dialogue(lines: Array) -> void:
 	_lines = lines
