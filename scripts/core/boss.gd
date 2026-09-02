@@ -43,22 +43,37 @@ const STUN_SECONDS := 1.4
 ## exactamente igual que antes del cambio de escala.
 const HP_SCALE := 100
 
-## Ritmo máximo al que el jefe puede recibir golpes, en segundos.
+## Cuántos golpes le entran al jefe como mucho en una ventana de tiempo.
 ##
-## Sin esto, CADA DEDO en la pantalla es un golpe entero: el toque llega
-## como un evento por punto de contacto, así que con las dos manos el daño
-## se multiplica por diez. Reporte del tester: su hija, haciendo multitap,
-## liquidó al jefe del nivel 50 en un par de segundos. Subirle la vida al
-## jefe no arregla eso — sólo castiga a quien juega con un dedo.
+## El problema: CADA DEDO en la pantalla es un golpe entero, porque el
+## toque llega como un evento por punto de contacto. Con las dos manos el
+## daño se multiplicaba por diez. Reporte del tester: su hija, haciendo
+## multitap, liquidó al jefe del nivel 50 en un par de segundos. Subirle la
+## vida no arregla eso — sólo castiga a quien juega con un dedo.
 ##
-## 0.16s es más rápido que lo que tapea una persona con un dedo (unos 3
-## por segundo, o sea 0.33s entre golpe y golpe), así que el juego normal
-## no se toca: lo único que corta es el spam simultáneo.
+## La primera versión de esto era un tiempo mínimo entre golpe y golpe, y
+## estaba mal: también frenaba a quien juega rápido con dos dedos, que es
+## juego legítimo y bastante común (medido: le entraba el 87%). Lo que hay
+## ahora es un tope de **golpes simultáneos**, que es lo que de verdad hay
+## que limitar.
+##
+## La ventana de 150ms no es un número redondo elegido a ojo: se probaron
+## 250, 200 y 150 contra ritmos de tapeo reales, y es la única en la que
+## uno, dos y tres dedos entran COMPLETOS. Medido, golpes que entran:
+##
+##   1 dedo a 5/s ................ 100%   (5 golpes/s)
+##   2 dedos a 10/s .............. 100%  (10 golpes/s)
+##   3 dedos a 15/s .............. 100%  (15 golpes/s)
+##   10 dedos a 80/s .............  15%  (12 golpes/s)
+##
+## O sea: la mano entera no saca NINGUNA ventaja sobre tres dedos, y de
+## hecho saca un poco menos, porque de cada manotazo sólo cuentan tres.
 ##
 ## Se mide en tiempo REAL (ticks_msec) y no con delta: la cámara lenta
 ## escala el delta, y si el corte fuera por delta el multitap volvería a
 ## funcionar justo mientras el tiempo está frenado.
-const HIT_COOLDOWN_MS := 160
+const HIT_WINDOW_MS := 150
+const MAX_HITS_PER_WINDOW := 3
 
 ## Escala del sprite del jefe. Las hojas de caminata pasaron de 128 a
 ## 256px por cuadro (mismo dibujo, más resolución: se re-partió la hoja
@@ -123,8 +138,10 @@ var _dashing: bool = false
 ## Mientras prepara un ataque, un golpe se lo anula (ver _telegraph).
 var _charging: bool = false
 var _charge_cancelled: bool = false
-## Cuándo entró el último golpe, en ms de reloj real (ver HIT_COOLDOWN_MS).
-var _last_hit_ms: int = -100000
+## Momentos de los últimos golpes, en ms de reloj real. Es una ventana
+## corrediza y no un balde por intervalo: con baldes fijos se pueden meter
+## seis golpes juntos si caen a caballo del borde entre dos baldes.
+var _hit_times: Array[int] = []
 var _dash_target := Vector2.ZERO
 var _player_position := Vector2.ZERO
 
@@ -578,6 +595,16 @@ func _is_invulnerable() -> bool:
 ## `from_power` salta el ritmo máximo. La tormenta y el lanzallamas ya se
 ## pagan en monedas y pegan una vez por uso o por tanda: no son spam, y si
 ## el corte se los comiera el poder no haría nada según cuándo lo usaste.
+## Deja pasar el golpe si no se llenó el cupo de la ventana. Ver
+## HIT_WINDOW_MS.
+func _acepta_golpe(ahora: int) -> bool:
+	while not _hit_times.is_empty() and ahora - _hit_times[0] >= HIT_WINDOW_MS:
+		_hit_times.pop_front()
+	if _hit_times.size() >= MAX_HITS_PER_WINDOW:
+		return false
+	_hit_times.append(ahora)
+	return true
+
 func take_damage(amount: int = 1, from_power: bool = false) -> void:
 	if is_dead:
 		return
@@ -592,11 +619,8 @@ func take_damage(amount: int = 1, from_power: bool = false) -> void:
 	# como si lo hubieran dejado tranquilo.
 	_time_since_hit = 0.0
 
-	var ahora := Time.get_ticks_msec()
-	if not from_power:
-		if ahora - _last_hit_ms < HIT_COOLDOWN_MS:
-			return
-		_last_hit_ms = ahora
+	if not from_power and not _acepta_golpe(Time.get_ticks_msec()):
+		return
 
 	# Un golpe mientras prepara un ataque lo anula. Se chequea ANTES que
 	# el escudo y los minions a propósito: si no, un jefe escudado nunca

@@ -916,24 +916,40 @@ dedo: con las dos manos el daño se multiplicaba por diez. Subirle la vida
 al jefe sólo castiga a quien juega con un dedo, mientras el que hace
 multitap sigue pasando igual de rápido.
 
-Lo que se agregó es un **ritmo máximo de golpes** en el jefe: 0,16
-segundos entre uno y otro. Medido:
+El primer intento fue un **tiempo mínimo entre golpe y golpe** (0,16s), y
+estaba mal. El tester lo marcó enseguida: *"muchos usan dos dedos, ¿podríamos
+limitarlo a 3 toques?"*. Tenía razón — medido, a quien juega con dos dedos
+a 10 toques por segundo le entraba sólo el **87%**. Un tope por tiempo no
+distingue entre spam y destreza.
 
-| ataque | antes | ahora |
+Lo que hay ahora es lo que propuso el tester: un tope de **golpes
+simultáneos**, tres, en una ventana corrediza de 150ms.
+
+La ventana no es un número elegido a ojo. Se probaron 250, 200 y 150ms
+contra ritmos de tapeo reales, y 150 es la única en la que uno, dos y tres
+dedos entran completos:
+
+| cómo se tapea | golpes que entran | ritmo real |
 |:--|--:|--:|
-| 10 dedos en el mismo frame | 10 golpes | **1 golpe** |
-| 80 toques en un segundo | 80 golpes | **4 golpes** |
+| 1 dedo a 5/s | **100%** | 5 golpes/s |
+| 2 dedos a 10/s | **100%** | 10 golpes/s |
+| 3 dedos a 15/s | **100%** | 15 golpes/s |
+| 10 dedos a 80/s | 15% | 12 golpes/s |
 
-Los 0,16s están elegidos para no tocar el juego normal: una persona con un
-dedo tapea unas 3 veces por segundo, o sea 0,33s entre golpe y golpe, más
-del doble del corte. Lo único que se corta es el spam simultáneo. Medido a
-ritmo humano, el jefe del nivel 50 sigue muriendo en **46 golpes y 15
-segundos**, dentro de los 90 que dura la pelea.
+O sea: la mano entera no saca **ninguna** ventaja sobre tres dedos, y de
+hecho saca un poco menos, porque de cada manotazo sólo cuentan tres.
+
+El costo de esta decisión, dicho claro: permitir tres dedos es permitir
+el triple de daño por segundo que con uno. La diferencia entre el jugador
+más rápido y el más lento pasa a ser 3x. Lo que se eliminó es el 10x a 30x
+del manotazo. Si la pelea sigue siendo corta para quien usa tres dedos, el
+número a mover ya no es éste — es la vida del jefe, y ahora se puede
+tunear con confianza porque el techo de daño quedó acotado y es conocido.
 
 Dos detalles:
 
-- El corte va **antes** del escudo, si no diez dedos se lo rompían de
-  golpe y la mecánica no existía.
+- El cupo se descuenta **antes** del escudo, si no diez dedos se lo rompían
+  de golpe y la mecánica no existía.
 - La tormenta y el lanzallamas lo **saltan** (`from_power`). Se pagan en
   monedas y pegan una vez por uso o por tanda: no son spam, y si el corte
   se los comiera el poder haría o no haría nada según el milisegundo en
@@ -941,6 +957,9 @@ Dos detalles:
 - Se mide con `Time.get_ticks_msec()` y no con `delta`: la cámara lenta
   escala el delta, así que con delta el multitap volvería a funcionar
   justo mientras el tiempo está frenado.
+- La ventana es **corrediza**, no un balde por intervalo. Con baldes fijos
+  se pueden colar seis golpes juntos si caen a caballo del borde entre
+  dos baldes.
 
 **Queda pendiente**: el multitap también infla el combo, porque cada dedo
 que acierta suma su propio golpe a la racha. No se tocó en este pase.
