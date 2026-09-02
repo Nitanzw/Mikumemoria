@@ -17,12 +17,34 @@ const CHARS_PER_SECOND := 38.0
 const BUBBLE_POP := 0.94
 const ARROW_BOB := 5.0
 
+## El globo crece HACIA ARRIBA: el pico se queda abajo, apuntando a
+## Sofía, así que lo que se mueve es el borde de arriba.
+const BUBBLE_BOTTOM := 466.0
+const BUBBLE_MIN_HEIGHT := 250.0
+## No subir más allá de acá, para no comerse la barra del HUD.
+const BUBBLE_TOP_LIMIT := 100.0
+## Márgenes del VBox adentro del globo (ver la escena) más aire para que
+## la última línea no quede debajo de la flechita de continuar.
+const BUBBLE_PAD_X := 52.0
+const BUBBLE_PAD_Y := 40.0
+## Aire de más abajo del texto. Tiene que alcanzar para la flechita de
+## continuar, que va anclada abajo a la derecha y se superpone al área de
+## texto: con poco aire, la última línea le quedaba encima.
+const BUBBLE_SLACK := 42.0
+
+## Bandas tipo cómic. Tapan el corte de abajo de Sofía (el retrato es un
+## busto: termina en el pecho, y sin nada que lo cierre se ve flotando y
+## cortado) y encuadran la escena mientras habla.
+const BAND_FADE := 0.22
+
 @onready var portrait: SofiaPortrait = $SofiaPortrait
 @onready var bubble: Panel = $Bubble
 @onready var tail: Panel = $Tail
 @onready var name_label: Label = $Bubble/VBox/NameLabel
 @onready var text_label: Label = $Bubble/VBox/TextLabel
 @onready var continue_hint: Label = $Bubble/ContinueHint
+@onready var band_top: Panel = $BandTop
+@onready var band_bottom: Panel = $BandBottom
 
 var _arrow_phase: float = 0.0
 var _arrow_base_y: float = 0.0
@@ -35,8 +57,21 @@ var _char_progress: float = 0.0
 
 func _ready() -> void:
 	continue_hint.visible = false
+	_entrar_bandas()
 	await get_tree().process_frame
 	_arrow_base_y = continue_hint.position.y
+
+## Las bandas entran deslizándose desde afuera. Aparecer de golpe se lee
+## como un glitch; entrar en un cuarto de segundo se lee como que la
+## escena se acomoda para la charla.
+func _entrar_bandas() -> void:
+	for banda: Panel in [band_top, band_bottom]:
+		var destino := banda.position.y
+		var desde := -banda.size.y if banda == band_top else destino + banda.size.y
+		banda.position.y = desde
+		var tween := create_tween()
+		tween.tween_property(banda, "position:y", destino, BAND_FADE) \
+			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 func show_dialogue(lines: Array) -> void:
 	_lines = lines
@@ -96,7 +131,39 @@ func _advance() -> void:
 	portrait.set_talking(true)
 	continue_hint.visible = false
 	text_label.text = ""
+	_ajustar_globo()
 	_pop_bubble()
+
+## Estira el globo para que entre TODO el texto de la línea.
+##
+## Era un panel de alto fijo (250px) y el Label adentro simplemente
+## recortaba lo que sobraba: con una línea larga, o con el tamaño de
+## texto en "grande", la última frase quedaba cortada por la mitad y no
+## había forma de leerla.
+##
+## Se mide con la fuente y el tamaño EFECTIVOS del Label, no con los de
+## la escena: SettingsManager reescala los Label con un override de tema,
+## así que el tamaño real depende del ajuste que eligió el jugador.
+func _ajustar_globo() -> void:
+	var ancho: float = get_viewport().get_visible_rect().size.x - 44.0 - BUBBLE_PAD_X
+	var alto := BUBBLE_PAD_Y + BUBBLE_SLACK
+	for etiqueta: Label in [name_label, text_label]:
+		var fuente := etiqueta.get_theme_font("font")
+		var tam := etiqueta.get_theme_font_size("font_size")
+		if fuente == null:
+			continue
+		var texto: String = _full_text if etiqueta == text_label else etiqueta.text
+		alto += fuente.get_multiline_string_size(
+			texto, HORIZONTAL_ALIGNMENT_LEFT, ancho, tam).y
+	# La separación del VBox entre las dos etiquetas.
+	alto += 6.0
+
+	var arriba: float = maxf(BUBBLE_BOTTOM - maxf(alto, BUBBLE_MIN_HEIGHT), BUBBLE_TOP_LIMIT)
+	bubble.offset_top = arriba
+	bubble.offset_bottom = BUBBLE_BOTTOM
+	# El pivote del rebote va al centro del globo nuevo, si no el pop lo
+	# escala desde un punto que ya no le corresponde y se ve descentrado.
+	bubble.pivot_offset = Vector2(bubble.size.x * 0.5, (BUBBLE_BOTTOM - arriba) * 0.5)
 
 ## El globo entra con un rebote corto en cada línea. Sin esto el texto
 ## cambia solo y no se nota que arrancó una frase nueva.

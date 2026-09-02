@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/dialogue_box.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ui/sofia_portrait.tscn" id="2"]
@@ -22,6 +22,16 @@ content_margin_top = 20
 content_margin_right = 26
 content_margin_bottom = 20
 
+[sub_resource type="StyleBoxFlat" id="band_top"]
+bg_color = Color(0.055, 0.05, 0.045, 1)
+border_width_bottom = 4
+border_color = Color(0.91, 0.77, 0.45, 1)
+
+[sub_resource type="StyleBoxFlat" id="band_bottom"]
+bg_color = Color(0.055, 0.05, 0.045, 1)
+border_width_top = 4
+border_color = Color(0.91, 0.77, 0.45, 1)
+
 [sub_resource type="StyleBoxFlat" id="tail"]
 bg_color = Color(0.96, 0.92, 0.84, 1)
 border_width_left = 3
@@ -40,8 +50,25 @@ mouse_filter = 2
 color = Color(0.03, 0.05, 0.02, 0.28)
 
 [node name="SofiaPortrait" parent="." instance=ExtResource("2")]
-position = Vector2(372, 767)
+position = Vector2(372, 706)
 scale = Vector2(1.02, 1.02)
+
+[node name="BandTop" type="Panel" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 132.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("band_top")
+
+[node name="BandBottom" type="Panel" parent="."]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -150.0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("band_bottom")
 
 [node name="Tail" type="Panel" parent="."]
 anchors_preset = 0

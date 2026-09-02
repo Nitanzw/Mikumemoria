@@ -863,6 +863,50 @@ quince al final y que igual te felicitara con "no erraste ni un golpe".
 Ahora ese cartel exige `misses == 0` de verdad. `Player` ya contaba bien
 los fallos — el dato existía y nadie lo miraba.
 
+## El diálogo, encuadrado como viñeta
+
+Reporte del tester, con captura: *"Sofía está cortada y flotando"*. Y
+tenía razón por partida doble — el retrato es un busto que termina en el
+pecho, y abajo se lo comía el borde de la pantalla y el panel de vidas del
+jefe. Quedaba una figura sin pies apoyada en la nada.
+
+Su propia idea fue la solución: **dos bandas tipo cómic**, arriba y abajo,
+que aparecen sólo mientras habla. La de abajo tapa justo donde el busto se
+termina, así que deja de haber corte: hay un encuadre. La de arriba cierra
+la composición y de paso saca de escena el HUD, que durante un diálogo no
+hace falta.
+
+Detalles que costaron una pasada cada uno:
+
+- **Van opacas.** La primera versión tenía alfa 0,93 y se veía el HUD y el
+  panel del jefe por atrás: no leía como un encuadre, leía como una
+  mancha.
+- **El retrato subió 61px.** Con la banda donde estaba, el filo caía
+  exactamente sobre el mentón de Sofía, que es lo más parecido a un corte
+  que hay. Subiéndola se le ve el cuello y el nacimiento de la capucha, y
+  la banda cierra a la altura de los hombros.
+- Entran deslizándose en 0,22s. Aparecer de golpe se lee como un glitch.
+
+### Y el globo no crecía con el texto
+
+En la misma captura se veía la última línea cortada por la mitad. El globo
+era un panel de alto **fijo** (250px) y el Label adentro simplemente
+recortaba lo que sobraba.
+
+Con el tamaño de texto en "normal" casi no se notaba; con "enorme" —que es
+justamente la opción para quien no ve bien— la frase más larga del juego
+perdía dos renglones. La opción de accesibilidad rompía la accesibilidad.
+
+Ahora el globo se mide con la fuente y el tamaño **efectivos** del Label,
+no con los de la escena: `SettingsManager` reescala los Label con un
+override de tema, así que el tamaño real depende del ajuste del jugador.
+Crece **hacia arriba**, porque el pico se queda abajo apuntando a Sofía.
+
+Verificado con la frase más larga de las 61 del juego, en "enorme": entra
+completa. Ahí el globo llega a 362px y su borde superior queda en 104,
+o sea pisando un poco la banda de arriba — y queda bien, se lee como una
+viñeta cuyo globo rompe el marco.
+
 ## Ajustes
 
 Nueva pantalla, entrando desde el menú principal.
