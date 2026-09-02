@@ -48,9 +48,6 @@ const GROOVE_INSET_X := 13.0
 const GROOVE_INSET_Y := 4.0
 const COIN_ICON := "res://assets/sprites/ui/coin.png"
 
-var _grid_view: bool = true
-var _view_button: Button
-
 func _ready() -> void:
 	header.add_theme_stylebox_override("panel", UITheme.scrim_style(0.55))
 	UITheme.style_title(title, 30)
@@ -59,26 +56,8 @@ func _ready() -> void:
 	back_button.text = "Volver al nivel" if GameManager.return_to_game_after_shop else "Volver"
 	back_button.pressed.connect(_on_back_pressed)
 
-	_grid_view = bool(GameManager.shop_grid_view)
-	_build_view_toggle()
-
 	GameManager.coins_changed.connect(func(_v): _refresh())
 	_refresh()
-
-## Botón para alternar vista. Va en el encabezado, arriba de todo, que es
-## donde se lo busca.
-func _build_view_toggle() -> void:
-	_view_button = Button.new()
-	_view_button.custom_minimum_size = Vector2(0, 46)
-	_view_button.add_theme_font_size_override("font_size", 18)
-	UITheme.style_wood_button(_view_button)
-	_view_button.pressed.connect(func():
-		_grid_view = not _grid_view
-		GameManager.set_shop_grid_view(_grid_view)
-		_refresh()
-	)
-	$Margin/VBox.add_child(_view_button)
-	$Margin/VBox.move_child(_view_button, 1)
 
 func _refresh() -> void:
 	for child in coins_holder.get_children():
@@ -88,35 +67,15 @@ func _refresh() -> void:
 	for child in list.get_children():
 		child.queue_free()
 
-	if _view_button:
-		_view_button.text = "Ver en lista" if _grid_view else "Ver en cuadrícula"
+	_build_grid_view()
 
-	if _grid_view:
-		_build_grid_view()
-	else:
-		_build_list_view()
-
-## Vista detallada: una tarjeta por artículo, con su descripción.
-func _build_list_view() -> void:
-	list.add_child(_build_section("Armas"))
-	for weapon_name in WeaponSystem.get_all_weapon_names():
-		list.add_child(_build_row(weapon_name))
-
-	# Objetos y poderes van separados: los pasivos hacen efecto solos, los
-	# poderes son un botón en la pantalla de juego y además cobran monedas
-	# cada vez que los usás. Mezclados no se entendía la diferencia.
-	list.add_child(_build_section("Objetos"))
-	for item_id in ItemSystem.get_all_item_ids():
-		if not ItemSystem.get_item(item_id).get("active", false):
-			list.add_child(_build_item_row(item_id))
-
-	list.add_child(_build_section("Poderes"))
-	for item_id in ItemSystem.get_all_item_ids():
-		if ItemSystem.get_item(item_id).get("active", false):
-			list.add_child(_build_item_row(item_id))
-
-## Vista cuadrícula: solo íconos, con su precio abajo. La descripción se
-## ve tocando el artículo.
+## La tienda va SIEMPRE en cuadrícula. Había un botón para alternar con
+## una vista de lista, con una tarjeta grande por artículo: ocupaba mucho
+## más alto, obligaba a scrollear un montón para ver el catálogo y no
+## dejaba comparar dos armas de un vistazo. La ficha con la descripción no
+## se perdió, se abre tocando el artículo — que es donde se la busca.
+##
+## Cuadrícula: sólo íconos, con la barra de nivel y el precio abajo.
 func _build_grid_view() -> void:
 	list.add_child(_build_section("Armas"))
 	list.add_child(_build_grid(WeaponSystem.get_all_weapon_names(), true))

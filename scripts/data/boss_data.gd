@@ -11,8 +11,19 @@ extends RefCounted
 
 const BOSS_COUNT := 10
 
-## Cuánto sube la vida y la velocidad por cada vuelta completa al roster.
-const CYCLE_HEALTH_MULT := 1.6
+## Cuánto se acelera el jefe por cada vuelta completa al roster.
+##
+## La vida YA NO sube por vuelta, y ese cambio arregla un juego roto. Era
+## `vida *= 1.6 ** vuelta`, o sea exponencial, mientras el daño del arma
+## crece lineal y topea en 107. Una exponencial contra una lineal termina
+## siempre igual: en el nivel 400 el jefe pedía 1.497 golpes y en el 1000
+## pedía 976.208, en peleas de 90 segundos. Estaba invicto desde bastante
+## antes del 400.
+##
+## No hace falta reemplazarlo por nada: el escalón de dificultad
+## (TIER_HEALTH_STEP) ya sube con el nivel, así que el mismo jefe visto de
+## nuevo más adelante llega más duro igual. La vuelta le cambia el nombre
+## y la velocidad, que es lo que la hace notar.
 const CYCLE_SPEED_MULT := 1.12
 
 ## Cuánta vida extra por escalón de dificultad del nivel (cada 10 niveles).
@@ -24,6 +35,17 @@ const CYCLE_SPEED_MULT := 1.12
 const WEAPON_REBALANCE := 2.6
 
 const TIER_HEALTH_STEP := 0.18
+
+## Los jefes aguantan esto de más. Reporte del tester: mató al del nivel
+## 40 en cuatro golpes, en una pelea que dura 90 segundos.
+##
+## Entra de a poco, no de golpe: al tier 0 vale 1 y recién al tier 3 llega
+## a 3. El primer jefe (nivel 5) lo pelea alguien que todavía hace 1 o 2
+## de daño, así que triplicarlo ahí lo volvería un muro de 150 golpes en
+## la primera pelea del juego. De ahí en adelante, cuando el arma ya
+## empezó a subir, el x3 es lo que pidió el tester.
+const BOSS_TOUGHNESS_MAX := 3.0
+const BOSS_TOUGHNESS_FULL_TIER := 3.0
 
 ## Daño que hace el jefe a Sofía, en puntos de vida (ella arranca con
 ## 1000). 200 son cinco golpes desde vida llena, que es exactamente lo
@@ -224,6 +246,13 @@ const SUMMON_POOL := ["hormiga_obrera", "cucaracha_electrica", "mosca_pesada", "
 ## 7x entre el arma, el árbol y los guantes: la Reina Primordial se caía
 ## en 10 golpes con un equipo completo. Con el escalón, el jefe acompaña
 ## la progresión y la pelea sigue durando lo mismo.
+## Cuánto aguanta de más el jefe en este escalón. Rampa de 1 a
+## BOSS_TOUGHNESS_MAX para no convertir la primera pelea del juego en un
+## muro (ver BOSS_TOUGHNESS_MAX).
+static func get_toughness(tier: int) -> float:
+	var avance: float = clampf(float(maxi(tier, 0)) / BOSS_TOUGHNESS_FULL_TIER, 0.0, 1.0)
+	return lerpf(1.0, BOSS_TOUGHNESS_MAX, avance)
+
 static func get_boss_config(boss_id: int, cycle: int = 0, tier: int = 0) -> Dictionary:
 	var base: Dictionary = BOSSES.get(boss_id, BOSSES[1])
 	var config := base.duplicate(true)
@@ -245,12 +274,12 @@ static func get_boss_config(boss_id: int, cycle: int = 0, tier: int = 0) -> Dict
 	var health := float(base["health"])
 	var speed := float(base["speed"])
 	if cycle > 0:
-		health *= pow(CYCLE_HEALTH_MULT, cycle)
 		speed *= pow(CYCLE_SPEED_MULT, cycle)
 		config["name"] = "%s +%d" % [base["name"], cycle]
 
 	health *= 1.0 + float(maxi(tier, 0)) * TIER_HEALTH_STEP
 	health *= WEAPON_REBALANCE
+	health *= get_toughness(tier)
 	config["health"] = int(round(health))
 	config["speed"] = speed
 

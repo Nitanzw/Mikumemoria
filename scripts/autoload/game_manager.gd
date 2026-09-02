@@ -34,7 +34,6 @@ var items: Dictionary = {}
 var return_to_game_after_shop: bool = false
 ## Vista elegida en la tienda: true = cuadrícula, false = lista. Se guarda
 ## para no tener que volver a cambiarla cada vez que se entra.
-var shop_grid_view: bool = true
 
 # Progreso de revelación de cada incógnito (índice -> puntos acumulados).
 # Persiste entre niveles porque un mismo incógnito aparece durante los
@@ -100,7 +99,6 @@ func load_game_data() -> void:
 		equipped_weapon = data.get("equipped_weapon", "zapato_viejo")
 		skill_tree = data.get("skill_tree", {})
 		items = data.get("items", {})
-		shop_grid_view = bool(data.get("shop_grid_view", true))
 		mystery_progress = data.get("mystery_progress", {})
 		story_seen = bool(data.get("story_seen", false))
 		seen_chapter_intros = data.get("seen_chapter_intros", [])
@@ -250,10 +248,6 @@ func mark_difficulty_warning_seen(tier: int) -> void:
 		seen_difficulty_tiers.append(tier)
 		SaveManager.save_game(_build_save_dict())
 
-func set_shop_grid_view(grid: bool) -> void:
-	shop_grid_view = grid
-	SaveManager.save_game(_build_save_dict())
-
 ## Cuál es el próximo mini tutorial que corresponde mostrar, según el
 ## estado real del jugador. Devuelve "" si no toca ninguno.
 ##
@@ -314,7 +308,6 @@ func _build_save_dict() -> Dictionary:
 		"equipped_weapon": equipped_weapon,
 		"skill_tree": skill_tree,
 		"items": items,
-		"shop_grid_view": shop_grid_view,
 		"mystery_progress": mystery_progress,
 		"story_seen": story_seen,
 		"seen_chapter_intros": seen_chapter_intros,

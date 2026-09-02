@@ -863,6 +863,60 @@ quince al final y que igual te felicitara con "no erraste ni un golpe".
 Ahora ese cartel exige `misses == 0` de verdad. `Player` ya contaba bien
 los fallos — el dato existía y nadie lo miraba.
 
+## Los jefes: el reporte, y algo peor que el reporte
+
+Reporte del tester: *"maté al jefe del nivel 40 en cuatro golpes, es
+súper mega hiper fácil"*, en una pelea que dura 90 segundos. Pidió
+triplicarles la vida.
+
+Al ir a tocar el número apareció algo bastante peor. La vida del jefe
+subía **exponencialmente** por cada vuelta al roster
+(`vida *= 1.6 ** vuelta`) mientras el daño del arma crece **lineal** y
+topea en 107. Una exponencial contra una lineal termina siempre igual:
+
+| nivel | golpes para matar al jefe |
+|------:|--------------------------:|
+| 40 | 6 |
+| 100 | 31 |
+| 200 | 129 |
+| 400 | 1.497 |
+| 1000 | **976.208** |
+
+O sea: los jefes eran triviales al principio e **invictos** bastante antes
+del nivel 400. El juego se anunciaba de 1000 niveles y estaba matemática-
+mente terminado alrededor del 300.
+
+El multiplicador por vuelta se fue. No hizo falta reemplazarlo por nada,
+porque el escalón de dificultad (`TIER_HEALTH_STEP`) ya sube con el nivel:
+el mismo jefe visto de nuevo más adelante llega más duro igual. La vuelta
+ahora le cambia el nombre y la velocidad, que es lo que la hace notar.
+
+Y encima va el x3 que pidió el tester, pero **entrando de a poco**: al
+escalón 0 vale 1 y recién al 3 llega a 3. El primer jefe (nivel 5) lo
+pelea alguien que todavía hace 1 o 2 de daño; triplicarlo ahí convertiría
+la primera pelea del juego en un muro de 150 golpes.
+
+Medido por el camino real (`Boss.take_damage()`, con `HP_SCALE` incluido),
+no por la fórmula sola:
+
+| nivel | antes | ahora |
+|------:|------:|------:|
+| 5 | 3 | 3 (sin cambio, a propósito) |
+| 40 | 6 | **19** |
+| 1000 | 976.208 | 459 |
+
+## La tienda, sólo en cuadrícula
+
+Había un botón para alternar entre cuadrícula y una vista de lista con una
+tarjeta grande por artículo. La lista se fue: ocupaba mucho más alto,
+obligaba a scrollear un montón para ver el catálogo y no dejaba comparar
+dos armas de un vistazo.
+
+La ficha con la descripción no se perdió — se abre tocando el artículo,
+que es donde se la busca. Con eso se fueron también el estado
+`shop_grid_view` del guardado y su setter: sin dos vistas no hay
+preferencia que recordar.
+
 ## El diálogo, encuadrado como viñeta
 
 Reporte del tester, con captura: *"Sofía está cortada y flotando"*. Y
