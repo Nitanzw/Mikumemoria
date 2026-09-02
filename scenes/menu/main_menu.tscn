@@ -51,10 +51,10 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -166.0
-offset_top = -250.0
-offset_right = -10.0
-offset_bottom = 0.0
+offset_left = -195.0
+offset_top = -520.0
+offset_right = -4.0
+offset_bottom = -6.0
 texture = ExtResource("5")
 expand_mode = 1
 stretch_mode = 5
@@ -130,7 +130,9 @@ layout_mode = 2
 mouse_filter = 2
 
 [node name="Buttons" type="VBoxContainer" parent="Margin/VBox"]
+custom_minimum_size = Vector2(330, 0)
 layout_mode = 2
+size_flags_horizontal = 0
 theme_override_constants/separation = 12
 
 [node name="PlayButton" type="Button" parent="Margin/VBox/Buttons"]

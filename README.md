@@ -646,8 +646,7 @@ búsqueda se resuelve una sola vez por nombre y queda cacheada.
 ## Sofía regenerada: las 6 emociones en UNA sola imagen
 
 El problema de resolución se resolvió regenerando, con permiso explícito.
-La parte difícil no era la resolución sino la **consistencia**: la API es
-texto a imagen y no acepta una imagen de referencia, así que seis
+La parte difícil no era la resolución sino la **consistencia**: seis
 generaciones sueltas devuelven seis caras distintas.
 
 La solución es la misma que mantiene idéntico al insecto entre los cuadros
@@ -659,7 +658,7 @@ que cualquier hoja futura la reuse textual.
 La hoja volvió en 1264x848 (más de los 1024 habituales), así que cada
 celda quedó en ~421px. Resultado tras recortar: **364x410 por emoción**,
 contra los 200x320 de antes con la figura ocupando ~200. Casi el doble de
-píxeles reales, y las seis alineadas dentro de un píxel o dos.
+píxeles reales.
 
 ### Tres cosas del recorte
 
@@ -694,6 +693,78 @@ hueco pensado para un busto de 200x320: con la cabeza detrás de los
 botones. Se recortó a la misma proporción del hueco (0.624). El menú tiene
 cinco botones y poco aire, así que cualquier figura ahí queda parcialmente
 tapada — eso ya pasaba antes.
+
+## La cara nueva, y la referencia visual
+
+El párrafo de arriba decía que la API es texto a imagen y no acepta una
+referencia. **Es falso**: el endpoint de imágenes es solo texto, pero el
+de *chat* acepta imágenes de entrada, y el mismo modelo redibuja a partir
+de una. Se comprobó mandándole un retrato viejo y pidiendo cuerpo entero:
+volvió la misma cara.
+
+Eso cambia cómo se mantiene la consistencia. Ahora hay dos mecanismos y se
+suman:
+
+- **La referencia** (`tools/sofia_reference.png`, vía `call_with_reference`)
+  fija QUIÉN es. Antes el retrato del diálogo y la Sofía del menú salían
+  de generaciones distintas con el mismo texto, y el texto describe un
+  diseño pero no fija una cara: daban dos personas parecidas. Con la
+  referencia son la misma.
+- **La hoja única** sigue fijando que las seis emociones compartan
+  encuadre y tamaño. La referencia sola no alcanza para eso, porque no
+  puede meter un plano entero y un primer plano en la misma imagen.
+
+Para elegir la cara se generó primero una hoja de seis candidatas con la
+misma ropa, el mismo pelo y el mismo encuadre, variando **sólo la cara**:
+en la misma imagen la comparación es entre caras y no entre estilos de
+dibujo. La elegida se guarda como referencia; cambiarla es cambiar ese
+archivo y volver a correr el pipeline.
+
+### Las seis emociones NO estaban alineadas
+
+Recortar con un bbox común deja las seis del mismo **tamaño**, pero no en
+la misma **posición**: el modelo dibuja cada retrato un poco corrido
+dentro de su celda. Las que estaban en el juego llegaban a 18px de
+diferencia horizontal y 12 vertical, y como el `Sprite2D` centra la
+textura, eso era un salto visible cada vez que Sofía cambiaba de ánimo.
+
+Ahora se registran contra la neutral buscando el desplazamiento que mejor
+superpone las siluetas. Dos detalles que importan:
+
+- La métrica va sobre la **máscara de opacidad**, no sobre el color: lo
+  que tiene que coincidir es la silueta (pelo, hombros, auriculares), y el
+  color cambia justamente donde cambia la expresión.
+- Se ignora el tercio de abajo de la cara. La boca abierta de "sorprendida"
+  y el ceño de "enojada" mueven la silueta ahí, y si entran en la cuenta
+  tiran el alineado para compensar algo que SÍ tiene que cambiar.
+
+Medido en pantalla, sobre tres emociones distintas del diálogo: el
+centroide se mueve menos de 1px horizontal y menos de 3 vertical, y parte
+de eso es la respiración, que es a propósito.
+
+### El halo verde del pelo, otra vez
+
+El despill de `chroma_key` baja el verde a `promedio(R,B)+12`. Sobre pelo
+oscuro (R=60, B=40) eso queda en 62 y **sigue siendo verde**: se ve como
+un halo alrededor del rodete. Además el modelo dibuja un contorno oscuro
+alrededor de la figura, y ese contorno, hecho contra el fondo croma, sale
+verde oscuro — no es antialiasing, es línea.
+
+La corrección baja el verde al mayor de los otros dos canales, que deja el
+píxel neutro, en una banda de 12px desde el filo. Va como pasada propia de
+Sofía y **no** tocando `chroma_key.py`: esa función la usan los 100
+insectos y las armas, y cambiarle la fórmula obligaría a regenerar y
+revisar todo eso.
+
+### El menú, reacomodado
+
+Con la figura de cuerpo entero el problema de "queda tapada" dejó de ser
+aceptable: se veía una bota y nada más. Los botones pasaron a 330px de
+ancho alineados a la izquierda (`size_flags_horizontal = 0` en un
+`VBoxContainer` respeta el ancho mínimo y alinea, sin reestructurar la
+escena ni romper las rutas de nodo que usa `main_menu.gd`), y Sofía ocupa
+la franja derecha entera, de la cabeza a las botas. Los botones siguen
+midiendo 330px de ancho por 82 de alto, que como blanco táctil sobra.
 
 ## Ajustes
 

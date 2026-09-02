@@ -33,3 +33,4 @@ assets/sprites/_sheets_raw/
 
 # docs/ tiene .gdignore: Godot no la importa, así que no hay .import que versionar
 docs/capturas/*.import
+tools/*.import

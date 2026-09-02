@@ -103,14 +103,26 @@ GREEN_SCREEN_BG_INSTRUCTION = (
     "shadow, no gradient, no other objects, no floor"
 )
 
-## Sofía va en UNA sola generación con las seis emociones adentro. Generar
-## seis imágenes sueltas devuelve seis caras distintas: la API es texto a
-## imagen y no acepta una referencia, así que la única forma de que sea la
-## misma persona es que salgan todas del mismo dibujo. Es el mismo truco
-## que mantiene idéntico al bicho entre los cuadros de caminata.
+## Sofía va en UNA sola generación con las seis emociones adentro: seis
+## llamadas sueltas devuelven seis caras distintas. Es el mismo truco que
+## mantiene idéntico al bicho entre los cuadros de caminata.
+##
+## Además la hoja se pide CONTRA una imagen de referencia (ver
+## call_with_reference), que es lo que ata la cara a un diseño elegido y
+## no a lo que el modelo improvise esa vez. Los dos mecanismos se suman:
+## la referencia fija QUIÉN es, la hoja única fija que las seis celdas
+## salgan del mismo dibujo.
 SOFIA_DESIGN = (
-    "a young latina woman gardener about twenty years old, warm tan skin, light freckles across the nose, hazel-green eyes, thick dark brown wavy hair tied up in a loose messy bun with a few strands loose at the temples, wearing a mustard-yellow hoodie with the sleeves pushed up and olive-green denim overalls, white and orange over-ear headphones resting around her neck"
+    "a young latina woman gardener about twenty years old, heart-shaped face, warm tan skin, light freckles across the nose only, large bright brown eyes, a small upturned nose, thick dark brown wavy hair tied up in a loose messy bun with a few strands loose at the temples, wearing a mustard-yellow hoodie with the sleeves pushed up and olive-green denim overalls, white and orange over-ear headphones resting around her neck"
 )
+
+## La cara elegida, guardada como imagen. El texto de arriba describe el
+## diseño pero no lo fija: dos generaciones con el mismo texto dan dos
+## caras parecidas, no la misma. Pasarle ESTA imagen como referencia a
+## call_with_reference es lo que hace que el retrato del diálogo y la
+## Sofía del menú sean la misma persona aunque salgan de llamadas
+## distintas. Si algún día se cambia la cara, se cambia este archivo.
+SOFIA_REFERENCE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sofia_reference.png")
 
 SOFIA_SHEET_PROMPT = (
     "a 3x2 character expression sheet of 6 head-and-shoulders portraits in "
@@ -681,6 +693,57 @@ def _call_images_api(api_key: str, model: str, prompt: str, aspect_ratio: str | 
             print(f"    aspect_ratio rechazado ({body[:200]}), reintentando sin él...")
             return _call_images_api(api_key, model, prompt, aspect_ratio=None)
         raise RuntimeError(f"HTTP {exc.code} llamando a {IMAGES_ENDPOINT}: {body}") from exc
+
+
+## El endpoint de imágenes es solo texto. El de chat, en cambio, acepta
+## imágenes de entrada, y el mismo modelo redibuja a partir de una. Eso es
+## lo que permite fijar la cara de un personaje UNA vez y pedir después
+## todas las poses contra esa cara, en vez de depender de que todo salga
+## de una única generación (que funciona, pero obliga a que todo comparta
+## encuadre: no se puede meter un plano entero y un primer plano juntos).
+CHAT_ENDPOINT = f"{API_BASE}/chat/completions"
+
+
+def call_with_reference(api_key: str, model: str, prompt: str,
+                        reference_png: bytes, timeout: int = 240) -> tuple["Image.Image", float]:
+    """Genera una imagen usando otra como referencia visual.
+
+    Devuelve (imagen, costo). El modelo copia cara, ropa y estilo de la
+    referencia y aplica lo que pida el prompt; conviene que el prompt diga
+    explícitamente qué se mantiene igual, porque si solo se pide la pose
+    nueva a veces se toma licencias con la cara.
+    """
+    ref_b64 = base64.b64encode(reference_png).decode("ascii")
+    payload = {
+        "model": model,
+        "modalities": ["image", "text"],
+        "messages": [{"role": "user", "content": [
+            {"type": "text", "text": prompt},
+            {"type": "image_url", "image_url": {"url": "data:image/png;base64," + ref_b64}},
+        ]}],
+    }
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "User-Agent": USER_AGENT,
+    }
+    req = urllib.request.Request(
+        CHAT_ENDPOINT, data=json.dumps(payload).encode("utf-8"),
+        headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"HTTP {exc.code} llamando a {CHAT_ENDPOINT}: {detail}") from exc
+
+    message = body["choices"][0]["message"]
+    images = message.get("images") or []
+    if not images:
+        raise RuntimeError(f"la respuesta no trae imagen: {str(message.get('content'))[:300]}")
+    data_url = images[0]["image_url"]["url"]
+    img = Image.open(io.BytesIO(base64.b64decode(data_url.split(",", 1)[1])))
+    return img, float(body.get("usage", {}).get("cost", 0.0) or 0.0)
 
 
 def remove_chroma_key(img: "Image.Image") -> "Image.Image":
