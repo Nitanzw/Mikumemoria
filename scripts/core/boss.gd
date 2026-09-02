@@ -43,6 +43,23 @@ const STUN_SECONDS := 1.4
 ## exactamente igual que antes del cambio de escala.
 const HP_SCALE := 100
 
+## Ritmo máximo al que el jefe puede recibir golpes, en segundos.
+##
+## Sin esto, CADA DEDO en la pantalla es un golpe entero: el toque llega
+## como un evento por punto de contacto, así que con las dos manos el daño
+## se multiplica por diez. Reporte del tester: su hija, haciendo multitap,
+## liquidó al jefe del nivel 50 en un par de segundos. Subirle la vida al
+## jefe no arregla eso — sólo castiga a quien juega con un dedo.
+##
+## 0.16s es más rápido que lo que tapea una persona con un dedo (unos 3
+## por segundo, o sea 0.33s entre golpe y golpe), así que el juego normal
+## no se toca: lo único que corta es el spam simultáneo.
+##
+## Se mide en tiempo REAL (ticks_msec) y no con delta: la cámara lenta
+## escala el delta, y si el corte fuera por delta el multitap volvería a
+## funcionar justo mientras el tiempo está frenado.
+const HIT_COOLDOWN_MS := 160
+
 ## Escala del sprite del jefe. Las hojas de caminata pasaron de 128 a
 ## 256px por cuadro (mismo dibujo, más resolución: se re-partió la hoja
 ## cruda de 1024 que quedó cacheada), así que la escala baja a la mitad
@@ -106,6 +123,8 @@ var _dashing: bool = false
 ## Mientras prepara un ataque, un golpe se lo anula (ver _telegraph).
 var _charging: bool = false
 var _charge_cancelled: bool = false
+## Cuándo entró el último golpe, en ms de reloj real (ver HIT_COOLDOWN_MS).
+var _last_hit_ms: int = -100000
 var _dash_target := Vector2.ZERO
 var _player_position := Vector2.ZERO
 
@@ -556,7 +575,10 @@ func _heal() -> void:
 func _is_invulnerable() -> bool:
 	return is_burrowed or minions_alive > 0 or shield_active
 
-func take_damage(amount: int = 1) -> void:
+## `from_power` salta el ritmo máximo. La tormenta y el lanzallamas ya se
+## pagan en monedas y pegan una vez por uso o por tanda: no son spam, y si
+## el corte se los comiera el poder no haría nada según cuándo lo usaste.
+func take_damage(amount: int = 1, from_power: bool = false) -> void:
 	if is_dead:
 		return
 
@@ -565,7 +587,16 @@ func take_damage(amount: int = 1) -> void:
 		queue_free()
 		return
 
+	# Se resetea ANTES del corte por ritmo: el jugador está atacando, aunque
+	# este golpe puntual no cuente, así que el jefe no tiene por qué curarse
+	# como si lo hubieran dejado tranquilo.
 	_time_since_hit = 0.0
+
+	var ahora := Time.get_ticks_msec()
+	if not from_power:
+		if ahora - _last_hit_ms < HIT_COOLDOWN_MS:
+			return
+		_last_hit_ms = ahora
 
 	# Un golpe mientras prepara un ataque lo anula. Se chequea ANTES que
 	# el escudo y los minions a propósito: si no, un jefe escudado nunca

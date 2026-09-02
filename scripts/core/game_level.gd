@@ -495,7 +495,7 @@ func _use_storm(level: int) -> void:
 			node.take_damage(damage)
 			count += 1
 		elif node is Boss:
-			node.take_damage(damage)
+			node.take_damage(damage, true)
 	hud.announce("¡Tormenta! %d insectos alcanzados" % count)
 	AudioManager.play_sfx("unlock")
 
@@ -515,7 +515,7 @@ func _use_flames(level: int) -> void:
 			if node is Insect and not node.is_dead and node.global_position.distance_to(origin) <= radius:
 				node.take_damage(ItemSystem.FLAME_DAMAGE)
 			elif node is Boss and node.global_position.distance_to(origin) <= radius:
-				node.take_damage(ItemSystem.FLAME_DAMAGE)
+				node.take_damage(ItemSystem.FLAME_DAMAGE, true)
 		await get_tree().create_timer(ItemSystem.FLAME_TICK).timeout
 	_flames_active = false
 

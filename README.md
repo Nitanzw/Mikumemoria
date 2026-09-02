@@ -905,6 +905,46 @@ no por la fórmula sola:
 | 40 | 6 | **19** |
 | 1000 | 976.208 | 459 |
 
+### El multitap, que es la causa de verdad
+
+Segundo reporte, y el que explica todo: *"los niños hacen multitap, mi
+hija mató el nivel 50 en dos segundos"*.
+
+Eso **no se arregla con vida**. El toque llega a Godot como un evento por
+cada punto de contacto, así que `_unhandled_input` corría una vez por
+dedo: con las dos manos el daño se multiplicaba por diez. Subirle la vida
+al jefe sólo castiga a quien juega con un dedo, mientras el que hace
+multitap sigue pasando igual de rápido.
+
+Lo que se agregó es un **ritmo máximo de golpes** en el jefe: 0,16
+segundos entre uno y otro. Medido:
+
+| ataque | antes | ahora |
+|:--|--:|--:|
+| 10 dedos en el mismo frame | 10 golpes | **1 golpe** |
+| 80 toques en un segundo | 80 golpes | **4 golpes** |
+
+Los 0,16s están elegidos para no tocar el juego normal: una persona con un
+dedo tapea unas 3 veces por segundo, o sea 0,33s entre golpe y golpe, más
+del doble del corte. Lo único que se corta es el spam simultáneo. Medido a
+ritmo humano, el jefe del nivel 50 sigue muriendo en **46 golpes y 15
+segundos**, dentro de los 90 que dura la pelea.
+
+Dos detalles:
+
+- El corte va **antes** del escudo, si no diez dedos se lo rompían de
+  golpe y la mecánica no existía.
+- La tormenta y el lanzallamas lo **saltan** (`from_power`). Se pagan en
+  monedas y pegan una vez por uso o por tanda: no son spam, y si el corte
+  se los comiera el poder haría o no haría nada según el milisegundo en
+  que lo usaste.
+- Se mide con `Time.get_ticks_msec()` y no con `delta`: la cámara lenta
+  escala el delta, así que con delta el multitap volvería a funcionar
+  justo mientras el tiempo está frenado.
+
+**Queda pendiente**: el multitap también infla el combo, porque cada dedo
+que acierta suma su propio golpe a la racha. No se tocó en este pase.
+
 ## La tienda, sólo en cuadrícula
 
 Había un botón para alternar entre cuadrícula y una vista de lista con una
