@@ -113,7 +113,7 @@ GREEN_SCREEN_BG_INSTRUCTION = (
 ## la referencia fija QUIÉN es, la hoja única fija que las seis celdas
 ## salgan del mismo dibujo.
 SOFIA_DESIGN = (
-    "a young latina woman gardener about twenty years old, heart-shaped face, warm tan skin, light freckles across the nose only, large bright brown eyes, a small upturned nose, thick dark brown wavy hair tied up in a loose messy bun with a few strands loose at the temples, wearing a mustard-yellow hoodie with the sleeves pushed up and olive-green denim overalls, white and orange over-ear headphones resting around her neck"
+    "a young woman gardener about twenty years old, heart-shaped face, fair light skin, light freckles across the nose only, large bright brown eyes, a small upturned nose, thick dark brown wavy hair tied up in a loose messy bun with a few strands loose at the temples, wearing a mustard-yellow hoodie with the sleeves pushed up and olive-green denim overalls, white and orange over-ear headphones resting around her neck"
 )
 
 ## La cara elegida, guardada como imagen. El texto de arriba describe el

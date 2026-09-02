@@ -720,6 +720,26 @@ en la misma imagen la comparación es entre caras y no entre estilos de
 dibujo. La elegida se guarda como referencia; cambiarla es cambiar ese
 archivo y volver a correr el pipeline.
 
+Eso es exactamente lo que se hizo después para pasarla a piel clara: se le
+pidió al modelo la MISMA referencia con el tono de piel cambiado, y esa
+imagen nueva pasó a ser la referencia. Pedirla de cero habría devuelto
+otra persona y habría obligado a volver a elegir cara.
+
+### Dos trampas del recorte que aparecieron acá
+
+**Las islas sueltas.** Los retratos casi tocan el borde de su celda, así
+que el corte en tercios se lleva puesto un pedazo del hombro del vecino y
+queda una esquirla flotando al costado. Se etiquetan los grupos de píxeles
+opacos y se conserva sólo el más grande. En la hoja de piel clara salieron
+dos islas, de 275 y 68 px, contra una figura de ~85.000: se ven de una que
+no son parte del personaje.
+
+**La ventana de búsqueda del alineado.** Con el tope en 30px, dos
+emociones dieron un corrimiento de exactamente +30 — que es la pista de
+que el óptimo real está más allá y quedó recortado. Eran +36 y +40. Ahora
+el tope es 70 y el script **avisa** si el óptimo cae pegado al borde de la
+ventana, porque si no el alineado se rompe en silencio.
+
 ### Las seis emociones NO estaban alineadas
 
 Recortar con un bbox común deja las seis del mismo **tamaño**, pero no en
@@ -755,6 +775,16 @@ píxel neutro, en una banda de 12px desde el filo. Va como pasada propia de
 Sofía y **no** tocando `chroma_key.py`: esa función la usan los 100
 insectos y las armas, y cambiarle la fórmula obligaría a regenerar y
 revisar todo eso.
+
+### El menú, y por qué la pose importa
+
+La pose de la Sofía del menú no es libre: tiene que entrar en una franja
+vertical angosta. La primera versión salió con el brazo extendido
+sosteniendo el zapato (486x855, proporción 0,57) y el hueco es 0,37, así
+que al encajarla por el ancho quedaba a dos tercios del alto disponible,
+con aire arriba y abajo. Se volvió a pedir con los brazos pegados al
+cuerpo y el zapato colgando al costado: 384x1149, proporción 0,33, que
+llena la franja de la cabeza a las botas.
 
 ### El menú, reacomodado
 
