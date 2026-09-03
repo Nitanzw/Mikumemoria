@@ -1106,8 +1106,32 @@ solución es **partirlo en dos capas**:
 | 3 | Sofía, el globo y el marco de viñeta |
 
 Los efectos cubren la pantalla entera de borde a borde, pero pasan **por
-detrás** del HUD, así que la vida se sigue leyendo. Y el toque lo sigue
-recibiendo la capa de arriba, que es la que tiene que responder.
+detrás** del HUD. Y el toque lo sigue recibiendo la capa de arriba, que es
+la que tiene que responder.
+
+### Y después el HUD directamente se esconde
+
+El tester miró eso y dijo lo que había que decir: *"¿no deberías ocultar
+la vida y el menú del puntaje para darle el estilo de cómic? Se ve raro"*.
+Tenía razón, y corrige el paso anterior.
+
+Yo había resuelto *"no se ve la vida"* **mostrando** el HUD. La respuesta
+buena era la otra: durante un diálogo el HUD no tiene que estar. El nivel
+está pausado, así que el puntaje, el reloj y las barras no informan nada —
+sólo son tres cajas de madera flotando encima de una viñeta de cómic.
+
+Ahora se desvanece al empezar a hablar y vuelve al terminar. Va **por
+grupo** y no por ruta de nodo, porque el mismo diálogo corre en la intro,
+en el tutorial y en el mapa de mundos, donde no hay HUD: si no encuentra
+ninguno, no hace nada.
+
+Un detalle que se paga caro si se pasa por alto: al devolver el HUD **no**
+se usa un tween. La caja de diálogo se destruye justo después, y un tween
+creado por un nodo se muere con él — el HUD se quedaría invisible para
+siempre. Se asigna el alfa directo.
+
+La partición en capas del punto anterior igual sirve: mantiene el toque en
+la capa correcta y ordena los efectos mientras el HUD se está yendo.
 
 Dos detalles del cambio:
 

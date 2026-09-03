@@ -2,11 +2,19 @@ extends CanvasLayer
 
 ## HUD de la partida: nivel, puntuación, monedas, combo y tiempo restante.
 
+## El grupo es para que el diálogo lo pueda esconder mientras habla, sin
+## tener que conocer la ruta del nodo ni depender de que exista (los
+## diálogos también corren en la intro y en el mapa, donde no hay HUD).
+const GRUPO := "hud"
+
 @onready var level_label: Label = $TopBar/LevelLabel
 @onready var score_label: Label = $TopBar/ScoreLabel
 @onready var coins_label: Label = $TopBar/CoinsLabel
 @onready var combo_label: Label = $UnderBar/ComboLabel
 @onready var time_label: Label = $TopBar/TimeLabel
+
+func _ready() -> void:
+	add_to_group(GRUPO)
 
 func set_level_label(level: int, chapter_name: String) -> void:
 	level_label.text = "Nivel %d · %s" % [level, chapter_name]

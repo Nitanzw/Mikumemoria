@@ -35,6 +35,14 @@ const BUBBLE_SLACK := 42.0
 ## Cuánto tarda en entrar el marco de la viñeta.
 const BAND_FADE := 0.22
 
+## El HUD se esconde mientras Sofía habla.
+##
+## Al principio se hizo al revés -se lo dejó a la vista y se acomodaron
+## los efectos para no taparlo- y quedaba raro: puntaje, reloj y barras de
+## vida flotando encima de una viñeta de cómic. Y no informan nada, porque
+## durante un diálogo el nivel está pausado. La viñeta se lee mejor sola.
+const HUD_FADE := 0.18
+
 @onready var portrait: SofiaPortrait = $SofiaPortrait
 @onready var bubble: Panel = $Bubble
 @onready var tail: Panel = $Tail
@@ -55,7 +63,26 @@ var _char_progress: float = 0.0
 
 func _ready() -> void:
 	continue_hint.visible = false
+	_mostrar_hud(false)
 	_entrar_bandas()
+
+## Esconde o devuelve el HUD de la partida.
+##
+## Va por grupo y no por ruta: el mismo diálogo se usa en la intro, en el
+## tutorial y en el mapa de mundos, donde no hay HUD. Si no hay ninguno,
+## esto no hace nada.
+func _mostrar_hud(visible_: bool) -> void:
+	for hud in get_tree().get_nodes_in_group("hud"):
+		var capa := hud as CanvasLayer
+		if capa == null:
+			continue
+		# Se anima el hijo raíz y no el CanvasLayer, que no tiene modulate.
+		for hijo in capa.get_children():
+			var control := hijo as CanvasItem
+			if control == null:
+				continue
+			var t := create_tween()
+			t.tween_property(control, "modulate:a", 1.0 if visible_ else 0.0, HUD_FADE)
 	await get_tree().process_frame
 	_arrow_base_y = continue_hint.position.y
 
@@ -129,9 +156,22 @@ func _finish_typing_instantly() -> void:
 	portrait.set_talking(false)
 	continue_hint.visible = true
 
+## Devuelve el HUD sin tween: el nodo está por destruirse y un tween
+## creado acá se muere con él, dejando el HUD invisible para siempre.
+func _devolver_hud() -> void:
+	for hud in get_tree().get_nodes_in_group("hud"):
+		var capa := hud as CanvasLayer
+		if capa == null:
+			continue
+		for hijo in capa.get_children():
+			var control := hijo as CanvasItem
+			if control:
+				control.modulate.a = 1.0
+
 func _advance() -> void:
 	_index += 1
 	if _index >= _lines.size():
+		_devolver_hud()
 		finished.emit()
 		queue_free()
 		return
