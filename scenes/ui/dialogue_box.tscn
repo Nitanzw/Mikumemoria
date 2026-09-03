@@ -31,30 +31,32 @@ border_color = Color(0.83, 0.75, 0.62, 1)
 corner_radius_bottom_left = 8
 
 [node name="DialogueBox" type="CanvasLayer"]
+layer = 3
 script = ExtResource("1")
 
-[node name="Dim" type="ColorRect" parent="."]
+[node name="Fondo" type="CanvasLayer" parent="."]
+layer = 0
+
+[node name="Dim" type="ColorRect" parent="Fondo"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
-color = Color(0.03, 0.05, 0.02, 0.46)
+color = Color(0.03, 0.05, 0.02, 0.42)
 
-[node name="Rayos" type="TextureRect" parent="."]
-anchors_preset = 0
-offset_left = 76.0
-offset_top = 386.0
-offset_right = 656.0
-offset_bottom = 966.0
+[node name="Rayos" type="TextureRect" parent="Fondo"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 mouse_filter = 2
 texture = ExtResource("3")
 expand_mode = 1
-stretch_mode = 5
+stretch_mode = 6
 modulate = Color(1, 1, 1, 0.5)
 
 [node name="SofiaPortrait" parent="." instance=ExtResource("2")]
-position = Vector2(366, 926)
-scale = Vector2(0.75, 0.75)
+position = Vector2(366, 862)
+scale = Vector2(0.66, 0.66)
 
 [node name="MarcoArriba" type="ColorRect" parent="."]
 anchors_preset = 10

@@ -1082,6 +1082,46 @@ de rayos.
 Al entrar, los rayos **giran y crecen** un poco. Es el golpe de viñeta que
 hace que la charla se sienta un momento y no una pausa.
 
+### Las capas: por qué los efectos se veían cortados
+
+Segundo reporte sobre lo mismo: *"quedan como cortados los efectos,
+deberían cubrir todo el cuadro"* y *"tampoco se ve la vida"*. Son dos
+síntomas de una sola causa.
+
+Los rayos estaban en una caja fija (580x580 en medio de la pantalla), así
+que terminaban en un filo recto a mitad de camino. Y el HUD quedaba tapado
+porque **el HUD y el diálogo compartían capa**: los dos son `CanvasLayer`
+sin `layer` explícito, o sea capa 1, y en esos casos el orden lo decide el
+árbol. El diálogo se instancia después, así que tapaba las barras de vida.
+
+Poner el diálogo arriba del todo arreglaba la vida pero dejaba los efectos
+tapando el HUD; ponerlo abajo arreglaba el HUD pero le pasaba el toque a
+los botones de poder, que durante un diálogo no hay que poder apretar. La
+solución es **partirlo en dos capas**:
+
+| capa | qué va |
+|--:|:--|
+| 0 | los efectos: velo, rayos y trama |
+| 1 | el HUD (queda en su capa de siempre) |
+| 3 | Sofía, el globo y el marco de viñeta |
+
+Los efectos cubren la pantalla entera de borde a borde, pero pasan **por
+detrás** del HUD, así que la vida se sigue leyendo. Y el toque lo sigue
+recibiendo la capa de arriba, que es la que tiene que responder.
+
+Dos detalles del cambio:
+
+- Los rayos van con `stretch_mode` **COVERED** y no CENTERED: la textura
+  es cuadrada y la pantalla no, así que centrada dejaba franjas.
+- La animación de entrada ahora arranca **grande** (1.14) y se achica
+  hasta su tamaño, nunca al revés. Empezando en 0.86 quedaba un marco
+  vacío alrededor durante la entrada — exactamente el efecto cortado que
+  había que sacar.
+
+Y Sofía se apoya **sobre** el panel de vidas en vez de atravesarlo: antes
+sus piernas cruzaban las barras y le tapaban la etiqueta "VIDA SOFÍA" a
+medias.
+
 ### Un detalle de la respiración
 
 El `Sprite2D` centra la textura, así que la respiración (que escala el eje

@@ -41,7 +41,7 @@ const BAND_FADE := 0.22
 @onready var name_label: Label = $Bubble/VBox/NameLabel
 @onready var text_label: Label = $Bubble/VBox/TextLabel
 @onready var continue_hint: Label = $Bubble/ContinueHint
-@onready var rayos: TextureRect = $Rayos
+@onready var rayos: TextureRect = $Fondo/Rayos
 @onready var marco: Array[ColorRect] = [$MarcoArriba, $MarcoAbajo, $MarcoIzq, $MarcoDer]
 
 var _arrow_phase: float = 0.0
@@ -75,7 +75,11 @@ func _entrar_bandas() -> void:
 	var desde := rayos.scale
 	rayos.modulate.a = 0.0
 	rayos.pivot_offset = rayos.size * 0.5
-	rayos.scale = desde * 0.86
+	# Entra GRANDE y se achica hasta su tamaño, nunca al revés: los rayos
+	# ocupan la pantalla entera, así que arrancar en 0.86 dejaría un
+	# marco vacío alrededor durante la entrada — justo el efecto cortado
+	# que había que sacar.
+	rayos.scale = desde * 1.14
 	rayos.rotation = -0.08
 	var tr := create_tween().set_parallel(true)
 	tr.tween_property(rayos, "modulate:a", 0.5, BAND_FADE * 1.4)
