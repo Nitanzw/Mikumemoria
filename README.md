@@ -1146,6 +1146,44 @@ Y Sofía se apoya **sobre** el panel de vidas en vez de atravesarlo: antes
 sus piernas cruzaban las barras y le tapaban la etiqueta "VIDA SOFÍA" a
 medias.
 
+### El idle: los valores eran de un busto
+
+Reporte del tester: *"es literal un PNG, animalo un poco que respire, no
+sea una serie de PNG"*. Y el retrato **sí** tenía respiración, balanceo y
+cabeceo — sólo que calibrados para un busto.
+
+Medido con diferencia de cuadros, en la zona de Sofía (210x430 = 90.300
+píxeles): entre un cuadro y otro cambiaban unos **3.000 píxeles, el 3,5%**,
+y casi todos en el borde del contorno. O sea, técnicamente animado y
+visualmente un PNG quieto.
+
+El motivo es geométrico: el mismo porcentaje de escala se ve mucho menos
+repartido en el doble de alto, y encima la figura va a escala 0,66.
+
+Qué se hizo, y por qué cada cosa:
+
+- **Se subieron las amplitudes** (respiración, cabeceo, balanceo).
+- **Se agregó un giro chiquito**, de unos 0,7 grados. Éste es el que más
+  rinde: gira desde los **pies**, porque ahí está el origen del sprite, y
+  una figura rígida que se inclina apenas se lee como alguien parado
+  haciendo equilibrio.
+- **Dos ondas de balanceo con frecuencias que no son múltiplos**, así el
+  vaivén no vuelve a coincidir nunca y no se lee como un bucle.
+- **Cambio de apoyo**: cada 3 a 5 segundos elige un pie y se acomoda
+  despacio hacia ese lado. Es lo que rompe la quietud sin parecer un
+  paso.
+
+Resultado medido con el mismo método: **~40% de la zona** cambia entre
+cuadros, contra el 3,5% de antes.
+
+### El parpadeo tuvo que irse
+
+Achataba el sprite un 15% en Y durante 0,14s. Con un busto eso se leía
+como cerrar los ojos; con la figura entera es **la persona completa
+achicándose de golpe**. No hay forma de parpadear sin arte de ojos aparte,
+y el cambio de apoyo cumple la misma función: romper la quietud cada
+tantos segundos.
+
 ### Un detalle de la respiración
 
 El `Sprite2D` centra la textura, así que la respiración (que escala el eje

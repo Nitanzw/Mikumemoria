@@ -36,23 +36,46 @@ const EMOTION_TINTS := {
 	"surprised": Color(1.0, 0.95, 0.8),
 }
 
-const BLINK_MIN_INTERVAL := 2.5
-const BLINK_MAX_INTERVAL := 5.0
+## Cada cuánto cambia el peso de pie. Es lo que más la hace ver viva: una
+## persona parada no se queda clavada, se acomoda.
+const SHIFT_MIN_INTERVAL := 2.8
+const SHIFT_MAX_INTERVAL := 5.5
+const SHIFT_PIXELS := 5.0
+const SHIFT_ROT := 0.016
+## Qué tan rápido llega al nuevo apoyo. Lento a propósito: es acomodarse,
+## no dar un paso.
+const SHIFT_SPEED := 1.1
 
 ## Respiración: el eje Y se estira y el X se angosta a la vez, que es
 ## como se ve respirar de verdad. Si los dos crecieran juntos parecería
 ## que la imagen hace zoom.
+## Estos números estaban calibrados para un BUSTO. Con la figura entera
+## el mismo porcentaje se ve mucho menos, porque el movimiento se reparte
+## en el doble de alto y encima la figura va escalada a 0.66. Medido con
+## diferencia de cuadros: se movían unos 3.000 de 90.000 píxeles, casi
+## todo en el borde del contorno — o sea, un PNG quieto.
 const BREATH_SPEED := 1.15
-const BREATH_Y := 0.016
-const BREATH_X := 0.007
-const BOB_PIXELS := 3.0
+const BREATH_Y := 0.021
+const BREATH_X := 0.010
+const BOB_PIXELS := 5.0
 ## El balanceo va mucho más lento que la respiración, si no marea.
 const SWAY_SPEED := 0.41
-const SWAY_PIXELS := 2.5
+const SWAY_PIXELS := 4.0
+## Una segunda onda de balanceo, con otra frecuencia. Dos senos que no son
+## múltiplos no vuelven a coincidir nunca, así que el vaivén no se repite
+## y no se lee como un bucle.
+const SWAY_SPEED_2 := 0.151
+const SWAY_PIXELS_2 := 2.8
+## Y un giro chiquito, que gira desde los PIES porque ahí está el origen
+## del sprite. Esto es lo que la despega de "imagen pegada": una figura
+## rígida que se inclina apenas se lee como alguien parado haciendo
+## equilibrio.
+const SWAY_ROT := 0.012
 ## Mientras habla se le suma un cabeceo corto, para que el texto no
 ## aparezca sobre alguien inmóvil.
 const TALK_SPEED := 7.5
-const TALK_PIXELS := 1.6
+const TALK_PIXELS := 2.6
+const TALK_ROT := 0.007
 
 @onready var sprite: Sprite2D = $Sprite2D
 
@@ -63,7 +86,10 @@ var _talking: bool = false
 ## El parpadeo y el énfasis pisan la escala; mientras corren, la
 ## respiración se aparta para no pelear con el tween.
 var _scale_locked: bool = false
-var _blink_timer: float = randf_range(BLINK_MIN_INTERVAL, BLINK_MAX_INTERVAL)
+var _shift_timer: float = randf_range(SHIFT_MIN_INTERVAL, SHIFT_MAX_INTERVAL)
+## Hacia qué lado está apoyando (-1 o 1) y dónde va llegando.
+var _shift_target: float = 1.0
+var _shift: float = 0.0
 var _base_scale: Vector2
 
 func _ready() -> void:
@@ -86,21 +112,30 @@ func _process(delta: float) -> void:
 	var breath := sin(_idle_phase)
 
 	var bob := breath * BOB_PIXELS
+	var giro := sin(_sway_phase * 0.61) * SWAY_ROT
 	if _talking:
 		_talk_phase += delta * TALK_SPEED
 		bob += sin(_talk_phase) * TALK_PIXELS
-	sprite.position.y = bob
-	sprite.position.x = sin(_sway_phase) * SWAY_PIXELS
+		giro += sin(_talk_phase * 0.5) * TALK_ROT
 
+	# El cambio de apoyo: se elige un lado cada tantos segundos y se llega
+	# despacio. Sumado al balanceo doble, el movimiento nunca se repite
+	# igual, que es la diferencia entre "animado" y "en bucle".
+	_shift_timer -= delta
+	if _shift_timer <= 0.0:
+		_shift_timer = randf_range(SHIFT_MIN_INTERVAL, SHIFT_MAX_INTERVAL)
+		_shift_target = -_shift_target
+	_shift = move_toward(_shift, _shift_target, delta * SHIFT_SPEED)
+
+	sprite.position.y = bob
+	sprite.position.x = (sin(_sway_phase) * SWAY_PIXELS
+		+ sin(_sway_phase * SWAY_SPEED_2 / SWAY_SPEED) * SWAY_PIXELS_2
+		+ _shift * SHIFT_PIXELS)
 	if not _scale_locked:
+		sprite.rotation = giro + _shift * SHIFT_ROT
 		sprite.scale = Vector2(
 			_base_scale.x * (1.0 - breath * BREATH_X),
 			_base_scale.y * (1.0 + breath * BREATH_Y))
-
-	_blink_timer -= delta
-	if _blink_timer <= 0.0:
-		_blink_timer = randf_range(BLINK_MIN_INTERVAL, BLINK_MAX_INTERVAL)
-		_play_blink()
 
 func set_emotion(emotion: String) -> void:
 	var texture_path: String = EMOTION_TEXTURES.get(emotion, "")
@@ -137,11 +172,8 @@ func _play_emphasis(emotion: String) -> void:
 			shake.tween_property(sprite, "position:x", offset.x, 0.04)
 		shake.tween_property(sprite, "position:x", 0.0, 0.04)
 
-func _play_blink() -> void:
-	if _scale_locked:
-		return
-	_scale_locked = true
-	var tween := create_tween()
-	tween.tween_property(sprite, "scale:y", _base_scale.y * 0.85, 0.06)
-	tween.tween_property(sprite, "scale:y", _base_scale.y, 0.08)
-	tween.finished.connect(func(): _scale_locked = false)
+## El parpadeo se fue. Achataba el sprite un 15% en Y durante 0.14s: con
+## un busto eso se leía como cerrar los ojos, pero con la figura entera es
+## la persona completa achicándose de golpe. No hay forma de parpadear sin
+## arte de ojos aparte, y el cambio de apoyo cumple la misma función —
+## romper la quietud cada tantos segundos.
