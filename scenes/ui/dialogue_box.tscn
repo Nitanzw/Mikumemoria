@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/dialogue_box.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ui/sofia_portrait.tscn" id="2"]
@@ -22,6 +22,18 @@ content_margin_left = 26
 content_margin_top = 20
 content_margin_right = 26
 content_margin_bottom = 20
+
+[sub_resource type="StyleBoxFlat" id="caption"]
+bg_color = Color(0.98, 0.97, 0.93, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.16, 0.13, 0.1, 1)
+content_margin_left = 14
+content_margin_top = 8
+content_margin_right = 18
+content_margin_bottom = 10
 
 [sub_resource type="StyleBoxFlat" id="tail"]
 bg_color = Color(0.96, 0.92, 0.84, 1)
@@ -91,6 +103,34 @@ offset_left = -12.0
 grow_horizontal = 0
 mouse_filter = 2
 color = Color(0.98, 0.97, 0.93, 1)
+
+[node name="Cartel" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -104.0
+offset_bottom = -26.0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("caption")
+
+[node name="CartelVBox" type="VBoxContainer" parent="Cartel"]
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="CartelTitulo" type="Label" parent="Cartel/CartelVBox"]
+mouse_filter = 2
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.13, 0.11, 0.09, 1)
+text = "CONTINUARÁ..."
+
+[node name="CartelCapitulo" type="Label" parent="Cartel/CartelVBox"]
+mouse_filter = 2
+theme_override_font_sizes/font_size = 17
+theme_override_colors/font_color = Color(0.36, 0.3, 0.24, 1)
+text = "Capítulo 2"
 
 [node name="Tail" type="Panel" parent="."]
 anchors_preset = 0

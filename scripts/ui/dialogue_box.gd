@@ -50,6 +50,8 @@ const HUD_FADE := 0.18
 @onready var text_label: Label = $Bubble/VBox/TextLabel
 @onready var continue_hint: Label = $Bubble/ContinueHint
 @onready var rayos: TextureRect = $Fondo/Rayos
+@onready var cartel: PanelContainer = $Cartel
+@onready var cartel_capitulo: Label = $Cartel/CartelVBox/CartelCapitulo
 @onready var marco: Array[ColorRect] = [$MarcoArriba, $MarcoAbajo, $MarcoIzq, $MarcoDer]
 
 var _arrow_phase: float = 0.0
@@ -59,6 +61,8 @@ var _lines: Array = []
 var _index: int = -1
 var _full_text: String = ""
 var _typing: bool = false
+## Capítulo que viene, para el cartel de continuará. 0 = sin cartel.
+var _continuara: int = 0
 var _char_progress: float = 0.0
 
 func _ready() -> void:
@@ -115,9 +119,13 @@ func _entrar_bandas() -> void:
 	tr.tween_property(rayos, "rotation", 0.0, BAND_FADE * 1.8) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
-func show_dialogue(lines: Array) -> void:
+## `continuara` es el número del capítulo que VIENE. Con 0 no se muestra
+## nada. El cartel aparece sólo en la ÚLTIMA línea, que es donde el
+## "continuará" significa algo: puesto en todas sería un adorno fijo.
+func show_dialogue(lines: Array, continuara: int = 0) -> void:
 	_lines = lines
 	_index = -1
+	_continuara = continuara
 	_advance()
 
 func _process(delta: float) -> void:
@@ -188,6 +196,25 @@ func _advance() -> void:
 	text_label.text = ""
 	_ajustar_globo()
 	_pop_bubble()
+	_mostrar_cartel(_continuara > 0 and _index == _lines.size() - 1)
+
+## El cartel de "CONTINUARÁ" entra deslizándose desde la izquierda, como
+## un rótulo que se apoya en la viñeta.
+func _mostrar_cartel(mostrar: bool) -> void:
+	if cartel.visible == mostrar:
+		return
+	cartel.visible = mostrar
+	if not mostrar:
+		return
+	cartel_capitulo.text = "Capítulo %d" % _continuara
+	# Se espera un cuadro porque el PanelContainer todavía no midió su
+	# ancho, y sin ancho no se sabe desde dónde tiene que entrar.
+	await get_tree().process_frame
+	var destino := cartel.position.x
+	cartel.position.x = destino - cartel.size.x - 24.0
+	var t := create_tween()
+	t.tween_property(cartel, "position:x", destino, 0.32) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 ## Estira el globo para que entre TODO el texto de la línea.
 ##

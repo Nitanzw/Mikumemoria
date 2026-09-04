@@ -1146,6 +1146,43 @@ Y Sofía se apoya **sobre** el panel de vidas en vez de atravesarlo: antes
 sus piernas cruzaban las barras y le tapaban la etiqueta "VIDA SOFÍA" a
 medias.
 
+### El cartel de "CONTINUARÁ"
+
+Del mockup del tester, y la parte que faltaba: *"queda genial eso de
+continuará, como para que les entre intriga la historia"*.
+
+Aparece **sólo en la última línea del cierre de capítulo**. Puesto en cada
+línea sería un adorno fijo que se deja de ver a los dos minutos; puesto
+donde el capítulo termina, es un gancho.
+
+Para eso hubo que escribir algo que no existía: `CHAPTER_OUTROS`, el
+cierre de cada capítulo. No son un resumen de lo que pasó — son una punta
+de lo que viene. El del 1 termina con *"el rastro sigue, y va derecho al
+invernadero"*; el del 8, con *"terminan en una puerta de acero, y del otro
+lado se escuchan órdenes"*. El capítulo 10 no tiene: ahí va el final, no
+un gancho.
+
+Dos decisiones de dónde ponerlo:
+
+- **Antes del resumen del nivel, no después.** El gancho tiene que ser lo
+  último que pasa antes de que el jugador decida si sigue jugando. Si va
+  después, se lee y enseguida lo tapa una pantalla de números.
+- **No se repite al rejugar.** El cierre sale sólo si el nivel terminado
+  es el más alto alcanzado; volver a jugar el 100 no vuelve a contarte lo
+  que ya sabés.
+
+El cartel entra deslizándose desde la izquierda. Hay que esperar un cuadro
+antes de animarlo: el `PanelContainer` todavía no midió su ancho, y sin
+ancho no se sabe desde dónde tiene que entrar.
+
+### Un candado que tiraba error
+
+Al pasar el candado de la tienda de emoji a ícono quedó una línea
+apuntando al nodo viejo: `horizontal_alignment` es de `Label` y el badge
+ahora es un `TextureRect`. Tiraba un error por **cada casillero
+bloqueado** que se dibujaba. El ícono igual se veía, así que no se notaba
+mirando — apareció en el log de una prueba de otra cosa.
+
 ### El idle: los valores eran de un busto
 
 Reporte del tester: *"es literal un PNG, animalo un poco que respire, no

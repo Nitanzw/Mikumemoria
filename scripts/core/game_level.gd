@@ -222,11 +222,11 @@ func _maybe_warn_difficulty() -> void:
 		return
 	_show_dialogue(lines, _start_gameplay)
 
-func _show_dialogue(lines: Array, on_finished: Callable) -> void:
+func _show_dialogue(lines: Array, on_finished: Callable, continuara: int = 0) -> void:
 	var box := DialogueBoxScene.instantiate()
 	add_child(box)
 	box.finished.connect(on_finished)
-	box.show_dialogue(lines)
+	box.show_dialogue(lines, continuara)
 
 func _start_gameplay() -> void:
 	if level_ended:
@@ -703,12 +703,42 @@ func _end_level() -> void:
 		insect.queue_free()
 
 	AudioManager.play_sfx("level_complete")
+	# El nivel que se acaba de terminar, ANTES de que on_level_complete
+	# avance el contador.
+	var terminado: int = GameManager.current_level
 	var reward := GameManager.on_level_complete()
 	# Los fallos van aparte del combo: el combo es la racha más larga y no
 	# dice nada de cuántas veces se tapeó al aire.
 	var fallos: int = player.total_misses if player else -1
+
+	# Si era el último nivel del capítulo, primero el cierre con el
+	# "CONTINUARÁ" y recién después el resumen. En ese orden y no al
+	# revés: el gancho tiene que ser lo último que pasa antes de que el
+	# jugador decida si sigue, no algo que se lee y después se tapa con
+	# una pantalla de números.
+	var cierre: Array = _cierre_de_capitulo(terminado)
+	if not cierre.is_empty():
+		var siguiente: int = GameManager.level_manager.get_chapter_for_level(terminado) + 1
+		_show_dialogue(cierre, func():
+			level_complete_ui.show_results(GameManager.player_score,
+				GameManager.combo_max, reward, is_boss_level, fallos),
+			siguiente)
+		return
+
 	level_complete_ui.show_results(GameManager.player_score, GameManager.combo_max,
 		reward, is_boss_level, fallos)
+
+## Las líneas de cierre si `nivel` era el último de su capítulo, o vacío.
+##
+## Se pide sólo cuando el nivel es múltiplo exacto de los que tiene un
+## capítulo: al rejugar un nivel viejo no se repite el cierre, porque el
+## jugador ya lo vio y ya sabe qué viene.
+func _cierre_de_capitulo(nivel: int) -> Array:
+	if nivel <= 0 or nivel % LevelManager.LEVELS_PER_CHAPTER != 0:
+		return []
+	if nivel < GameManager.max_level_unlocked - 1:
+		return []
+	return StoryData.get_chapter_outro(GameManager.level_manager.get_chapter_for_level(nivel))
 
 func _on_next_level_pressed() -> void:
 	if GameManager.current_chapter != _entry_chapter:

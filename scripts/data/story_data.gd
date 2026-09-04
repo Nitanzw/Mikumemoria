@@ -137,6 +137,51 @@ const CHAPTER_INTROS := {
 	],
 }
 
+## Cierre de capítulo: se muestra al terminar el ÚLTIMO nivel de cada uno,
+## y lleva el cartel de "CONTINUARÁ". No es un resumen de lo que pasó: es
+## una punta de lo que viene, que es lo que hace que quieras entrar al
+## capítulo siguiente en vez de apagar el juego.
+##
+## El capítulo 10 no tiene: ahí va el final (ENDING), no un gancho.
+const CHAPTER_OUTROS := {
+	1: [
+		{"speaker": "Sofía", "emotion": "neutral", "text": "El huerto quedó limpio. Por ahora."},
+		{"speaker": "Sofía", "emotion": "worried", "text": "Pero el rastro sigue, y va derecho al invernadero. Ahí adentro está todo lo que la abuela tardó años en criar."},
+	],
+	2: [
+		{"speaker": "Sofía", "emotion": "happy", "text": "Los plantines están a salvo. Uno por uno, pero están."},
+		{"speaker": "Sofía", "emotion": "surprised", "text": "Y atrás de las macetas hay un agujero en la tierra. Grande. Con escalones."},
+	],
+	3: [
+		{"speaker": "Sofía", "emotion": "neutral", "text": "La cueva no era una cueva. Era un pasillo."},
+		{"speaker": "Sofía", "emotion": "worried", "text": "Y al fondo se ve luz verde. Nada bueno brilla verde."},
+	],
+	4: [
+		{"speaker": "Sofía", "emotion": "angry", "text": "«SuperCosecha S.A.». Me voy a acordar de ese nombre."},
+		{"speaker": "Sofía", "emotion": "neutral", "text": "El desagüe del cultivo va a dar al pantano. Si tiraron todo ahí, ahí tengo que ir."},
+	],
+	5: [
+		{"speaker": "Sofía", "emotion": "worried", "text": "Salí del pantano con las botas arruinadas y una certeza."},
+		{"speaker": "Sofía", "emotion": "surprised", "text": "Ese zumbido no venía de los bichos. Venía de abajo. De una máquina."},
+	],
+	6: [
+		{"speaker": "Sofía", "emotion": "sad", "text": "Apagué el laboratorio. No me hizo sentir tan bien como esperaba."},
+		{"speaker": "Sofía", "emotion": "neutral", "text": "En la pizarra había un plano. Decía «línea de montaje». Los estaban blindando en serie."},
+	],
+	7: [
+		{"speaker": "Sofía", "emotion": "angry", "text": "Fábrica parada. Que se oxide."},
+		{"speaker": "Sofía", "emotion": "worried", "text": "Pero las cintas transportadoras salían para algún lado, y no eran cortas."},
+	],
+	8: [
+		{"speaker": "Sofía", "emotion": "neutral", "text": "Seguí los túneles hasta el final. Tienen mejor logística que el correo del pueblo, ya lo dije."},
+		{"speaker": "Sofía", "emotion": "worried", "text": "Terminan en una puerta de acero. Y del otro lado se escuchan órdenes."},
+	],
+	9: [
+		{"speaker": "Sofía", "emotion": "angry", "text": "El búnker cayó. Estaban armados, organizados... y perdieron igual."},
+		{"speaker": "Sofía", "emotion": "worried", "text": "Atrás de todo hay una sola puerta más. Y late."},
+	],
+}
+
 # Tutorial: se muestra una sola vez, antes del primer nivel jugado.
 
 const ENDING := [
@@ -191,3 +236,8 @@ static func get_tutorial(tutorial_id: String) -> Array:
 ## ese capítulo no tiene intro definida.
 static func get_chapter_intro(chapter: int) -> Array:
 	return CHAPTER_INTROS.get(chapter, [])
+
+## Líneas de cierre del capítulo, las que llevan el "CONTINUARÁ". Vacío si
+## ese capítulo no tiene (el 10 termina con ENDING, no con un gancho).
+static func get_chapter_outro(chapter: int) -> Array:
+	return CHAPTER_OUTROS.get(chapter, [])

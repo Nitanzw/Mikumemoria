@@ -191,8 +191,13 @@ func _lock_badge() -> Control:
 	badge.offset_top = 6.0
 	badge.offset_right = -8.0
 	badge.offset_bottom = 34.0
-	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UITheme.style_body(badge, 20)
+	# El centrado y el estilo de texto son de Label. Cuando el candado
+	# pasó de emoji a ícono, esto quedó apuntando a un TextureRect y
+	# tiraba un error por cada casillero bloqueado que se dibujaba.
+	var texto_badge := badge as Label
+	if texto_badge:
+		texto_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		UITheme.style_body(texto_badge, 20)
 	return badge
 
 ## Barra de nivel. Se pone dorada al estar completa, que es la señal de
