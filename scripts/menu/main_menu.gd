@@ -58,6 +58,9 @@ const LIVES_REFRESH_INTERVAL := 1.0
 var _lives_refresh: float = 0.0
 
 func _ready() -> void:
+	# Franja de publicidad de abajo, y el margen para que no tape nada.
+	BannerAd.mostrar(self)
+	BannerAd.reservar($Margin)
 	AudioManager.play_music("menu_theme")
 	# La fila de vidas se arma ANTES del primer refresco: _refresh_lives
 	# escribe en los nodos que crea esta función.

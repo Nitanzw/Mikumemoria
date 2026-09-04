@@ -263,7 +263,7 @@ func _physics_process(delta: float) -> void:
 		if direction.y < 0.0:
 			direction.y = absf(direction.y)
 
-	var floor_y := get_viewport_rect().size.y - PLAY_BOTTOM_INSET
+	var floor_y := get_viewport_rect().size.y - PLAY_BOTTOM_INSET - BannerAd.alto(self)
 	if global_position.y > floor_y:
 		global_position.y = floor_y
 		if direction.y > 0.0:
@@ -281,7 +281,7 @@ func _physics_process(delta: float) -> void:
 func _play_rect() -> Rect2:
 	var view := get_viewport_rect().size
 	var top := PLAY_TOP_INSET
-	var bottom := view.y - PLAY_BOTTOM_INSET
+	var bottom := view.y - PLAY_BOTTOM_INSET - BannerAd.alto(self)
 	return Rect2(ON_SCREEN_INSET, top, maxf(view.x - ON_SCREEN_INSET * 2.0, 1.0), maxf(bottom - top, 1.0))
 
 func _is_on_screen() -> bool:

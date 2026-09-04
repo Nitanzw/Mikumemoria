@@ -3,7 +3,7 @@
 `el_huerto_de_sofia.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-Versión 0.42.0 (versionCode 50), ~82MB, arquitectura arm64-v8a solamente.
+Versión 0.43.0 (versionCode 51), ~82MB, arquitectura arm64-v8a solamente.
 
 Este build ya es **completo**: incluye la música de los 10 capítulos,
 que los builds anteriores dejaban afuera para no pasarse del límite de
@@ -312,6 +312,46 @@ Comparten fondo ilustrado, botones de madera y tarjetas con
 habilidades los botones y los precios quedaban **cortados fuera de la
 pantalla**: el `ScrollContainer` permitía scroll horizontal y los textos
 largos empujaban la fila más ancha que los 540px del viewport.
+
+## Novedades de la 0.43.0 — el banner de abajo, con su lugar reservado
+
+Faltaba el banner permanente. Ya está, y con lo que de verdad importa de
+un banner, que no es mostrarlo: **es reservarle el lugar**.
+
+El banner de AdMob no es un nodo de Godot, es una vista de Android que se
+dibuja ENCIMA de la pantalla del juego. Si el juego no le deja el espacio
+libre, tapa lo que haya abajo — acá serían el botón de "Volver" de todos
+los menús, la barra de vida de las peleas y la columna de poderes. Un
+botón tapado por un anuncio es un toque accidental, que además de
+arruinar la partida es motivo de baneo de la cuenta de AdMob.
+
+Así que se corre todo para arriba, en cada pantalla:
+
+| Pantalla | Qué sube |
+|---|---|
+| Menú, tienda, habilidades, ajustes, selector de niveles | el margen de abajo entero |
+| Mapa de mundos | el scroll del mapa y el botón de volver |
+| Partida | el panel de vida, la columna de poderes y el punto al que apuntan los ataques del jefe |
+| Bichos | el piso por el que caminan |
+| Resumen del nivel | el botón de anuncio, y sólo si haría falta |
+| Diálogos | Sofía y el globo |
+
+El alto se calcula en cada celular: 50 dp (el banner estándar) pasados a
+píxeles reales por el DPI de la pantalla y de ahí a píxeles del viewport,
+con topes de 58 y 120 para que un celular con un DPI raro no se coma
+media pantalla ni deje una franja de nada.
+
+**Y se va cuando pagan.** `BannerAd.alto()` devuelve cero si el jugador
+compró "sacar la publicidad", así que no sólo desaparece la franja: el
+juego recupera esos píxeles y usa la pantalla entera. Es parte de lo que
+se compró, y se nota. En la tienda la franja se va en el acto, sin salir
+de la pantalla: ver el banner seguir ahí después de pagar es la primera
+impresión de que la compra no funcionó.
+
+Por ahora dibuja un cartel gris que dice "BANNER SIMULADO · 320x50", para
+poder ver que el espacio quedó bien reservado antes de tener AdMob. El
+día que se enchufe, se cambia el cuerpo de `BannerAd.mostrar()` por la
+llamada al plugin y **no hay que tocar ni una pantalla más**.
 
 ## Novedades de la 0.42.0 — versión gratis y dificultad al doble
 

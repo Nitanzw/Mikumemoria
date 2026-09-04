@@ -100,7 +100,7 @@ func _ready() -> void:
 ## flotando a media viñeta, con la huerta pasando por debajo de las
 ## botas.
 func _apoyar_a_sofia() -> void:
-	portrait.position.y = get_viewport().get_visible_rect().size.y - SOFIA_FLOOR_GAP
+	portrait.position.y = get_viewport().get_visible_rect().size.y - SOFIA_FLOOR_GAP - BannerAd.alto(self)
 
 ## Esconde o devuelve el HUD de la partida.
 ##
@@ -305,7 +305,7 @@ func _tam_base(etiqueta: Label) -> int:
 ##      celular más alto hay más lugar en vez de un hueco vacío.
 func _ajustar_globo() -> void:
 	var vista := get_viewport().get_visible_rect().size
-	var abajo: float = vista.y - BUBBLE_BOTTOM_GAP
+	var abajo: float = vista.y - BUBBLE_BOTTOM_GAP - BannerAd.alto(self)
 	var ancho: float = vista.x - 44.0 - BUBBLE_PAD_X
 	var disponible: float = abajo - BUBBLE_TOP_LIMIT
 

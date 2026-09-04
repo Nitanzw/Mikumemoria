@@ -26,6 +26,9 @@ const BRANCH_ICONS := {
 var skill_system := SkillSystem.new()
 
 func _ready() -> void:
+	# Franja de publicidad de abajo, y el margen para que no tape nada.
+	BannerAd.mostrar(self)
+	BannerAd.reservar($Margin)
 	header.add_theme_stylebox_override("panel", UITheme.scrim_style(0.55))
 	UITheme.style_title(title, 28)
 	UITheme.style_wood_button(back_button)

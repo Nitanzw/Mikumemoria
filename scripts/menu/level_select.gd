@@ -27,6 +27,9 @@ const COLOR_BOSS_DONE := Color(0.44, 0.28, 0.30)
 var chapter: int = 1
 
 func _ready() -> void:
+	# Franja de publicidad de abajo, y el margen para que no tape nada.
+	BannerAd.mostrar(self)
+	BannerAd.reservar($Margin)
 	UITheme.style_title(title, 26)
 	UITheme.style_body(subtitle, 17)
 	subtitle.add_theme_color_override("font_color", Color(0.93, 0.88, 0.75))

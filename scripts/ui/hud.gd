@@ -14,6 +14,7 @@ const GRUPO := "hud"
 @onready var time_label: Label = $TopBar/TimeLabel
 
 func _ready() -> void:
+	_correr_por_el_banner()
 	add_to_group(GRUPO)
 
 func set_level_label(level: int, chapter_name: String) -> void:
@@ -179,3 +180,18 @@ func refresh_power_affordability(coins: int) -> void:
 
 func _on_power_pressed(power_id: String) -> void:
 	power_pressed.emit(power_id)
+
+
+## Sube lo que está pegado al borde de abajo — el panel de vidas de las
+## peleas y la columna de poderes — para que el banner de publicidad no
+## se los tape. Con el banner sacado (compra "sin anuncios") esto no hace
+## nada y el HUD usa la pantalla entera.
+func _correr_por_el_banner() -> void:
+	var alto := BannerAd.alto(self)
+	if alto <= 0.0:
+		return
+	for nodo: Control in [get_node_or_null("BottomBars"), get_node_or_null("PowersBox")]:
+		if nodo == null:
+			continue
+		nodo.offset_top -= alto
+		nodo.offset_bottom -= alto

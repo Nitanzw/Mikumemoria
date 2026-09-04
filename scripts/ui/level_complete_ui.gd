@@ -126,6 +126,9 @@ var _intro: Tween = null
 ## algo es justo cuando acaba de terminar un nivel. Ofrecerle el anuncio
 ## en cualquier otro lado convierte muchísimo menos.
 var _ad_button: Button
+## Dónde va el botón de anuncio dentro del panel, sin contar el banner.
+const AD_TOP := 800.0
+const AD_BOTTOM := 858.0
 ## Recompensa del nivel que se está mostrando, para poder duplicarla.
 var _reward_shown: int = 0
 
@@ -152,8 +155,8 @@ func _build_ad_button() -> void:
 	_ad_button.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_ad_button.offset_left = -238.0
 	_ad_button.offset_right = 238.0
-	_ad_button.offset_top = 800.0
-	_ad_button.offset_bottom = 858.0
+	_ad_button.offset_top = AD_TOP
+	_ad_button.offset_bottom = AD_BOTTOM
 	_ad_button.focus_mode = Control.FOCUS_NONE
 	_ad_button.add_theme_font_size_override("font_size", 20)
 	_ad_button.visible = false
@@ -225,11 +228,22 @@ func show_results(score: int, combo_max: int, reward: int, was_boss: bool = fals
 	count.tween_method(_set_reward, 0, reward, COUNT_TIME).set_delay(0.32)
 
 ## Ofrece duplicar la recompensa mirando un anuncio.
+## Lo sube si el banner de publicidad de abajo se lo comería. Sólo lo
+## que haga falta: en una pantalla alta no se mueve nada.
+func _esquivar_banner() -> void:
+	var vista: float = get_viewport().get_visible_rect().size.y
+	var subir: float = maxf((AD_BOTTOM + BannerAd.alto(self)) - vista, 0.0)
+	if subir <= 0.0:
+		return
+	_ad_button.offset_top -= subir
+	_ad_button.offset_bottom -= subir
+
 func _ofrecer_duplicar(reward: int) -> void:
 	_desconectar_ad()
 	_ad_button.visible = reward > 0 and Store.can_watch_rewarded()
 	if not _ad_button.visible:
 		return
+	_esquivar_banner()
 	_ad_button.text = tr("Ver anuncio: recompensa x2")
 	_ad_button.pressed.connect(_on_duplicar_pressed)
 
@@ -253,6 +267,7 @@ func _ofrecer_vida() -> void:
 	_ad_button.visible = Store.can_watch_rewarded()
 	if not _ad_button.visible:
 		return
+	_esquivar_banner()
 	_ad_button.text = tr("Ver anuncio: +1 vida")
 	_ad_button.pressed.connect(_on_vida_pressed)
 

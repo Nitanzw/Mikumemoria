@@ -26,6 +26,7 @@ const COLOR_DONE := Color(0.4, 0.75, 0.4)
 var _chapter_nodes: Dictionary = {}
 
 func _ready() -> void:
+	_correr_por_el_banner()
 	title_panel.add_theme_stylebox_override("panel", UITheme.scrim_style(0.5))
 	UITheme.style_title(title, 26)
 	UITheme.style_wood_button(back_button)
@@ -141,3 +142,19 @@ func _scroll_to_current() -> void:
 func _on_chapter_pressed(chapter: int) -> void:
 	GameManager.selected_chapter = chapter
 	get_tree().change_scene_to_file("res://scenes/menu/level_select.tscn")
+
+
+## El mapa no cuelga de un MarginContainer, así que se le corre a mano lo
+## que está pegado abajo: el scroll del mapa y el botón de volver.
+func _correr_por_el_banner() -> void:
+	BannerAd.mostrar(self)
+	var alto := BannerAd.alto(self)
+	if alto <= 0.0:
+		return
+	var scroll := get_node_or_null("ScrollContainer") as Control
+	if scroll:
+		scroll.offset_bottom -= alto
+	var volver := get_node_or_null("BackButton") as Control
+	if volver:
+		volver.offset_top -= alto
+		volver.offset_bottom -= alto

@@ -90,6 +90,10 @@ func _ready() -> void:
 	_play_chapter_music()
 	_setup_background()
 	_setup_borde_extremo()
+	# La franja de publicidad de abajo. Se crea una sola vez y sobrevive
+	# a los cambios de escena; si el jugador compró "sin anuncios", esto
+	# la saca.
+	BannerAd.mostrar(self)
 
 	# Reloj de Arena: segundos extra de nivel. En las peleas de jefe
 	# también suman, que es donde más se agradecen.
@@ -607,7 +611,7 @@ func _setup_background() -> void:
 		# apuntan las embestidas y los escupitajos del jefe, y ese punto
 		# tiene que seguir subiendo en las peleas para no caer detrás del
 		# panel de vidas de abajo.
-		var from_bottom: float = 265.0 if is_boss_level else 60.0
+		var from_bottom: float = (265.0 if is_boss_level else 60.0) + BannerAd.alto(self)
 		sofia_sprite.position = Vector2(view_size.x / 2.0, view_size.y - from_bottom)
 
 ## Siembra los primeros bichos ya ADENTRO de la pantalla (no en el borde),

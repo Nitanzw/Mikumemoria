@@ -49,6 +49,9 @@ const GROOVE_INSET_Y := 4.0
 const COIN_ICON := "res://assets/sprites/ui/coin.png"
 
 func _ready() -> void:
+	# Franja de publicidad de abajo, y el margen para que no tape nada.
+	BannerAd.mostrar(self)
+	BannerAd.reservar($Margin)
 	header.add_theme_stylebox_override("panel", UITheme.scrim_style(0.55))
 	UITheme.style_title(title, 30)
 	UITheme.style_wood_button(back_button)
@@ -60,6 +63,11 @@ func _ready() -> void:
 	_refresh()
 
 func _refresh() -> void:
+	# Si en esta pantalla se compró "sacar la publicidad", la franja se
+	# tiene que ir en el acto: verla seguir ahí después de pagar es la
+	# primera impresión de que la compra no funcionó.
+	BannerAd.mostrar(self)
+	BannerAd.reservar($Margin)
 	for child in coins_holder.get_children():
 		child.queue_free()
 	coins_holder.add_child(UITheme.build_coin_row(GameManager.player_coins, 24))

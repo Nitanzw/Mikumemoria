@@ -22,6 +22,9 @@ const MUTE_BOTON := Vector2(56, 48)
 @onready var back_button: Button = $Margin/VBox/BackButton
 
 func _ready() -> void:
+	# Franja de publicidad de abajo, y el margen para que no tape nada.
+	BannerAd.mostrar(self)
+	BannerAd.reservar($Margin)
 	UITheme.style_wood_button(back_button)
 	back_button.pressed.connect(func():
 		get_tree().change_scene_to_file("res://scenes/menu/main_menu.tscn"))
