@@ -19,10 +19,29 @@ const ARROW_BOB := 5.0
 
 ## El globo crece HACIA ARRIBA: el pico se queda abajo, apuntando a
 ## Sofía, así que lo que se mueve es el borde de arriba.
-const BUBBLE_BOTTOM := 466.0
+##
+## El piso NO es una coordenada fija sino una distancia desde abajo de la
+## pantalla (960 - 466 en el diseño original). La escena se diseñó para
+## 540x960, pero el proyecto estira con aspect "expand": en un celular
+## 19,5:9 el viewport mide 540x1140, y un 466 clavado dejaba el globo
+## flotando en el medio con un hueco enorme abajo.
+const BUBBLE_BOTTOM_GAP := 494.0
 const BUBBLE_MIN_HEIGHT := 250.0
-## No subir más allá de acá, para no comerse la barra del HUD.
+## No subir más allá de acá, para no comerse el marco de la viñeta.
 const BUBBLE_TOP_LIMIT := 100.0
+## Distancia entre el pico del globo y el borde de abajo del globo.
+const TAIL_OFFSET := 20.0
+
+## Si ni achicando el globo entra el texto, se achica el texto. Hasta
+## acá llega: por debajo de este factor no se lee en un celular.
+const TEXT_SHRINK_MIN := 0.62
+const TEXT_SHRINK_STEP := 0.06
+## Nombre del meta donde SettingsManager guarda el tamaño de fuente
+## original de cada Label. Se lee para poder volver SIEMPRE al tamaño
+## base antes de medir: si se midiera sobre el tamaño ya achicado de la
+## línea anterior, cada línea larga encogería un poco más que la previa
+## hasta volver el texto ilegible.
+const ORIGINAL_SIZE_META := "_base_font_size"
 ## Márgenes del VBox adentro del globo (ver la escena) más aire para que
 ## la última línea no quede debajo de la flechita de continuar.
 const BUBBLE_PAD_X := 52.0
@@ -42,6 +61,10 @@ const BAND_FADE := 0.22
 ## vida flotando encima de una viñeta de cómic. Y no informan nada, porque
 ## durante un diálogo el nivel está pausado. La viñeta se lee mejor sola.
 const HUD_FADE := 0.18
+
+## Cuánto le queda de pantalla a Sofía por debajo de los pies (960 - 862
+## en el diseño original).
+const SOFIA_FLOOR_GAP := 98.0
 
 @onready var portrait: SofiaPortrait = $SofiaPortrait
 @onready var bubble: Panel = $Bubble
@@ -67,8 +90,17 @@ var _char_progress: float = 0.0
 
 func _ready() -> void:
 	continue_hint.visible = false
+	_apoyar_a_sofia()
 	_mostrar_hud(false)
 	_entrar_bandas()
+
+## Sofía va apoyada en el borde de abajo de la pantalla, no en la Y fija
+## de la escena. Con aspect "expand" un celular 19,5:9 da un viewport de
+## 540x1140, y la posición de la escena (pensada para 960) la dejaba
+## flotando a media viñeta, con la huerta pasando por debajo de las
+## botas.
+func _apoyar_a_sofia() -> void:
+	portrait.position.y = get_viewport().get_visible_rect().size.y - SOFIA_FLOOR_GAP
 
 ## Esconde o devuelve el HUD de la partida.
 ##
@@ -216,36 +248,91 @@ func _mostrar_cartel(mostrar: bool) -> void:
 	t.tween_property(cartel, "position:x", destino, 0.32) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
-## Estira el globo para que entre TODO el texto de la línea.
+## Alto REAL que ocupa un texto dentro del globo, en píxeles.
+##
+## Acá estaba el bug de los textos cortados, y es sutil:
+## `Font.get_multiline_string_size()` mide con las métricas de la fuente
+## PRINCIPAL solamente, mientras que el Label dibuja con la altura de
+## línea de la fuente MÁS SUS RESERVAS. Desde que se agregaron las Noto
+## de los 15 idiomas como fallback, la de bengalí y la de devanagari —
+## que tienen ascendente y descendente enormes — mandan: la fuente mide
+## 35 px por línea y el Label dibuja 57. O sea que todo se medía 1,6
+## veces más chico de lo que se dibujaba, y las últimas líneas quedaban
+## afuera del globo.
+##
+## Entonces: la cantidad de líneas se saca de la medición (que parte bien
+## el texto), y el alto de cada una se le pregunta al Label, que es el
+## que sabe con qué fuentes va a dibujar de verdad.
+func _alto_de_texto(etiqueta: Label, texto: String, ancho: float) -> float:
+	if texto.is_empty():
+		return 0.0
+	var fuente := etiqueta.get_theme_font("font")
+	var tam := etiqueta.get_theme_font_size("font_size")
+	if fuente == null:
+		return 0.0
+	var medida := fuente.get_multiline_string_size(
+		texto, HORIZONTAL_ALIGNMENT_LEFT, ancho, tam)
+	var unidad: float = maxf(fuente.get_string_size(
+		"Ay", HORIZONTAL_ALIGNMENT_LEFT, -1.0, tam).y, 1.0)
+	var lineas: int = maxi(1, int(round(medida.y / unidad)))
+	return float(lineas) * float(etiqueta.get_line_height())
+
+## Tamaño de fuente base del Label, ya con el ajuste de "tamaño de texto"
+## del jugador aplicado. Es el punto de partida para achicar: sin esto,
+## medir sobre el tamaño que quedó de la línea anterior encogería el
+## texto un poco más en cada línea larga.
+func _tam_base(etiqueta: Label) -> int:
+	if etiqueta.has_meta(ORIGINAL_SIZE_META):
+		var base := float(etiqueta.get_meta(ORIGINAL_SIZE_META))
+		return maxi(int(round(base * SettingsManager.get_text_scale())), 8)
+	return etiqueta.get_theme_font_size("font_size")
+
+## Acomoda el globo para que entre TODO el texto de la línea.
 ##
 ## Era un panel de alto fijo (250px) y el Label adentro simplemente
 ## recortaba lo que sobraba: con una línea larga, o con el tamaño de
 ## texto en "grande", la última frase quedaba cortada por la mitad y no
 ## había forma de leerla.
 ##
-## Se mide con la fuente y el tamaño EFECTIVOS del Label, no con los de
-## la escena: SettingsManager reescala los Label con un override de tema,
-## así que el tamaño real depende del ajuste que eligió el jugador.
+## Tiene que aguantar los 15 idiomas: el alemán y el neerlandés arman
+## palabras larguísimas, el hindi y el bengalí dibujan más alto. Por eso
+## son TRES defensas en orden, y no una:
+##
+##   1. el globo crece hacia arriba hasta el techo de la viñeta;
+##   2. si con todo el alto disponible no alcanza, se achica la letra en
+##      pasos hasta TEXT_SHRINK_MIN;
+##   3. el piso del globo se mide desde abajo de la pantalla, así en un
+##      celular más alto hay más lugar en vez de un hueco vacío.
 func _ajustar_globo() -> void:
-	var ancho: float = get_viewport().get_visible_rect().size.x - 44.0 - BUBBLE_PAD_X
-	var alto := BUBBLE_PAD_Y + BUBBLE_SLACK
-	for etiqueta: Label in [name_label, text_label]:
-		var fuente := etiqueta.get_theme_font("font")
-		var tam := etiqueta.get_theme_font_size("font_size")
-		if fuente == null:
-			continue
-		var texto: String = _full_text if etiqueta == text_label else etiqueta.text
-		alto += fuente.get_multiline_string_size(
-			texto, HORIZONTAL_ALIGNMENT_LEFT, ancho, tam).y
-	# La separación del VBox entre las dos etiquetas.
-	alto += 6.0
+	var vista := get_viewport().get_visible_rect().size
+	var abajo: float = vista.y - BUBBLE_BOTTOM_GAP
+	var ancho: float = vista.x - 44.0 - BUBBLE_PAD_X
+	var disponible: float = abajo - BUBBLE_TOP_LIMIT
 
-	var arriba: float = maxf(BUBBLE_BOTTOM - maxf(alto, BUBBLE_MIN_HEIGHT), BUBBLE_TOP_LIMIT)
+	# El nombre no se achica nunca: es una palabra corta y siempre entra.
+	var fijo: float = BUBBLE_PAD_Y + BUBBLE_SLACK + 6.0 \
+		+ _alto_de_texto(name_label, name_label.text, ancho)
+
+	var base: int = _tam_base(text_label)
+	var escala := 1.0
+	var alto: float = 0.0
+	while true:
+		text_label.add_theme_font_size_override(
+			"font_size", maxi(int(round(float(base) * escala)), 10))
+		alto = fijo + _alto_de_texto(text_label, _full_text, ancho)
+		if alto <= disponible or escala <= TEXT_SHRINK_MIN:
+			break
+		escala -= TEXT_SHRINK_STEP
+
+	var arriba: float = maxf(abajo - maxf(alto, BUBBLE_MIN_HEIGHT), BUBBLE_TOP_LIMIT)
 	bubble.offset_top = arriba
-	bubble.offset_bottom = BUBBLE_BOTTOM
+	bubble.offset_bottom = abajo
+	# El pico del globo sigue al borde de abajo, si no queda colgado en el
+	# aire en las pantallas altas.
+	tail.position.y = abajo - TAIL_OFFSET
 	# El pivote del rebote va al centro del globo nuevo, si no el pop lo
 	# escala desde un punto que ya no le corresponde y se ve descentrado.
-	bubble.pivot_offset = Vector2(bubble.size.x * 0.5, (BUBBLE_BOTTOM - arriba) * 0.5)
+	bubble.pivot_offset = Vector2(bubble.size.x * 0.5, (abajo - arriba) * 0.5)
 
 ## El globo entra con un rebote corto en cada línea. Sin esto el texto
 ## cambia solo y no se nota que arrancó una frase nueva.

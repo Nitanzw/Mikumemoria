@@ -3,7 +3,7 @@
 `el_huerto_de_sofia.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-Versión 0.39.0 (versionCode 47), ~82MB, arquitectura arm64-v8a solamente.
+Versión 0.41.0 (versionCode 49), ~82MB, arquitectura arm64-v8a solamente.
 
 Este build ya es **completo**: incluye la música de los 10 capítulos,
 que los builds anteriores dejaban afuera para no pasarse del límite de
@@ -312,6 +312,77 @@ Comparten fondo ilustrado, botones de madera y tarjetas con
 habilidades los botones y los precios quedaban **cortados fuera de la
 pantalla**: el `ScrollContainer` permitía scroll horizontal y los textos
 largos empujaban la fila más ancha que los 540px del viewport.
+
+## Novedades de la 0.41.0 — el globo de diálogo se adapta al texto
+
+Los textos largos quedaban cortados: la frase seguía por fuera del globo
+y las últimas líneas caían sobre la huerta. La causa es fina y venía de
+la tanda de los 15 idiomas: `Font.get_multiline_string_size()` mide con
+las métricas de la fuente PRINCIPAL, pero el Label dibuja con la altura
+de línea de la fuente **más sus reservas**, y las Noto de bengalí y
+devanagari — que se agregaron como fallback para esos idiomas — tienen
+ascendente y descendente enormes. Resultado: se medían 35 px por línea y
+se dibujaban 57. Todo el globo se calculaba 1,6 veces más chico de lo
+que después se pintaba.
+
+Ahora el alto se le pregunta al Label (`get_line_height()`), que sí mira
+las fuentes de reserva, y el globo tiene **tres defensas en orden**:
+
+1. crece hacia arriba hasta el techo de la viñeta;
+2. si aun con todo el alto disponible no entra, **achica la letra** en
+   pasos hasta el 62% antes de rendirse;
+3. el piso del globo se mide **desde abajo de la pantalla**, no en una
+   coordenada fija, así en un celular 19,5:9 (viewport 540x1140) hay más
+   lugar en vez de un hueco vacío.
+
+Probado con una frase alemana de 7 renglones, y con el tamaño de texto
+en "enorme": entra completa, achicando la letra de 33 a 21.
+
+De la misma tanda, dos arreglos más:
+
+- **Sofía queda parada en el piso de la viñeta.** Su posición era fija
+  (y=862, pensada para 960 de alto); en una pantalla alta quedaba
+  flotando a media viñeta con la huerta pasándole por debajo de las
+  botas. Ahora se apoya en el borde de abajo, sea cual sea el alto.
+- **Las etiquetas de una línea se achican solas si no entran.** Traducir
+  rompe layouts — "Combo" en alemán es "Höchste Kombo" — y un Label con
+  `clip_text` no avisa: recorta la palabra y listo. Ahora SettingsManager
+  vigila el ancho de esos Label y les baja el cuerpo de letra de a un
+  punto hasta que entren.
+
+**Lo que todavía falta para el lanzamiento internacional** (medido, no
+estimado): las 88 claves que pasan por `tr()` están traducidas a los 15
+idiomas, pero hay **231 textos que nunca pasaron por `tr()`** — los 79
+renglones de historia, los nombres de armas, objetos, jefes y capítulos,
+las medallas y los consejos del resumen. En el juego se ven en castellano
+aunque el idioma sea otro.
+
+## Novedades de la 0.40.0 — el extremo arranca en el escalón 12
+
+En la primera prueba el modo extremo **arrancaba más fácil que el
+normal**, y tiene toda la lógica: las armas y el árbol se comparten,
+así que al extremo se entra con todo mejorado, y el x2,5 sobre un bicho
+de 1 de vida sigue siendo un bicho de 3 de vida.
+
+Ahora el **nivel 1 del extremo pelea con la dificultad del nivel 120 del
+normal** (escalón 12), y de ahí sube igual que siempre — un escalón cada
+10 niveles — con el x2,5 arriba de todo. Lo que se corre es sólo la
+dificultad: capítulo, fondo, música, historia y qué jefe toca siguen
+atados al nivel real, así el extremo recorre los mismos 1000 niveles en
+el mismo orden.
+
+| | Normal 1 | Normal 120 | **Extremo 1** | Extremo 500 |
+|---|---|---|---|---|
+| Escalón | 0 | 12 | **12** | 61 |
+| Vida de una hormiga | 1 | 61 | **153** | 765 |
+| Velocidad | 100 px/s | 235 px/s | **490 px/s** | 2.499 px/s |
+| Aparece un bicho cada | 1,10 s | 0,86 s | **0,55 s** | 0,55 s |
+| Tipos de bicho en juego | 1 | 8 | **8** | 14 |
+| Jefe (vida / daño) | 52 / 200 | 887 / 340 | **1.232 / 450** | 15.885 / 450 |
+
+Con el arma al máximo (107 de daño) una hormiga del extremo 1 se lleva
+**2 golpes** en vez de uno, y las que entran a partir del nivel 120 del
+roster (lombriz, abejorro, mantis) aparecen desde el primer nivel.
 
 ## Novedades de la 0.39.0 — Modo Extremo
 

@@ -233,6 +233,10 @@ func _rescale_node(node: Node) -> void:
 	if not (control is Label or control is Button or control is RichTextLabel):
 		return
 
+	# Antes de cualquier atajo: el vigilante de ancho tiene que quedar
+	# enganchado aunque el nodo no tenga override propio de tamaño.
+	_vigilar_ancho(control)
+
 	var base: int
 	if control.has_meta(ORIGINAL_SIZE_META):
 		base = int(control.get_meta(ORIGINAL_SIZE_META))
@@ -245,6 +249,61 @@ func _rescale_node(node: Node) -> void:
 		control.set_meta(ORIGINAL_SIZE_META, base)
 
 	control.add_theme_font_size_override("font_size", maxi(int(round(base * get_text_scale())), 8))
+
+# --- Que el texto entre en su caja ---
+#
+## Traducir rompe layouts: "Combo" en alemán es "Höchste Kombo" y en
+## bengalí ocupa todavía más. Los Label de una sola línea con clip_text
+## no avisan nada cuando eso pasa — simplemente recortan la palabra a la
+## mitad, y del lado del jugador parece un bug del juego.
+##
+## Por eso el ancho se vigila solo: cuando un Label de una línea no entra
+## en su caja, se le baja el cuerpo de letra de a un punto hasta que
+## entre, con un piso para no volverlo ilegible. Es la misma idea que la
+## del globo de diálogo, pero para las etiquetas sueltas.
+const FIT_MIN_SCALE := 0.62
+
+func _vigilar_ancho(control: Control) -> void:
+	if not (control is Label):
+		return
+	if not control.resized.is_connected(_on_control_resized):
+		control.resized.connect(_on_control_resized.bind(control))
+	fit_label(control)
+
+func _on_control_resized(control: Control) -> void:
+	if is_instance_valid(control):
+		fit_label(control)
+
+## Achica la letra de un Label de una línea hasta que entre en su ancho.
+## Se puede llamar a mano después de cambiarle el texto por código, que
+## es lo único que el `resized` no cubre (cambiar el texto no siempre
+## cambia el tamaño del nodo).
+func fit_label(control: Control) -> void:
+	var etiqueta := control as Label
+	if etiqueta == null or not etiqueta.clip_text:
+		return
+	if etiqueta.autowrap_mode != TextServer.AUTOWRAP_OFF:
+		return
+	if etiqueta.text.is_empty() or etiqueta.size.x <= 1.0:
+		return
+	var fuente := etiqueta.get_theme_font("font")
+	if fuente == null:
+		return
+
+	var base: int
+	if etiqueta.has_meta(ORIGINAL_SIZE_META):
+		base = int(etiqueta.get_meta(ORIGINAL_SIZE_META))
+	else:
+		base = etiqueta.get_theme_font_size("font_size")
+		etiqueta.set_meta(ORIGINAL_SIZE_META, base)
+
+	var tam: int = maxi(int(round(float(base) * get_text_scale())), 8)
+	var piso: int = maxi(int(round(float(tam) * FIT_MIN_SCALE)), 8)
+	while tam > piso and fuente.get_string_size(
+			etiqueta.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, tam).x > etiqueta.size.x:
+		tam -= 1
+	if tam != etiqueta.get_theme_font_size("font_size"):
+		etiqueta.add_theme_font_size_override("font_size", tam)
 
 # --- Persistencia ---
 

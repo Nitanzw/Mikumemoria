@@ -51,6 +51,20 @@ const HARDCORE_MULT := 2.5
 ## era demasiado corto para que se sienta la paliza.
 const HARDCORE_TIME_LIMIT := 60
 
+## Piso de dificultad del modo extremo.
+##
+## Arrancarlo en el escalón 0 era un chiste, y se notó en la primera
+## prueba: las armas, los objetos y el árbol SE COMPARTEN con el modo
+## normal, así que al extremo se entra con todo mejorado y los primeros
+## niveles quedaban más fáciles que el normal donde el jugador venía
+## jugando. El x2.5 sobre un bicho de 1 de vida sigue siendo un bicho de
+## 3 de vida.
+##
+## Ahora el nivel 1 del extremo pelea con la dificultad del nivel 120 del
+## normal, y de ahí sube igual que siempre (un escalón cada 10 niveles),
+## con el x2.5 arriba de todo.
+const HARDCORE_START_LEVEL := 120
+
 ## Lo prende GameManager al entrar o salir del modo (y al cargar la
 ## partida). Se guarda acá para no tener que leer el autoload desde
 ## adentro del RefCounted que el propio autoload construye.
@@ -118,7 +132,7 @@ func get_level_config(level: int) -> Dictionary:
 		"hardcore": hardcore,
 		"difficulty_tier": tier,
 		"time_limit": BOSS_TIME_LIMIT if is_boss_level(level) else duracion,
-		"enemy_types": get_available_enemies(level),
+		"enemy_types": get_available_enemies(get_difficulty_level(level)),
 		"has_mystery_bug": has_mystery_bug(level) and not is_boss_level(level),
 		"mystery_index": get_mystery_bug_index(level),
 		"is_boss": is_boss_level(level),
@@ -132,10 +146,24 @@ func is_boss_level(level: int) -> bool:
 ## Qué jefe toca. Hay 10 arquetipos y se recorren en orden, repitiendo el
 ## ciclo a medida que se avanza (el nivel 5 es el jefe 1, el 10 el 2, ...,
 ## el 50 el 10, el 55 vuelve al 1 pero más fuerte, ver get_boss_config).
+## Nivel "de dificultad": en el modo normal es el nivel mismo; en el
+## extremo es el nivel corrido HARDCORE_START_LEVEL - 1 lugares para
+## arriba.
+##
+## Lo usan la vida, la velocidad, el ritmo de aparición y qué bichos
+## aparecen. El capítulo, el fondo, la música, la historia y qué jefe
+## toca siguen atados al nivel REAL: el modo extremo recorre los mismos
+## 1000 niveles en el mismo orden, con la misma historia, sólo que
+## empezando por donde el normal ya duele.
+func get_difficulty_level(level: int) -> int:
+	if hardcore:
+		return level + HARDCORE_START_LEVEL - 1
+	return level
+
 ## Escalón de dificultad: sube uno cada DIFFICULTY_PERIOD niveles.
 ## El nivel 10 entra en el escalón 1, el 20 en el 2, y así.
 func get_difficulty_tier(level: int) -> int:
-	return int(level / DIFFICULTY_PERIOD)
+	return int(get_difficulty_level(level) / DIFFICULTY_PERIOD)
 
 ## True en los niveles donde el escalón cambia (10, 20, 30...), para
 ## avisarle al jugador que los bichos se pusieron más duros.

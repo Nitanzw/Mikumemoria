@@ -221,11 +221,17 @@ func _maybe_warn_difficulty() -> void:
 		return
 
 	var tier: int = GameManager.level_manager.get_difficulty_tier(level)
-	if GameManager.has_seen_difficulty_warning(tier):
+	# El aviso se recuerda por modo: el extremo arranca en el escalón 12,
+	# y si compartiera la marca con el normal se comerían los avisos el
+	# uno al otro (verías el del 12 en extremo y ya no te aparecería al
+	# llegar al nivel 120 normal). El signo alcanza para separarlos sin
+	# agregar otro campo al guardado.
+	var clave: int = -tier if GameManager.hardcore else tier
+	if GameManager.has_seen_difficulty_warning(clave):
 		_start_gameplay()
 		return
 
-	GameManager.mark_difficulty_warning_seen(tier)
+	GameManager.mark_difficulty_warning_seen(clave)
 	var lines: Array = StoryData.get_difficulty_warning(tier)
 	if lines.is_empty():
 		_start_gameplay()
