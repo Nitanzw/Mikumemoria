@@ -166,7 +166,7 @@ func show_results(score: int, combo_max: int, reward: int, was_boss: bool = fals
 	combo_caption.visible = show_banner
 	combo_plate.visible = show_banner
 	combo_label.visible = show_banner
-	combo_caption.text = "¡COMBO PERFECTO!" if combo_max >= PERFECT_COMBO else "¡BUENA RACHA!"
+	combo_caption.text = tr("¡COMBO PERFECTO!") if combo_max >= PERFECT_COMBO else tr("¡BUENA RACHA!")
 	combo_label.text = "x%d" % combo_max
 	_layout(0.0 if show_banner else BANNER_SHIFT, 0)
 
@@ -175,7 +175,7 @@ func show_results(score: int, combo_max: int, reward: int, was_boss: bool = fals
 	score_icon.texture = ICON_STAR
 	combo_icon.texture = ICON_MEDAL
 	_set_score(score)
-	combo_value.text = "Racha más Larga: x%d" % combo_max
+	combo_value.text = tr("Racha más Larga: x%d") % combo_max
 	reward_row.visible = true
 	_set_reward(reward)
 	note_label.text = _pick_note(combo_max, misses)
@@ -194,7 +194,7 @@ func _set_score(value: int) -> void:
 	score_value.text = "Total de Puntos: %s" % _thousands(value)
 
 func _set_reward(value: int) -> void:
-	reward_value.text = "Recompensa: %s Monedas" % _thousands(value)
+	reward_value.text = tr("Recompensa: %s Monedas") % _thousands(value)
 
 
 ## Entrada del panel. Se arranca invisible y se deja pasar un cuadro para
@@ -303,13 +303,13 @@ func show_defeat(reason: String, lives_left: int) -> void:
 	score_icon.texture = ICON_HEART
 	combo_icon.texture = ICON_HEART
 	score_value.text = reason
-	combo_value.text = "Vidas: %d" % lives_left if lives_left > 0 else "Sin vidas"
+	combo_value.text = (tr("Vidas: %d") % lives_left) if lives_left > 0 else tr("Sin vidas")
 	shop_button.visible = true
 	if lives_left > 0:
-		note_label.text = "Sacudite y volvé a entrar.\nPasá por la tienda si querés mejorar algo."
+		note_label.text = tr("Sacudite y volvé a entrar.") + "\n" + tr("Pasá por la tienda si querés mejorar algo.")
 		next_button.text = "Otra vez"
 		next_button.visible = true
 	else:
-		note_label.text = "Te quedaste sin vidas.\nRegeneran solas, o las recargás en el menú."
+		note_label.text = tr("Te quedaste sin vidas.") + "\n" + tr("Regeneran solas, o las recargás en el menú.")
 		next_button.visible = false
 	await _appear()

@@ -53,7 +53,7 @@ func _ready() -> void:
 	UITheme.style_title(title, 30)
 	UITheme.style_wood_button(back_button)
 
-	back_button.text = "Volver al nivel" if GameManager.return_to_game_after_shop else "Volver"
+	back_button.text = tr("Volver al nivel") if GameManager.return_to_game_after_shop else tr("Volver")
 	back_button.pressed.connect(_on_back_pressed)
 
 	GameManager.coins_changed.connect(func(_v): _refresh())
@@ -273,7 +273,7 @@ func _tile_info(item_id: String, is_weapon: bool) -> Dictionary:
 	var cost_text := str(cost)
 	var cost_color := Color(1, 0.88, 0.5)
 	if locked:
-		cost_text = "Bloqueado"
+		cost_text = tr("Bloqueado")
 		cost_color = Color(0.72, 0.66, 0.6)
 		cost = 0
 	elif cost < 0:
@@ -290,7 +290,7 @@ func _tile_info(item_id: String, is_weapon: bool) -> Dictionary:
 		"cost_text": cost_text,
 		"cost_color": cost_color,
 		"locked": locked,
-		"level_text": "Nivel %d/%d" % [level, max_level],
+		"level_text": tr("Nivel %d/%d") % [level, max_level],
 		"level_color": Color(0.72, 0.66, 0.6) if locked else Color(0.96, 0.92, 0.84),
 	}
 
@@ -300,7 +300,7 @@ func _icon_path(item_id: String, is_weapon: bool) -> String:
 	return str(ItemSystem.get_item(item_id).get("icon", ""))
 
 	if not ItemSystem.is_unlocked(GameManager.items, item_id):
-		return "Bloqueado"
+		return tr("Bloqueado")
 	var level := ItemSystem.get_level(GameManager.items, item_id)
 	var cost := ItemSystem.get_cost(GameManager.items, item_id)
 	if cost < 0:
@@ -328,7 +328,7 @@ func _show_detail(item_id: String, is_weapon: bool) -> void:
 	holder.add_child(_build_row(item_id) if is_weapon else _build_item_row(item_id))
 
 	var close := Button.new()
-	close.text = "Cerrar"
+	close.text = tr("Cerrar")
 	close.custom_minimum_size = Vector2(0, 50)
 	close.add_theme_font_size_override("font_size", 20)
 	UITheme.style_wood_button(close)
@@ -455,7 +455,7 @@ func _build_item_row(item_id: String) -> Control:
 		button.text = ItemSystem.get_lock_reason(item_id)
 		button.disabled = true
 	elif cost < 0:
-		button.text = "Al máximo"
+		button.text = tr("Al máximo")
 		button.disabled = true
 	else:
 		button.text = ("Comprar · %d" % cost) if level == 0 else ("Mejorar · %d" % cost)
@@ -511,7 +511,7 @@ func _build_row(weapon_name: String) -> Control:
 
 	var stats := Label.new()
 	var damage := WeaponSystem.get_damage(weapon_name, level)
-	stats.text = "Daño %d · Radio %d" % [damage, int(data.get("radius", 50))]
+	stats.text = tr("Daño %d · Radio %d") % [damage, int(data.get("radius", 50))]
 	if owned and cost > 0:
 		# Ver el salto antes de pagar es lo que hace que la mejora se
 		# entienda: "Daño 7 → 9" dice más que "nivel 4".
@@ -534,7 +534,7 @@ func _build_row(weapon_name: String) -> Control:
 		button.text = WeaponSystem.get_lock_reason(weapon_name)
 		button.disabled = true
 	elif cost < 0:
-		button.text = "Al máximo" if equipped else "Equipar (máximo)"
+		button.text = tr("Al máximo") if equipped else tr("Equipar")
 		button.disabled = equipped
 		if not equipped:
 			button.pressed.connect(func():
@@ -560,7 +560,7 @@ func _build_row(weapon_name: String) -> Control:
 		equip_button.custom_minimum_size = Vector2(0, 48)
 		equip_button.add_theme_font_size_override("font_size", 18)
 		UITheme.style_wood_button(equip_button)
-		equip_button.text = "Equipar"
+		equip_button.text = tr("Equipar")
 		equip_button.pressed.connect(func():
 			GameManager.equip_weapon(weapon_name)
 			AudioManager.play_sfx("unlock")

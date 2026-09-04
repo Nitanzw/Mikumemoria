@@ -1276,6 +1276,85 @@ completa. Ahí el globo llega a 362px y su borde superior queda en 104,
 o sea pisando un poco la banda de arriba — y queda bien, se lee como una
 viñeta cuyo globo rompe el marco.
 
+## Los 15 idiomas
+
+El juego pasó de 2 idiomas a **15**, con una pantalla de selección que
+sale la primera vez que se abre.
+
+### Lo primero que había que medir era la fuente
+
+Antes de traducir una sola palabra: el juego no tenía fuente propia, usaba
+la de Godot (Open Sans SemiBold). Medido con `Font.has_char()` sobre una
+frase de muestra por idioma:
+
+| idiomas | glifos que faltaban |
+|:--|--:|
+| inglés, español, francés, portugués, alemán, italiano, neerlandés, ruso | **0** |
+| chino, japonés, coreano, árabe, hindi, bengalí, urdu | **todos** |
+
+O sea: 7 de los 15 idiomas pedidos salían **enteros en cuadraditos**. Sin
+resolver eso, traducir no servía de nada.
+
+### Las fuentes van recortadas, y por eso pesan 316 KB
+
+Se bajan las Noto de cada sistema de escritura y se **recortan a los
+glifos que el juego usa de verdad**, leyéndolos del propio CSV:
+
+| fuente | completa | recortada |
+|:--|--:|--:|
+| Noto Sans SC (chino) | 10.284 KB | **42 KB** |
+| Noto Sans JP | 5.194 KB | **55 KB** |
+| Noto Sans KR | 6.015 KB | **27 KB** |
+| Árabe + Devanagari + Bengalí | 539 KB | **193 KB** |
+| **total** | **22 MB** | **316 KB** |
+
+Sin recortar, el APK se iba a 100 MB por las fuentes. El precio es que si
+se agrega una cadena nueva en uno de esos idiomas, sus glifos no van a
+estar: por eso el recorte vive en `tools/subset_fonts.py` y se vuelve a
+correr cada vez que cambian las traducciones.
+
+Van como **fallback** de la fuente por defecto, no como fuente principal.
+Así el latino se sigue dibujando con Open Sans —el look no cambia— y sólo
+los caracteres que Open Sans no tiene caen en la Noto que corresponda. Se
+cuelgan una vez al arrancar, en `SettingsManager`, y valen para toda la
+interfaz sin tocar un solo `Label`.
+
+### La pantalla de selección
+
+Sale **antes que todo**, incluso antes de la intro: la intro está en
+español y no tiene sentido mostrársela a alguien que instaló el juego en
+Corea.
+
+Tres decisiones:
+
+- **Cada idioma se muestra escrito en su propio idioma.** Alguien que abre
+  el juego en un idioma que no entiende necesita reconocer el suyo en la
+  lista: a "日本語" lo reconoce, a "Japonés" no.
+- **Arranca marcado el idioma del celular** (`OS.get_locale()`), así para
+  la mayoría se resuelve con un toque. Si el idioma del sistema no está
+  entre los 15, cae en inglés.
+- **Se aplica al tocar, antes de confirmar.** Podés ver la pantalla en el
+  idioma antes de decidir, y el segundo toque sobre el que ya está
+  marcado confirma — sin un botón de "aceptar" que además habría que
+  traducir aparte.
+
+### El respaldo pasa a inglés
+
+Era español. Si a un idioma le falta una clave, un jugador de Corea
+entiende mucho más el inglés que el español.
+
+### 24 cadenas que no pasaban por el CSV
+
+Al probar la tienda en árabe apareció "Nivel 0/10" en español en medio del
+árabe: había textos armados con formato (`"Nivel %d/%d" % [...]`) que
+nunca pasaban por `tr()`. Se buscaron con un script en vez de a ojo y
+salieron 24, entre el HUD, la tienda, el resumen de nivel y el menú. Todas
+tienen ahora su clave, con los `%d` verificados uno por uno: si un idioma
+se come un placeholder, el juego crashea al formatear.
+
+De paso, en árabe Godot **espeja la grilla solo**: los casilleros de la
+tienda se ordenan de derecha a izquierda sin tocar nada.
+
 ## Ajustes
 
 Nueva pantalla, entrando desde el menú principal.

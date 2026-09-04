@@ -17,7 +17,7 @@ func _ready() -> void:
 	add_to_group(GRUPO)
 
 func set_level_label(level: int, chapter_name: String) -> void:
-	level_label.text = "Nivel %d · %s" % [level, chapter_name]
+	level_label.text = tr("Nivel %d · %s") % [level, chapter_name]
 
 func set_score(value: int) -> void:
 	score_label.text = str(value)
@@ -27,7 +27,7 @@ func set_coins(value: int) -> void:
 
 func set_combo(value: int) -> void:
 	if value >= 2:
-		combo_label.text = "Combo x%d" % value
+		combo_label.text = tr("Combo x%d") % value
 		combo_label.visible = true
 	else:
 		combo_label.visible = false
@@ -68,7 +68,9 @@ func setup_boss_bars(max_hp: int, boss_name: String) -> void:
 
 	# En la placa de abajo no entra el nombre completo, así que va la
 	# primera palabra; el nombre entero se lee arriba.
-	boss_title.text = "VIDA " + boss_name.split(" ")[0].to_upper()
+	# El nombre del jefe no se traduce (es propio), así que la etiqueta usa
+	# una clave fija en vez de armarse con el nombre.
+	boss_title.text = tr("VIDA JEFE")
 	set_player_hp(max_hp, max_hp)
 
 func set_boss_hp(current: int, maximum: int) -> void:

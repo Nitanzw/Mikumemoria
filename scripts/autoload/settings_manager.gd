@@ -24,16 +24,60 @@ const TEXT_SCALES := {
 	"enorme": 1.3,
 }
 
+## Los 15 idiomas, cada uno escrito EN SU PROPIO IDIOMA. Es a propósito:
+## alguien que abre el juego y no entiende el idioma en el que está
+## necesita reconocer el suyo en la lista, y "日本語" lo reconoce, "Japonés"
+## no. El orden va por cantidad de hablantes, no alfabético.
 const LANGUAGES := {
-	"es": "Español",
 	"en": "English",
+	"zh_CN": "简体中文",
+	"es": "Español",
+	"hi": "हिन्दी",
+	"ar": "العربية",
+	"bn": "বাংলা",
+	"pt": "Português",
+	"ru": "Русский",
+	"ur": "اردو",
+	"ja": "日本語",
+	"de": "Deutsch",
+	"fr": "Français",
+	"ko": "한국어",
+	"it": "Italiano",
+	"nl": "Nederlands",
 }
+
+## Fuentes que se cuelgan como respaldo de la fuente por defecto.
+##
+## La de Godot (Open Sans) cubre latino, cirílico y griego, y NADA de
+## chino, japonés, coreano, árabe, devanagari ni bengalí — medido: de esos
+## idiomas no tenía un solo glifo, así que el texto salía en cuadraditos.
+##
+## Van como fallback y no como fuente principal para no perder el look:
+## el latino sigue dibujándose con Open Sans, y sólo los caracteres que
+## Open Sans no tiene caen en la Noto que corresponda.
+##
+## Están recortadas a los glifos que el juego usa de verdad (ver
+## tools/subset_fonts.py): enteras pesan 22 MB, recortadas 316 KB.
+const FONT_FALLBACKS := [
+	"res://assets/fonts/NotoSansSC.ttf",
+	"res://assets/fonts/NotoSansJP.ttf",
+	"res://assets/fonts/NotoSansKR.ttf",
+	"res://assets/fonts/NotoSansArabic.ttf",
+	"res://assets/fonts/NotoSansDevanagari.ttf",
+	"res://assets/fonts/NotoSansBengali.ttf",
+]
+
+## Idiomas que se escriben de derecha a izquierda.
+const RTL_LANGUAGES := ["ar", "ur"]
 
 var master_volume: float = DEFAULT_VOLUME
 var music_volume: float = DEFAULT_VOLUME
 var sfx_volume: float = DEFAULT_VOLUME
 var text_size: String = "normal"
 var language: String = "es"
+## Falso hasta que el jugador elige idioma la primera vez. Es lo que
+## dispara la pantalla de selección al abrir el juego recién instalado.
+var language_chosen: bool = false
 
 ## El mute va SEPARADO del volumen a propósito: si mutear pusiera la barra
 ## en cero, al volver no habría a dónde volver. Así el nivel se conserva y
@@ -43,12 +87,43 @@ var music_muted: bool = false
 var sfx_muted: bool = false
 
 func _ready() -> void:
+	_install_font_fallbacks()
 	load_settings()
 	apply_all()
 	# Cada nodo de texto que entra al árbol se ajusta solo. Hace falta
 	# engancharse acá y no en cada pantalla porque media UI se construye
 	# por código (la tienda arma sus casilleros a mano).
 	get_tree().node_added.connect(_on_node_added)
+
+## Cuelga las Noto de la fuente por defecto. Se hace una sola vez, al
+## arrancar, y vale para TODA la interfaz: no hay que tocar ni un Label.
+func _install_font_fallbacks() -> void:
+	var base := ThemeDB.fallback_font
+	if base == null:
+		return
+	var caidas: Array[Font] = []
+	for ruta in FONT_FALLBACKS:
+		if ResourceLoader.exists(ruta):
+			caidas.append(load(ruta))
+		else:
+			push_warning("[Settings] falta la fuente %s: ese idioma va a salir en cuadraditos" % ruta)
+	base.fallbacks = caidas
+
+func is_rtl(code: String = "") -> bool:
+	return (code if code != "" else language) in RTL_LANGUAGES
+
+## Idioma sugerido según el que tiene puesto el celular, para que la
+## pantalla de selección arranque con esa opción marcada. Si el idioma del
+## sistema no está entre los 15, cae en inglés.
+func suggested_language() -> String:
+	var sistema := OS.get_locale()
+	if LANGUAGES.has(sistema):
+		return sistema
+	var corto := sistema.split("_")[0]
+	for code in LANGUAGES:
+		if code == corto or code.begins_with(corto + "_"):
+			return code
+	return "en"
 
 func get_text_scale() -> float:
 	return float(TEXT_SCALES.get(text_size, 1.0))
@@ -120,6 +195,14 @@ func set_text_size(size_name: String) -> void:
 	save_settings()
 	settings_changed.emit()
 
+## Marca que el jugador ya eligió, para no volver a preguntarle.
+func confirm_language(code: String) -> void:
+	language_chosen = true
+	if LANGUAGES.has(code) and code != language:
+		language = code
+		TranslationServer.set_locale(language)
+	save_settings()
+
 func set_language(code: String) -> void:
 	if not LANGUAGES.has(code) or code == language:
 		return
@@ -176,6 +259,7 @@ func save_settings() -> void:
 		"sfx_volume": sfx_volume,
 		"text_size": text_size,
 		"language": language,
+		"language_chosen": language_chosen,
 		"master_muted": master_muted,
 		"music_muted": music_muted,
 		"sfx_muted": sfx_muted,
@@ -199,6 +283,7 @@ func load_settings() -> void:
 	text_size = size_name if TEXT_SCALES.has(size_name) else "normal"
 	var code := str(parsed.get("language", "es"))
 	language = code if LANGUAGES.has(code) else "es"
+	language_chosen = bool(parsed.get("language_chosen", false))
 	master_muted = bool(parsed.get("master_muted", false))
 	music_muted = bool(parsed.get("music_muted", false))
 	sfx_muted = bool(parsed.get("sfx_muted", false))

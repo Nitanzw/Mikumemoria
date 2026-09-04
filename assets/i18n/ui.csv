@@ -1,63 +1,86 @@
-keys,es,en
-Jugar,Jugar,Play
-Tienda,Tienda,Shop
-Habilidades,Habilidades,Skills
-Historia,Historia,Story
-Ajustes,Ajustes,Settings
-Volver,Volver,Back
-Menú,Menú,Menu
-Seguir,Seguir,Continue
-Otra vez,Otra vez,Try again
-Cerrar,Cerrar,Close
-Volver al Menú,Volver al Menú,Back to Menu
-Volver al Mapa,Volver al Mapa,Back to Map
-Volver al nivel,Volver al nivel,Back to level
-Mapa de Mundos,Mapa de Mundos,World Map
-Capítulo,Capítulo,Chapter
-Jefe,Jefe,Boss
-VIDA JEFE,VIDA JEFE,BOSS HP
-VIDA SOFÍA,VIDA SOFÍA,SOFÍA HP
-Saltar ▸,Saltar ▸,Skip ▸
-Armas,Armas,Weapons
-Objetos,Objetos,Items
-Poderes,Poderes,Powers
-Equipar,Equipar,Equip
-Equipado,Equipado,Equipped
-Al máximo,Al máximo,Maxed out
-Bloqueado,Bloqueado,Locked
-Completo,Completo,Complete
-Ver en lista,Ver en lista,List view
-Ver en cuadrícula,Ver en cuadrícula,Grid view
-Sonido,Sonido,Sound
-Texto,Texto,Text
-Idioma,Idioma,Language
-General,General,Master
-Música,Música,Music
-Efectos,Efectos,Effects
-Chico,Chico,Small
-Normal,Normal,Normal
-Grande,Grande,Large
-Enorme,Enorme,Huge
-Volver a los valores de fábrica,Volver a los valores de fábrica,Reset to defaults
-Guantes de Trabajo,Guantes de Trabajo,Work Gloves
-Botiquín de la Abuela,Botiquín de la Abuela,Grandma's First Aid Kit
-Delantal Reforzado,Delantal Reforzado,Reinforced Apron
-Repelente Casero,Repelente Casero,Homemade Repellent
-Trébol de la Suerte,Trébol de la Suerte,Lucky Clover
-Frasco de Monedas,Frasco de Monedas,Coin Jar
-Reloj de Arena,Reloj de Arena,Hourglass
-Lupa del Abuelo,Lupa del Abuelo,Grandpa's Magnifier
-Reloj de Bolsillo,Reloj de Bolsillo,Pocket Watch
-Campo Expansivo,Campo Expansivo,Expanding Field
-Tormenta de Rayos,Tormenta de Rayos,Lightning Storm
-Lanzallamas de la Abuela,Lanzallamas de la Abuela,Grandma's Flamethrower
-Botas de Goma,Botas de Goma,Rubber Boots
-Zapato Viejo,Zapato Viejo,Old Shoe
-Chancla de Goma,Chancla de Goma,Rubber Flip-Flop
-Matamoscas Metálico,Matamoscas Metálico,Metal Flyswatter
-Sartén de Hierro,Sartén de Hierro,Iron Frying Pan
-Pala Electrificada,Pala Electrificada,Electrified Shovel
-Fuerza,Fuerza,Strength
-Fortuna,Fortuna,Fortune
-Precisión,Precisión,Precision
-Los menús están en los dos idiomas. La historia y las descripciones todavía solo en español.,Los menús están en los dos idiomas. La historia y las descripciones todavía solo en español.,The menus are in both languages. The story and item descriptions are still Spanish only.
+keys,es,en,zh_CN,fr,ar,pt,ru,ja,ko,de,it,nl,hi,bn,ur
+Jugar,Jugar,Play,开始游戏,Jouer,العب,Jogar,Играть,プレイ,플레이,Spielen,Gioca,Spelen,खेलें,খেলুন,کھیلیں
+Tienda,Tienda,Shop,商店,Boutique,المتجر,Loja,Магазин,ショップ,상점,Laden,Negozio,Winkel,दुकान,দোকান,دکان
+Habilidades,Habilidades,Skills,技能,Talents,المهارات,Talentos,Навыки,スキル,기술,Fähigkeiten,Abilità,Vaardigheden,कौशल,দক্ষতা,مہارتیں
+Historia,Historia,Story,剧情,Histoire,القصة,História,История,ストーリー,이야기,Geschichte,Storia,Verhaal,कहानी,গল্প,کہانی
+Ajustes,Ajustes,Settings,设置,Réglages,الإعدادات,Ajustes,Настройки,設定,설정,Einstellungen,Impostazioni,Instellingen,सेटिंग्स,সেটিংস,ترتیبات
+Volver,Volver,Back,返回,Retour,رجوع,Voltar,Назад,戻る,뒤로,Zurück,Indietro,Terug,वापस,পিছনে,واپس
+Menú,Menú,Menu,菜单,Menu,القائمة,Menu,Меню,メニュー,메뉴,Menü,Menu,Menu,मेन्यू,মেনু,مینو
+Seguir,Seguir,Continue,继续,Continuer,متابعة,Continuar,Продолжить,つづける,계속,Weiter,Continua,Doorgaan,जारी रखें,চালিয়ে যান,جاری رکھیں
+Otra vez,Otra vez,Try again,再试一次,Réessayer,حاول مجددا,Tentar de novo,Ещё раз,もう一度,다시 시도,Nochmal,Riprova,Opnieuw,फिर से,আবার চেষ্টা,دوبارہ کوشش
+Cerrar,Cerrar,Close,关闭,Fermer,إغلاق,Fechar,Закрыть,閉じる,닫기,Schließen,Chiudi,Sluiten,बंद करें,বন্ধ,بند کریں
+Volver al Menú,Volver al Menú,Back to Menu,返回菜单,Retour au menu,العودة للقائمة,Voltar ao menu,В меню,メニューへ,메뉴로,Zum Menü,Al menu,Naar menu,मेन्यू पर,মেনুতে,مینو پر
+Volver al Mapa,Volver al Mapa,Back to Map,返回地图,Retour à la carte,العودة للخريطة,Voltar ao mapa,К карте,マップへ,지도로,Zur Karte,Alla mappa,Naar kaart,नक्शे पर,মানচিত্রে,نقشے پر
+Volver al nivel,Volver al nivel,Back to level,返回关卡,Retour au niveau,العودة للمستوى,Voltar ao nível,К уровню,レベルへ,레벨로,Zum Level,Al livello,Naar level,स्तर पर,স্তরে,لیول پر
+Mapa de Mundos,Mapa de Mundos,World Map,世界地图,Carte du monde,خريطة العالم,Mapa do mundo,Карта мира,ワールドマップ,월드 맵,Weltkarte,Mappa del mondo,Wereldkaart,विश्व मानचित्र,বিশ্ব মানচিত্র,دنیا کا نقشہ
+Capítulo,Capítulo,Chapter,章节,Chapitre,الفصل,Capítulo,Глава,チャプター,챕터,Kapitel,Capitolo,Hoofdstuk,अध्याय,অধ্যায়,باب
+Jefe,Jefe,Boss,首领,Boss,الزعيم,Chefe,Босс,ボス,보스,Boss,Boss,Baas,बॉस,বস,باس
+VIDA JEFE,VIDA JEFE,BOSS HP,首领血量,PV DU BOSS,صحة الزعيم,VIDA DO CHEFE,ЗДОРОВЬЕ БОССА,ボスのHP,보스 체력,BOSS-LP,VITA BOSS,BAAS HP,बॉस HP,বস HP,باس ایچ پی
+VIDA SOFÍA,VIDA SOFÍA,SOFÍA HP,索菲亚血量,PV DE SOFÍA,صحة صوفيا,VIDA DA SOFÍA,ЗДОРОВЬЕ СОФИИ,ソフィアのHP,소피아 체력,SOFÍA-LP,VITA SOFÍA,SOFÍA HP,सोफ़िया HP,সোফিয়া HP,صوفیا ایچ پی
+Saltar ▸,Saltar ▸,Skip ▸,跳过 ▸,Passer ▸,تخطي ▸,Pular ▸,Пропустить ▸,スキップ ▸,건너뛰기 ▸,Überspringen ▸,Salta ▸,Overslaan ▸,छोड़ें ▸,এড়িয়ে যান ▸,چھوڑیں ▸
+Armas,Armas,Weapons,武器,Armes,الأسلحة,Armas,Оружие,武器,무기,Waffen,Armi,Wapens,हथियार,অস্ত্র,ہتھیار
+Objetos,Objetos,Items,道具,Objets,الأغراض,Itens,Предметы,アイテム,아이템,Gegenstände,Oggetti,Voorwerpen,वस्तुएं,জিনিস,اشیاء
+Poderes,Poderes,Powers,技能道具,Pouvoirs,القدرات,Poderes,Способности,パワー,파워,Kräfte,Poteri,Krachten,शक्तियां,ক্ষমতা,طاقتیں
+Equipar,Equipar,Equip,装备,Équiper,تجهيز,Equipar,Экипировать,装備する,장착,Ausrüsten,Equipaggia,Uitrusten,लैस करें,সজ্জিত করুন,لیس کریں
+Equipado,Equipado,Equipped,已装备,Équipé,مجهز,Equipado,Экипировано,装備中,장착됨,Ausgerüstet,Equipaggiato,Uitgerust,लैस,সজ্জিত,لیس
+Al máximo,Al máximo,Maxed out,已满级,Niveau max,الحد الأقصى,No máximo,Максимум,最大レベル,최대,Maximal,Al massimo,Maximaal,अधिकतम,সর্বোচ্চ,زیادہ سے زیادہ
+Bloqueado,Bloqueado,Locked,已锁定,Verrouillé,مقفل,Bloqueado,Заблокировано,ロック中,잠김,Gesperrt,Bloccato,Vergrendeld,बंद,লক করা,مقفل
+Completo,Completo,Complete,已完成,Terminé,مكتمل,Completo,Завершено,完了,완료,Fertig,Completo,Voltooid,पूर्ण,সম্পূর্ণ,مکمل
+Sonido,Sonido,Sound,声音,Son,الصوت,Som,Звук,サウンド,소리,Ton,Audio,Geluid,ध्वनि,শব্দ,آواز
+Texto,Texto,Text,文字,Texte,النص,Texto,Текст,テキスト,텍스트,Text,Testo,Tekst,पाठ,লেখা,متن
+Idioma,Idioma,Language,语言,Langue,اللغة,Idioma,Язык,言語,언어,Sprache,Lingua,Taal,भाषा,ভাষা,زبان
+General,General,Master,总音量,Général,العام,Geral,Общий,全体,전체,Gesamt,Generale,Algemeen,मुख्य,প্রধান,مجموعی
+Música,Música,Music,音乐,Musique,الموسيقى,Música,Музыка,音楽,음악,Musik,Musica,Muziek,संगीत,সঙ্গীত,موسیقی
+Efectos,Efectos,Effects,音效,Effets,المؤثرات,Efeitos,Эффекты,効果音,효과음,Effekte,Effetti,Effecten,प्रभाव,প্রভাব,اثرات
+Chico,Chico,Small,小,Petit,صغير,Pequeno,Мелкий,小,작게,Klein,Piccolo,Klein,छोटा,ছোট,چھوٹا
+Normal,Normal,Normal,中,Normal,عادي,Normal,Обычный,標準,보통,Normal,Normale,Normaal,सामान्य,স্বাভাবিক,عام
+Grande,Grande,Large,大,Grand,كبير,Grande,Крупный,大,크게,Groß,Grande,Groot,बड़ा,বড়,بڑا
+Enorme,Enorme,Huge,特大,Très grand,ضخم,Enorme,Огромный,特大,아주 크게,Sehr groß,Enorme,Zeer groot,बहुत बड़ा,অনেক বড়,بہت بڑا
+Volver a los valores de fábrica,Volver a los valores de fábrica,Reset to defaults,恢复默认设置,Réinitialiser,إعادة الضبط,Restaurar padrões,Сбросить настройки,初期設定に戻す,기본값으로 초기화,Zurücksetzen,Ripristina i valori,Standaard herstellen,डिफ़ॉल्ट पर लौटें,ডিফল্টে ফিরুন,ڈیفالٹ پر واپس
+Guantes de Trabajo,Guantes de Trabajo,Work Gloves,工作手套,Gants de travail,قفازات العمل,Luvas de trabalho,Рабочие перчатки,作業用手袋,작업 장갑,Arbeitshandschuhe,Guanti da lavoro,Werkhandschoenen,काम के दस्ताने,কাজের দস্তানা,کام کے دستانے
+Botiquín de la Abuela,Botiquín de la Abuela,Grandma's First Aid Kit,奶奶的急救箱,Trousse de secours de mamie,حقيبة إسعاف الجدة,Kit da vovó,Аптечка бабушки,おばあちゃんの救急箱,할머니의 구급상자,Omas Erste-Hilfe-Kasten,Kit di nonna,Oma's EHBO-doos,दादी की प्राथमिक चिकित्सा,দাদির প্রাথমিক চিকিৎসা,دادی کی ابتدائی طبی امداد
+Delantal Reforzado,Delantal Reforzado,Reinforced Apron,加固围裙,Tablier renforcé,مريلة معززة,Avental reforçado,Усиленный фартук,強化エプロン,보강된 앞치마,Verstärkte Schürze,Grembiule rinforzato,Versterkt schort,मजबूत एप्रन,শক্ত অ্যাপ্রন,مضبوط تہبند
+Repelente Casero,Repelente Casero,Homemade Repellent,自制驱虫剂,Répulsif maison,طارد حشرات منزلي,Repelente caseiro,Самодельный репеллент,手作り虫除け,수제 방충제,Hausgemachtes Mittel,Repellente fatto in casa,Zelfgemaakt afweermiddel,घरेलू विकर्षक,ঘরোয়া প্রতিরোধক,گھریلو دافع
+Trébol de la Suerte,Trébol de la Suerte,Lucky Clover,幸运四叶草,Trèfle porte-bonheur,برسيم الحظ,Trevo da sorte,Клевер удачи,幸運のクローバー,행운의 클로버,Glücksklee,Trifoglio portafortuna,Geluksklavertje,भाग्यशाली तिपतिया,ভাগ্যের ক্লোভার,خوش قسمت شبدر
+Frasco de Monedas,Frasco de Monedas,Coin Jar,硬币罐,Bocal à pièces,جرة العملات,Pote de moedas,Банка с монетами,コインの瓶,동전 항아리,Münzglas,Barattolo di monete,Muntenpot,सिक्कों का जार,মুদ্রার বয়াম,سکوں کا مرتبان
+Reloj de Arena,Reloj de Arena,Hourglass,沙漏,Sablier,الساعة الرملية,Ampulheta,Песочные часы,砂時計,모래시계,Sanduhr,Clessidra,Zandloper,रेत घड़ी,বালিঘড়ি,ریت گھڑی
+Lupa del Abuelo,Lupa del Abuelo,Grandpa's Magnifier,爷爷的放大镜,Loupe de papi,عدسة الجد,Lupa do vovô,Лупа дедушки,おじいちゃんの虫眼鏡,할아버지의 돋보기,Opas Lupe,Lente del nonno,Opa's vergrootglas,दादा का लेंस,দাদুর ম্যাগনিফায়ার,دادا کا عدسہ
+Reloj de Bolsillo,Reloj de Bolsillo,Pocket Watch,怀表,Montre à gousset,ساعة الجيب,Relógio de bolso,Карманные часы,懐中時計,회중시계,Taschenuhr,Orologio da tasca,Zakhorloge,जेब घड़ी,পকেট ঘড়ি,جیبی گھڑی
+Campo Expansivo,Campo Expansivo,Expanding Field,扩散力场,Champ expansif,حقل التوسع,Campo expansivo,Расширяющееся поле,拡張フィールド,확장 필드,Ausdehnendes Feld,Campo espansivo,Uitdijend veld,विस्तारित क्षेत्र,প্রসারিত ক্ষেত্র,پھیلتا میدان
+Tormenta de Rayos,Tormenta de Rayos,Lightning Storm,闪电风暴,Orage de foudre,عاصفة البرق,Tempestade de raios,Гроза,雷の嵐,번개 폭풍,Blitzsturm,Tempesta di fulmini,Bliksemstorm,बिजली का तूफान,বজ্রঝড়,بجلی کا طوفان
+Lanzallamas de la Abuela,Lanzallamas de la Abuela,Grandma's Flamethrower,奶奶的喷火器,Lance-flammes de mamie,قاذف لهب الجدة,Lança-chamas da vovó,Огнемёт бабушки,おばあちゃんの火炎放射器,할머니의 화염방사기,Omas Flammenwerfer,Lanciafiamme di nonna,Oma's vlammenwerper,दादी का फ्लेमथ्रोअर,দাদির অগ্নিনিক্ষেপক,دادی کا شعلہ پھینک
+Botas de Goma,Botas de Goma,Rubber Boots,橡胶靴,Bottes en caoutchouc,أحذية مطاطية,Botas de borracha,Резиновые сапоги,ゴム長靴,고무 장화,Gummistiefel,Stivali di gomma,Rubberlaarzen,रबर के जूते,রাবার বুট,ربڑ کے جوتے
+Zapato Viejo,Zapato Viejo,Old Shoe,旧鞋子,Vieille chaussure,حذاء قديم,Sapato velho,Старый ботинок,古い靴,낡은 신발,Alter Schuh,Scarpa vecchia,Oude schoen,पुराना जूता,পুরনো জুতা,پرانا جوتا
+Chancla de Goma,Chancla de Goma,Rubber Flip-Flop,橡胶拖鞋,Tong en caoutchouc,شبشب مطاطي,Chinelo de borracha,Резиновый шлёпанец,ゴムサンダル,고무 슬리퍼,Gummi-Flipflop,Infradito di gomma,Rubberen slipper,रबर की चप्पल,রাবার স্যান্ডেল,ربڑ کی چپل
+Matamoscas Metálico,Matamoscas Metálico,Metal Flyswatter,金属苍蝇拍,Tapette métallique,مضرب ذباب معدني,Mata-moscas de metal,Металлическая мухобойка,金属のハエたたき,금속 파리채,Metall-Fliegenklatsche,Scacciamosche di metallo,Metalen vliegenmepper,धातु मक्खी मारक,ধাতব মাছি মারার,دھاتی مکھی مار
+Sartén de Hierro,Sartén de Hierro,Iron Frying Pan,铁煎锅,Poêle en fonte,مقلاة حديدية,Frigideira de ferro,Чугунная сковорода,鉄のフライパン,무쇠 프라이팬,Eisenpfanne,Padella di ferro,IJzeren koekenpan,लोहे का तवा,লোহার কড়াই,لوہے کا توا
+Pala Electrificada,Pala Electrificada,Electrified Shovel,电击铁锹,Pelle électrifiée,مجرفة مكهربة,Pá eletrificada,Электрическая лопата,電撃シャベル,전기 삽,Elektroschaufel,Pala elettrificata,Geëlektrificeerde schop,बिजली वाला फावड़ा,বৈদ্যুতিক বেলচা,بجلی والا بیلچہ
+Fuerza,Fuerza,Strength,力量,Force,القوة,Força,Сила,力,힘,Stärke,Forza,Kracht,शक्ति,শক্তি,طاقت
+Fortuna,Fortuna,Fortune,财运,Fortune,الحظ,Sorte,Удача,幸運,행운,Glück,Fortuna,Fortuin,भाग्य,ভাগ্য,قسمت
+Precisión,Precisión,Precision,精准,Précision,الدقة,Precisão,Точность,精度,정밀,Präzision,Precisione,Precisie,सटीकता,নির্ভুলতা,درستگی
+Elegí tu idioma,Elegí tu idioma,Choose your language,选择你的语言,Choisis ta langue,اختر لغتك,Escolha seu idioma,Выберите язык,言語を選んでください,언어를 선택하세요,Wähle deine Sprache,Scegli la lingua,Kies je taal,अपनी भाषा चुनें,আপনার ভাষা বাছুন,اپنی زبان منتخب کریں
+Se puede cambiar después en Ajustes.,Se puede cambiar después en Ajustes.,You can change it later in Settings.,以后可以在设置中更改。,Tu peux la changer plus tard dans les réglages.,يمكنك تغييرها لاحقا من الإعدادات.,Você pode mudar depois nos ajustes.,Это можно изменить позже в настройках.,あとで設定から変更できます。,나중에 설정에서 바꿀 수 있습니다.,Du kannst sie später in den Einstellungen ändern.,Puoi cambiarla dopo nelle impostazioni.,Je kunt dit later wijzigen bij instellingen.,आप इसे बाद में सेटिंग्स में बदल सकते हैं।,আপনি পরে সেটিংসে বদলাতে পারবেন।,آپ اسے بعد میں ترتیبات میں بدل سکتے ہیں۔
+La historia todavía está solo en español.,La historia todavía está solo en español.,The story is still Spanish only.,剧情目前仅有西班牙语。,L'histoire est encore uniquement en espagnol.,القصة لا تزال بالإسبانية فقط.,A história ainda está só em espanhol.,История пока только на испанском.,ストーリーはまだスペイン語のみです。,이야기는 아직 스페인어만 지원합니다.,Die Geschichte ist noch nur auf Spanisch.,La storia è ancora solo in spagnolo.,Het verhaal is nog alleen in het Spaans.,कहानी अभी केवल स्पेनिश में है।,গল্প এখনও শুধু স্প্যানিশে।,کہانی ابھی صرف ہسپانوی میں ہے۔
+Nivel %d / 1000,Nivel %d / 1000,Level %d / 1000,关卡 %d / 1000,Niveau %d / 1000,المستوى %d / 1000,Nível %d / 1000,Уровень %d / 1000,レベル %d / 1000,레벨 %d / 1000,Level %d / 1000,Livello %d / 1000,Level %d / 1000,स्तर %d / 1000,স্তর %d / 1000,لیول %d / 1000
+Incógnitos: %d / 100,Incógnitos: %d / 100,Mystery bugs: %d / 100,神秘虫: %d / 100,Insectes mystère : %d / 100,حشرات غامضة: %d / 100,Insetos misteriosos: %d / 100,Загадочные: %d / 100,ナゾの虫: %d / 100,수수께끼 벌레: %d / 100,Rätselinsekten: %d / 100,Insetti misteriosi: %d / 100,Mysteriebeestjes: %d / 100,रहस्यमय कीड़े: %d / 100,রহস্যময় পোকা: %d / 100,پراسرار کیڑے: %d / 100
+Próxima vida en %02d:%02d,Próxima vida en %02d:%02d,Next life in %02d:%02d,下一条命 %02d:%02d,Prochaine vie dans %02d:%02d,الحياة التالية بعد %02d:%02d,Próxima vida em %02d:%02d,Следующая жизнь через %02d:%02d,次のライフまで %02d:%02d,다음 생명까지 %02d:%02d,Nächstes Leben in %02d:%02d,Prossima vita tra %02d:%02d,Volgend leven over %02d:%02d,अगली ज़िंदगी %02d:%02d में,পরের জীবন %02d:%02d এ,اگلی زندگی %02d:%02d میں
+Llenar vidas por %d,Llenar vidas por %d,Refill lives for %d,补满生命 %d,Recharger pour %d,املأ الأرواح مقابل %d,Encher vidas por %d,Пополнить за %d,ライフ回復 %d,생명 채우기 %d,Leben auffüllen für %d,Ricarica vite per %d,Levens bijvullen voor %d,%d में जीवन भरें,%d এ জীবন পূরণ,%d میں زندگیاں بھریں
+Nivel %d · %s,Nivel %d · %s,Level %d · %s,关卡 %d · %s,Niveau %d · %s,المستوى %d · %s,Nível %d · %s,Уровень %d · %s,レベル %d · %s,레벨 %d · %s,Level %d · %s,Livello %d · %s,Level %d · %s,स्तर %d · %s,স্তর %d · %s,لیول %d · %s
+Combo x%d,Combo x%d,Combo x%d,连击 x%d,Combo x%d,تسلسل x%d,Combo x%d,Комбо x%d,コンボ x%d,콤보 x%d,Combo x%d,Combo x%d,Combo x%d,कॉम्बो x%d,কম্বো x%d,کومبو x%d
+Daño %d · Radio %d,Daño %d · Radio %d,Damage %d · Radius %d,伤害 %d · 范围 %d,Dégâts %d · Rayon %d,الضرر %d · النطاق %d,Dano %d · Raio %d,Урон %d · Радиус %d,ダメージ %d · 範囲 %d,공격력 %d · 범위 %d,Schaden %d · Radius %d,Danno %d · Raggio %d,Schade %d · Bereik %d,क्षति %d · दायरा %d,ক্ষতি %d · ব্যাসার্ধ %d,نقصان %d · دائرہ %d
+Mejorar · %d,Mejorar · %d,Upgrade · %d,升级 · %d,Améliorer · %d,ترقية · %d,Melhorar · %d,Улучшить · %d,強化 · %d,강화 · %d,Verbessern · %d,Potenzia · %d,Verbeteren · %d,अपग्रेड · %d,আপগ্রেড · %d,اپ گریڈ · %d
+Nivel %d/%d,Nivel %d/%d,Level %d/%d,等级 %d/%d,Niveau %d/%d,المستوى %d/%d,Nível %d/%d,Уровень %d/%d,レベル %d/%d,레벨 %d/%d,Stufe %d/%d,Livello %d/%d,Niveau %d/%d,स्तर %d/%d,স্তর %d/%d,لیول %d/%d
+Capítulo %d,Capítulo %d,Chapter %d,第 %d 章,Chapitre %d,الفصل %d,Capítulo %d,Глава %d,第%d章,%d장,Kapitel %d,Capitolo %d,Hoofdstuk %d,अध्याय %d,অধ্যায় %d,باب %d
+Racha más Larga: x%d,Racha más Larga: x%d,Longest Streak: x%d,最长连击: x%d,Meilleure série : x%d,أطول سلسلة: x%d,Maior sequência: x%d,Лучшая серия: x%d,最長コンボ: x%d,최장 연속: x%d,Längste Serie: x%d,Serie più lunga: x%d,Langste reeks: x%d,सबसे लंबी लड़ी: x%d,দীর্ঘতম ধারা: x%d,سب سے لمبی لڑی: x%d
+Recompensa: %s Monedas,Recompensa: %s Monedas,Reward: %s Coins,奖励: %s 金币,Récompense : %s pièces,المكافأة: %s عملة,Recompensa: %s moedas,Награда: %s монет,報酬: %s コイン,보상: %s 코인,Belohnung: %s Münzen,Ricompensa: %s monete,Beloning: %s munten,इनाम: %s सिक्के,পুরস্কার: %s কয়েন,انعام: %s سکے
+Vidas: %d,Vidas: %d,Lives: %d,生命: %d,Vies : %d,الأرواح: %d,Vidas: %d,Жизни: %d,ライフ: %d,생명: %d,Leben: %d,Vite: %d,Levens: %d,जीवन: %d,জীবন: %d,زندگیاں: %d
+Sin vidas,Sin vidas,No lives,没有生命,Plus de vies,لا أرواح,Sem vidas,Нет жизней,ライフなし,생명 없음,Keine Leben,Nessuna vita,Geen levens,कोई जीवन नहीं,জীবন নেই,کوئی زندگی نہیں
+¡COMBO PERFECTO!,¡COMBO PERFECTO!,PERFECT COMBO!,完美连击!,COMBO PARFAIT !,تسلسل مثالي!,COMBO PERFEITO!,ИДЕАЛЬНОЕ КОМБО!,パーフェクトコンボ!,퍼펙트 콤보!,PERFEKTES COMBO!,COMBO PERFETTA!,PERFECTE COMBO!,परफेक्ट कॉम्बो!,পারফেক্ট কম্বো!,پرفیکٹ کومبو!
+¡BUENA RACHA!,¡BUENA RACHA!,GREAT STREAK!,连击不错!,BELLE SÉRIE !,سلسلة رائعة!,BOA SEQUÊNCIA!,ОТЛИЧНАЯ СЕРИЯ!,いい調子!,좋은 연속!,TOLLE SERIE!,BELLA SERIE!,GOEDE REEKS!,बढ़िया लड़ी!,দারুণ ধারা!,زبردست لڑی!
+%d / %d niveles,%d / %d niveles,%d / %d levels,%d / %d 关,%d / %d niveaux,%d / %d مستوى,%d / %d níveis,%d / %d уровней,%d / %d レベル,%d / %d 레벨,%d / %d Level,%d / %d livelli,%d / %d levels,%d / %d स्तर,%d / %d স্তর,%d / %d لیول
+Los de calavera son jefes,Los de calavera son jefes,Skull tiles are bosses,骷髅关卡是首领战,Les crânes sont des boss,خانات الجمجمة زعماء,Os de caveira são chefes,Черепа — это боссы,ドクロはボス戦,해골은 보스전,Totenköpfe sind Bosse,I teschi sono boss,Schedels zijn bazen,खोपड़ी वाले बॉस हैं,খুলিগুলো বস,کھوپڑی والے باس ہیں
+"Sin vidas. Regeneran solas, o recargalas en el menú.","Sin vidas. Regeneran solas, o recargalas en el menú.","No lives. They refill on their own, or recharge them in the menu.",没有生命了。会自动恢复，也可以在菜单里补满。,"Plus de vies. Elles reviennent seules, ou recharge-les au menu.",لا توجد أرواح. تتجدد وحدها أو أعد شحنها من القائمة.,"Sem vidas. Elas voltam sozinhas, ou recarregue no menu.","Жизней нет. Они восстановятся сами, или пополните их в меню.",ライフ切れ。時間で回復するか、メニューで補充できます。,생명이 없습니다. 시간이 지나면 회복되거나 메뉴에서 채울 수 있습니다.,"Keine Leben. Sie füllen sich von selbst, oder lade sie im Menü auf.","Nessuna vita. Si ricaricano da sole, o ricaricale dal menu.","Geen levens. Ze vullen zich vanzelf, of vul ze bij in het menu.","कोई जीवन नहीं। ये अपने आप भर जाते हैं, या मेन्यू से भरें।","জীবন নেই। নিজে থেকেই ফিরে আসে, বা মেনু থেকে পূরণ করুন।",کوئی زندگی نہیں۔ خود بھر جاتی ہیں، یا مینو سے بھریں۔
+Sacudite y volvé a entrar.,Sacudite y volvé a entrar.,Shake it off and jump back in.,振作起来，再来一次。,Secoue-toi et reviens.,انفض عنك وعد مجددا.,Sacuda a poeira e volte.,Соберись и попробуй снова.,気を取り直してもう一度。,털어내고 다시 도전하세요.,Kopf hoch und nochmal rein.,Scrollati di dosso e riprova.,Schud het van je af en ga terug.,झाड़ो और फिर से आओ।,ঝেড়ে ফেলে আবার নামুন।,جھاڑ کر دوبارہ آئیں۔
+Pasá por la tienda si querés mejorar algo.,Pasá por la tienda si querés mejorar algo.,Stop by the shop if you want an upgrade.,想升级的话去商店看看。,Passe à la boutique pour améliorer.,مر بالمتجر إن أردت ترقية.,Passe na loja se quiser melhorar algo.,"Загляни в магазин, если хочешь улучшение.",強化したいならショップへ。,강화하려면 상점에 들르세요.,Schau im Laden vorbei für ein Upgrade.,Passa dal negozio per potenziare.,Ga langs de winkel voor een upgrade.,अपग्रेड चाहिए तो दुकान देखें।,আপগ্রেড চাইলে দোকানে যান।,اپ گریڈ چاہیے تو دکان دیکھیں۔
+Te quedaste sin vidas.,Te quedaste sin vidas.,You're out of lives.,你没有生命了。,Tu n'as plus de vies.,نفدت أرواحك.,Você ficou sem vidas.,У тебя закончились жизни.,ライフがなくなりました。,생명이 다 떨어졌습니다.,Dir sind die Leben ausgegangen.,Hai finito le vite.,Je levens zijn op.,आपके जीवन खत्म हो गए।,আপনার জীবন শেষ।,آپ کی زندگیاں ختم ہو گئیں۔
+"Regeneran solas, o las recargás en el menú.","Regeneran solas, o las recargás en el menú.","They refill on their own, or recharge them in the menu.",会自动恢复，也可以在菜单里补满。,"Elles reviennent seules, ou recharge-les au menu.",تتجدد وحدها أو أعد شحنها من القائمة.,"Elas voltam sozinhas, ou recarregue no menu.","Они восстановятся сами, или пополните их в меню.",時間で回復するか、メニューで補充できます。,시간이 지나면 회복되거나 메뉴에서 채울 수 있습니다.,"Sie füllen sich von selbst, oder lade sie im Menü auf.","Si ricaricano da sole, o ricaricale dal menu.","Ze vullen zich vanzelf, of vul ze bij in het menu.","ये अपने आप भर जाते हैं, या मेन्यू से भरें।","নিজে থেকেই ফিরে আসে, বা মেনু থেকে পূরণ করুন।",خود بھر جاتی ہیں، یا مینو سے بھریں۔

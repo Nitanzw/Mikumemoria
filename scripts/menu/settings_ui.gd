@@ -51,7 +51,7 @@ func _build() -> void:
 		func(value): return str(SettingsManager.LANGUAGES[value])))
 
 	var note := Label.new()
-	note.text = "Los menús están en los dos idiomas. La historia y las descripciones todavía solo en español."
+	note.text = tr("La historia todavía está solo en español.")
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UITheme.style_body(note, 15)
@@ -60,7 +60,7 @@ func _build() -> void:
 
 	rows.add_child(_section(""))
 	var reset := Button.new()
-	reset.text = "Volver a los valores de fábrica"
+	reset.text = tr("Volver a los valores de fábrica")
 	reset.custom_minimum_size = Vector2(0, 54)
 	reset.add_theme_font_size_override("font_size", 18)
 	UITheme.style_wood_button(reset)

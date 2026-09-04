@@ -84,8 +84,8 @@ func _wood_style(wood: Texture2D, tint: Color) -> StyleBoxTexture:
 	return style
 
 func _refresh_labels() -> void:
-	level_label.text = "Nivel %d / 1000" % GameManager.max_level_unlocked
-	collection_label.text = "Incógnitos: %d / 100" % GameManager.get_unlocked_insect_count()
+	level_label.text = tr("Nivel %d / 1000") % GameManager.max_level_unlocked
+	collection_label.text = tr("Incógnitos: %d / 100") % GameManager.get_unlocked_insect_count()
 	_refresh_lives()
 
 ## Arma la fila de corazones y el botón de recarga.
@@ -156,8 +156,8 @@ func _refresh_lives() -> void:
 		return
 
 	var remaining := GameManager.seconds_until_next_life()
-	lives_label.text = "Próxima vida en %02d:%02d" % [int(remaining / 60), remaining % 60]
-	_refill_button.text = "Llenar vidas por %d" % GameManager.REFILL_LIVES_COST
+	lives_label.text = tr("Próxima vida en %02d:%02d") % [int(remaining / 60), remaining % 60]
+	_refill_button.text = tr("Llenar vidas por %d") % GameManager.REFILL_LIVES_COST
 	# Si no alcanza la plata el botón se apaga en vez de no hacer nada al
 	# tocarlo, que se siente como que el juego se colgó.
 	_refill_button.disabled = GameManager.player_coins < GameManager.REFILL_LIVES_COST

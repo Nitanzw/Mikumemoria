@@ -96,11 +96,11 @@ func _build_row(branch: String) -> Control:
 	UITheme.style_wood_button(button)
 
 	if tier >= MAX_TIER:
-		button.text = "Al máximo"
+		button.text = tr("Al máximo")
 		button.disabled = true
 	else:
 		var cost := skill_system.get_cost_for_next_tier(GameManager.skill_tree, branch)
-		button.text = "Mejorar · %d" % cost
+		button.text = tr("Mejorar · %d") % cost
 		button.disabled = GameManager.player_coins < cost
 		button.pressed.connect(func():
 			if GameManager.purchase_skill(branch):

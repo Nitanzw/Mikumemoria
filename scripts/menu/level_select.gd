@@ -38,7 +38,7 @@ func _ready() -> void:
 
 	title.text = "%d. %s" % [chapter, GameManager.level_manager.get_chapter_name(chapter)]
 	var done := _levels_completed_in_chapter()
-	subtitle.text = "%d / %d niveles · los de calavera son jefes" % [done, LevelManager.LEVELS_PER_CHAPTER]
+	subtitle.text = (tr("%d / %d niveles") % [done, LevelManager.LEVELS_PER_CHAPTER]) + " · " + tr("Los de calavera son jefes")
 
 	grid.columns = COLUMNS
 	_build_grid()
@@ -163,7 +163,7 @@ func _on_level_pressed(level: int) -> void:
 	# Los niveles de jefe consumen vida al perder, así que ni dejamos
 	# entrar si no queda ninguna.
 	if GameManager.level_manager.is_boss_level(level) and not GameManager.has_lives():
-		subtitle.text = "Sin vidas. Regeneran solas, o recargalas en el menú."
+		subtitle.text = tr("Sin vidas. Regeneran solas, o recargalas en el menú.")
 		return
 	GameManager.current_level = level
 	GameManager.current_chapter = GameManager.level_manager.get_chapter_for_level(level)

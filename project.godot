@@ -12,7 +12,7 @@ config_version=5
 
 config/name="El Huerto de Sofía"
 config/version="0.1.0"
-run/main_scene="res://scenes/story/story_intro.tscn"
+run/main_scene="res://scenes/menu/language_picker.tscn"
 config/features=PackedStringArray("4.3", "Mobile")
 config/icon="res://icon.png"
 
@@ -58,5 +58,5 @@ textures/vram_compression/import_etc2_astc=true
 
 [internationalization]
 
-locale/translations=PackedStringArray("res://assets/i18n/ui.es.translation", "res://assets/i18n/ui.en.translation")
-locale/fallback="es"
+locale/translations=PackedStringArray("res://assets/i18n/ui.es.translation", "res://assets/i18n/ui.en.translation", "res://assets/i18n/ui.zh_CN.translation", "res://assets/i18n/ui.fr.translation", "res://assets/i18n/ui.ar.translation", "res://assets/i18n/ui.pt.translation", "res://assets/i18n/ui.ru.translation", "res://assets/i18n/ui.ja.translation", "res://assets/i18n/ui.ko.translation", "res://assets/i18n/ui.de.translation", "res://assets/i18n/ui.it.translation", "res://assets/i18n/ui.nl.translation", "res://assets/i18n/ui.hi.translation", "res://assets/i18n/ui.bn.translation", "res://assets/i18n/ui.ur.translation")
+locale/fallback="en"

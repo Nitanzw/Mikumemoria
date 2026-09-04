@@ -206,7 +206,7 @@ func _mostrar_cartel(mostrar: bool) -> void:
 	cartel.visible = mostrar
 	if not mostrar:
 		return
-	cartel_capitulo.text = "Capítulo %d" % _continuara
+	cartel_capitulo.text = tr("Capítulo %d") % _continuara
 	# Se espera un cuadro porque el PanelContainer todavía no midió su
 	# ancho, y sin ancho no se sabe desde dónde tiene que entrar.
 	await get_tree().process_frame
