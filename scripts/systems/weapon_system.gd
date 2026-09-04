@@ -60,7 +60,26 @@ const WEAPONS := {
 		"radius": 90.0,
 		"sprite": "res://assets/sprites/weapons/pala_electrificada.png",
 	},
+	# El arma de pago. No entra en la cadena de desbloqueo: no se compra
+	# con monedas por más que subas el árbol entero, se consigue con la
+	# compra dentro del juego y después se mejora con monedas como
+	# cualquier otra. Se le da `damage_base` propio porque la fórmula de
+	# la cadena la dejaría en 111, cinco puntos arriba de la mejor arma
+	# normal, y por eso nadie la compraría.
+	"zapato_de_oro": {
+		"order": 5,
+		"display_name": "Zapato de Oro de la Abuela",
+		"radius": 110.0,
+		"sprite": "res://assets/sprites/weapons/zapato_de_oro.png",
+		"premium": true,
+		"damage_base": 250,
+		"damage_step": 12,
+	},
 }
+
+## True si el arma sólo se consigue comprándola con plata de verdad.
+static func is_premium(weapon_name: String) -> bool:
+	return bool(get_weapon_data(weapon_name).get("premium", false))
 
 static func get_weapon_data(weapon_name: String) -> Dictionary:
 	return WEAPONS.get(weapon_name, WEAPONS["zapato_viejo"])
@@ -81,6 +100,8 @@ static func get_previous(weapon_name: String) -> String:
 	if order <= 0:
 		return ""
 	for name in WEAPONS:
+		if bool(WEAPONS[name].get("premium", false)):
+			continue
 		if int(WEAPONS[name]["order"]) == order - 1:
 			return name
 	return ""
@@ -92,8 +113,11 @@ static func get_level(levels: Dictionary, weapon_name: String) -> int:
 ## que tendría en el 1, para poder mostrarlo en la tienda antes de
 ## comprarla.
 static func get_damage(weapon_name: String, level: int) -> int:
-	var order := get_order(weapon_name)
-	return FIRST_DAMAGE + WEAPON_STEP * order + LEVEL_STEP * (maxi(level, 1) - 1)
+	var data := get_weapon_data(weapon_name)
+	var nivel: int = maxi(level, 1) - 1
+	if data.has("damage_base"):
+		return int(data["damage_base"]) + int(data.get("damage_step", LEVEL_STEP)) * nivel
+	return FIRST_DAMAGE + WEAPON_STEP * get_order(weapon_name) + LEVEL_STEP * nivel
 
 static func get_radius(weapon_name: String) -> float:
 	return float(get_weapon_data(weapon_name).get("radius", 50.0))
@@ -114,6 +138,9 @@ static func is_unlocked(levels: Dictionary, weapon_name: String) -> bool:
 	# a la vez, que no significa nada.
 	if get_level(levels, weapon_name) > 0:
 		return true
+	# La de pago no se destraba jugando: o la compraste o no está.
+	if is_premium(weapon_name):
+		return false
 	var previous := get_previous(weapon_name)
 	if previous == "":
 		return true
@@ -121,6 +148,8 @@ static func is_unlocked(levels: Dictionary, weapon_name: String) -> bool:
 
 ## Texto para la tienda cuando está bloqueada.
 static func get_lock_reason(weapon_name: String) -> String:
+	if is_premium(weapon_name):
+		return "Se consigue en la tienda premium"
 	var previous := get_previous(weapon_name)
 	if previous == "":
 		return ""

@@ -23,6 +23,9 @@ var _elegido: String = "en"
 const SIGUIENTE := "res://scenes/story/story_intro.tscn"
 
 func _ready() -> void:
+	# Los 15 nombres van cada uno en su alfabeto, así que acá sí hacen
+	# falta TODAS las fuentes colgadas a la vez.
+	SettingsManager.install_all_fallbacks()
 	# Ya eligió alguna vez: esta pantalla no vuelve a aparecer nunca.
 	if SettingsManager.language_chosen:
 		get_tree().change_scene_to_file(SIGUIENTE)

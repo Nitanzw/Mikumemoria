@@ -58,14 +58,25 @@ const LANGUAGES := {
 ##
 ## Están recortadas a los glifos que el juego usa de verdad (ver
 ## tools/subset_fonts.py): enteras pesan 22 MB, recortadas 316 KB.
-const FONT_FALLBACKS := [
-	"res://assets/fonts/NotoSansSC.ttf",
-	"res://assets/fonts/NotoSansJP.ttf",
-	"res://assets/fonts/NotoSansKR.ttf",
-	"res://assets/fonts/NotoSansArabic.ttf",
-	"res://assets/fonts/NotoSansDevanagari.ttf",
-	"res://assets/fonts/NotoSansBengali.ttf",
-]
+## Qué fuente de reserva necesita CADA idioma. Antes se colgaban las seis
+## siempre, y eso tenía un costo que no era obvio: la altura de línea de
+## un Label es la de la fuente MÁS ALTA de la cadena, y la Noto de
+## bengalí y la de devanagari tienen ascendente y descendente enormes.
+## Resultado: en castellano el texto se dibujaba con 54 px de alto de
+## línea en vez de 35, todo separadísimo y ocupando el doble de lugar.
+##
+## Ahora se cuelga sólo la que hace falta para el idioma que está puesto,
+## y se cambia al cambiar de idioma. Los idiomas de alfabeto latino no
+## cuelgan ninguna: la fuente del juego ya los tiene.
+const FONT_FALLBACKS := {
+	"zh_CN": "res://assets/fonts/NotoSansSC.ttf",
+	"ja": "res://assets/fonts/NotoSansJP.ttf",
+	"ko": "res://assets/fonts/NotoSansKR.ttf",
+	"ar": "res://assets/fonts/NotoSansArabic.ttf",
+	"ur": "res://assets/fonts/NotoSansArabic.ttf",
+	"hi": "res://assets/fonts/NotoSansDevanagari.ttf",
+	"bn": "res://assets/fonts/NotoSansBengali.ttf",
+}
 
 ## Idiomas que se escriben de derecha a izquierda.
 const RTL_LANGUAGES := ["ar", "ur"]
@@ -87,22 +98,40 @@ var music_muted: bool = false
 var sfx_muted: bool = false
 
 func _ready() -> void:
-	_install_font_fallbacks()
+	# Primero el guardado, después la fuente: la Noto que se cuelga
+	# depende del idioma, y antes de leer el guardado el idioma todavía
+	# es el de fábrica.
 	load_settings()
+	_install_font_fallbacks()
 	apply_all()
 	# Cada nodo de texto que entra al árbol se ajusta solo. Hace falta
 	# engancharse acá y no en cada pantalla porque media UI se construye
 	# por código (la tienda arma sus casilleros a mano).
 	get_tree().node_added.connect(_on_node_added)
 
-## Cuelga las Noto de la fuente por defecto. Se hace una sola vez, al
-## arrancar, y vale para TODA la interfaz: no hay que tocar ni un Label.
+## Cuelga de la fuente por defecto la Noto que necesita el idioma actual,
+## y sólo esa. Vale para TODA la interfaz: no hay que tocar ni un Label.
 func _install_font_fallbacks() -> void:
+	var ruta: String = str(FONT_FALLBACKS.get(language, ""))
+	_poner_fallbacks([ruta] if ruta != "" else [])
+
+## Cuelga TODAS las Noto de una. La necesita la pantalla de selección de
+## idioma, que es el único lado donde conviven los 15 alfabetos: ahí sí
+## hace falta poder dibujar chino, árabe y bengalí en la misma lista, y
+## el alto de línea de más no importa porque son quince renglones sueltos.
+func install_all_fallbacks() -> void:
+	_poner_fallbacks(FONT_FALLBACKS.values())
+
+func _poner_fallbacks(rutas: Array) -> void:
 	var base := ThemeDB.fallback_font
 	if base == null:
 		return
 	var caidas: Array[Font] = []
-	for ruta in FONT_FALLBACKS:
+	var puestas: Array = []
+	for ruta in rutas:
+		if ruta in puestas:
+			continue
+		puestas.append(ruta)
 		if ResourceLoader.exists(ruta):
 			caidas.append(load(ruta))
 		else:
@@ -201,6 +230,7 @@ func confirm_language(code: String) -> void:
 	if LANGUAGES.has(code) and code != language:
 		language = code
 		TranslationServer.set_locale(language)
+		_install_font_fallbacks()
 	save_settings()
 
 func set_language(code: String) -> void:
@@ -208,6 +238,9 @@ func set_language(code: String) -> void:
 		return
 	language = code
 	TranslationServer.set_locale(code)
+	# La fuente de reserva depende del idioma: se cambia acá y no al
+	# arrancar, porque el idioma se puede cambiar en cualquier momento.
+	_install_font_fallbacks()
 	save_settings()
 	settings_changed.emit()
 

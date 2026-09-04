@@ -260,6 +260,19 @@ func add_coins(amount: int) -> void:
 	player_coins += amount
 	coins_changed.emit(player_coins)
 
+## Suma monedas y guarda en el acto.
+##
+## Es para todo lo que se REGALA fuera de una partida: el anuncio con
+## premio, el regalo diario y las compras. Si el jugador cierra el juego
+## justo después, no lo puede perder — y perder algo que se pagó con
+## plata de verdad termina en reembolso y en una reseña de una estrella.
+##
+## add_coins() a secas no guarda a propósito: se llama una vez por bicho
+## aplastado, y escribir el archivo en cada golpe sería una locura.
+func add_coins_and_save(amount: int) -> void:
+	add_coins(amount)
+	SaveManager.save_game(_build_save_dict())
+
 func unlock_insect(index: int, insect_data: Dictionary) -> void:
 	if index not in unlocked_insects:
 		unlocked_insects.append(index)
@@ -432,6 +445,19 @@ func lose_life() -> int:
 	SaveManager.save_game(_build_save_dict())
 	return player_lives
 
+## Suma vidas de regalo: el anuncio con premio y el regalo diario. Nunca
+## pasa del máximo, así el regalo no se puede acumular sin techo.
+func add_lives(cantidad: int) -> int:
+	_regenerate_lives()
+	if cantidad <= 0:
+		return player_lives
+	player_lives = mini(player_lives + cantidad, MAX_LIVES)
+	if player_lives >= MAX_LIVES:
+		lives_timestamp = int(Time.get_unix_time_from_system())
+	lives_changed.emit(player_lives)
+	SaveManager.save_game(_build_save_dict())
+	return player_lives
+
 ## Recarga todas las vidas pagando monedas. Devuelve false si no alcanza
 ## o si ya estaban llenas.
 func refill_lives_with_coins() -> bool:
@@ -526,6 +552,18 @@ func upgrade_weapon(weapon_name: String) -> bool:
 	coins_changed.emit(player_coins)
 	SaveManager.save_game(_build_save_dict())
 	return true
+
+## Entrega un arma sin cobrar monedas y la equipa. La usa la tienda
+## premium: el arma de pago no pasa por upgrade_weapon porque no está en
+## la cadena de desbloqueo y no tiene precio en monedas.
+func grant_weapon(weapon_name: String) -> void:
+	if not WeaponSystem.WEAPONS.has(weapon_name):
+		return
+	if get_weapon_level(weapon_name) > 0:
+		return
+	weapon_levels[weapon_name] = 1
+	equipped_weapon = weapon_name
+	SaveManager.save_game(_build_save_dict())
 
 func equip_weapon(weapon_name: String) -> bool:
 	if not has_weapon(weapon_name):

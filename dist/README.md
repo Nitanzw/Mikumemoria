@@ -3,7 +3,7 @@
 `el_huerto_de_sofia.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-Versión 0.41.0 (versionCode 49), ~82MB, arquitectura arm64-v8a solamente.
+Versión 0.42.0 (versionCode 50), ~82MB, arquitectura arm64-v8a solamente.
 
 Este build ya es **completo**: incluye la música de los 10 capítulos,
 que los builds anteriores dejaban afuera para no pasarse del límite de
@@ -312,6 +312,90 @@ Comparten fondo ilustrado, botones de madera y tarjetas con
 habilidades los botones y los precios quedaban **cortados fuera de la
 pantalla**: el `ScrollContainer` permitía scroll horizontal y los textos
 largos empujaban la fila más ancha que los 540px del viewport.
+
+## Novedades de la 0.42.0 — versión gratis y dificultad al doble
+
+### Respaldo de la versión de pago
+
+La versión premium (sin publicidad, sin compras, todo se consigue
+jugando) queda respaldada en el commit **561e34a**, APK 0.41.0. Le puse
+la etiqueta `v0.41.0-premium` en local, pero el permiso de este entorno
+sólo deja pushear a la rama de trabajo: la etiqueta hay que crearla desde
+GitHub sobre ese commit, o desde una consola propia.
+
+### Dificultad
+
+- **La vida de todos los bichos, al doble** (`LevelManager.GLOBAL_HEALTH_MULT`).
+- **La vida de los jefes, al triple** (`BossData.BOSS_HEALTH_MULT`).
+
+| Nivel | Hormiga | Jefe | Con el zapato al máximo (19 de daño), a 15 toques/s |
+|---|---|---|---|
+| 1 | 2 | — | |
+| 20 | 22 | 891 | 47 golpes · 3,1 s |
+| 40 | 42 | 1.207 | 64 golpes · **4,3 s** (antes 1,4 s) |
+| 50 | 52 | 3.023 | 160 golpes · 10,7 s |
+| 100 | 102 | 4.455 | 235 golpes · 15,7 s |
+
+Efecto de costado buscado: matar cuesta más golpes, así que entran menos
+monedas por nivel. Eso es justamente lo que le da sentido a la tienda, al
+regalo diario y al anuncio que duplica la recompensa.
+
+### Monetización
+
+**Toda la lógica está hecha y anda.** Lo que está simulado son las dos
+puntas que necesitan cuentas de Google: mostrar el anuncio y cobrar la
+compra. Ver `scripts/services/LEEME.md` para el paso a paso de enchufar
+AdMob y Play Billing — el juego llama siempre a la misma función, así que
+hay que tocar sólo esos dos archivos.
+
+**Anuncios con premio** (los pide el jugador, nunca aparecen solos):
+
+| Dónde | Qué da |
+|---|---|
+| Regalo diario | el regalo del día, al doble |
+| Menú, sin vidas | +1 vida |
+| Resumen del nivel | la recompensa del nivel, al doble |
+| Al perder sin vidas | +1 vida para reintentar en el momento |
+| Tienda | +150 monedas |
+
+Tope de 12 por día, para que nadie se haga el juego mirando publicidad y
+para no quemar el inventario (cuando se quema, la red paga menos).
+
+**Anuncio de pantalla completa**: uno cada 3 niveles, y sólo al tocar
+"Seguir" — nunca durante una partida, nunca encima del cartel de
+resultados y nunca después de perder. Ese último es el que hace
+desinstalar.
+
+**Regalo diario**: racha de 7 días (150 · 250 · 400 · 3 vidas · 700 ·
+1.000 · 2.000 + 3 vidas). Se muestran los siete casilleros, no sólo el de
+hoy: lo que hace volver un martes sin ganas no es el regalo, es no querer
+perder los seis días que ya llevás.
+
+**Compras** (precios de referencia; el real lo fija Google por país):
+
+| | Precio | Qué hace |
+|---|---|---|
+| Sacar la publicidad | 2,99 | nunca más un anuncio automático, + 500 monedas |
+| Zapato de Oro de la Abuela | 4,99 | arma de pago: pega **250** contra los 107 de la mejor arma con monedas, y el radio más grande del juego |
+| Reloj de la Abuela | 3,99 | todos los bichos, minions y jefes a **la mitad de velocidad**, para siempre |
+| Pack Fundador | 9,99 | las tres cosas + 3.000 monedas (por separado sale 11,97) |
+| Monedas | 1,99 / 4,99 / 9,99 | 2.000 / 6.000 / 15.000 |
+
+Tres reglas que se siguieron al armarlo: nada de lo que se compra se
+puede perder, nada de lo que se compra cierra contenido (el que no paga
+llega igual al nivel 1000), y hay un paquete "todo incluido" más barato
+que la suma, que es el que más factura siempre.
+
+### De yapa: el texto ocupa un 35% menos de alto
+
+Al mirar por qué las tarjetas de la tienda salían gigantes apareció otro
+efecto de las Noto de los 15 idiomas: se colgaban **las seis a la vez**
+como fuentes de reserva, y la altura de línea de un Label es la de la
+fuente más alta de la cadena. En castellano el texto se dibujaba con 54
+px de alto de línea en vez de 35 — todo separadísimo y ocupando el doble.
+Ahora se cuelga sólo la que necesita el idioma que está puesto (la
+pantalla de selección de idioma sigue colgando las seis, que es el único
+lado donde conviven los quince alfabetos).
 
 ## Novedades de la 0.41.0 — el globo de diálogo se adapta al texto
 

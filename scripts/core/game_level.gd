@@ -365,6 +365,7 @@ func _on_boss_wants_summon(count: int) -> void:
 	# fue "lo mismo para los minions".
 	var minion_vida: float = float(level_config.get("enemy_health_mult", 1.0))
 	minion_speed *= minion_vida
+	minion_speed *= Store.speed_mult()
 	for i in range(count):
 		var types: Array = BossData.SUMMON_POOL
 		var minion := InsectScene.instantiate() as Insect
@@ -677,7 +678,9 @@ func _spawn_random_insect() -> Insect:
 	var insect_type: String = types[randi() % types.size()]
 	var insect := InsectScene.instantiate() as Insect
 	insect.insect_type = insect_type
-	insect.speed_mult = level_config.get("enemy_speed_mult", 1.0)
+	# El Reloj de la Abuela (compra premium) deja a todo el bicherío a la
+	# mitad de velocidad, para siempre y en los dos modos.
+	insect.speed_mult = float(level_config.get("enemy_speed_mult", 1.0)) * Store.speed_mult()
 	insect.health_bonus = int(level_config.get("enemy_health_bonus", 0))
 	insect.health_mult = float(level_config.get("enemy_health_mult", 1.0))
 	# El élite se marca ANTES de meterlo al árbol: initialize_by_type corre
@@ -725,6 +728,10 @@ func _end_level() -> void:
 		insect.queue_free()
 
 	AudioManager.play_sfx("level_complete")
+	# Cuenta para el anuncio de entre niveles, que se muestra recién al
+	# tocar "Seguir". Nunca acá: un anuncio encima del cartel de
+	# resultados le tapa al jugador lo único que quería ver.
+	Store.note_level_finished()
 	# El nivel que se acaba de terminar, ANTES de que on_level_complete
 	# avance el contador.
 	var terminado: int = GameManager.current_level
@@ -763,6 +770,12 @@ func _cierre_de_capitulo(nivel: int) -> Array:
 	return StoryData.get_chapter_outro(GameManager.level_manager.get_chapter_for_level(nivel))
 
 func _on_next_level_pressed() -> void:
+	# El anuncio de pantalla completa va ACÁ: entre un nivel y el que
+	# sigue, con el nivel ya terminado y los números ya vistos. Si no
+	# corresponde mostrarlo, el callback se llama al toque.
+	AdsService.mostrar_entre_niveles(self, _ir_al_siguiente)
+
+func _ir_al_siguiente() -> void:
 	if GameManager.current_chapter != _entry_chapter:
 		# Cruzó a un capítulo nuevo: mostrar el mapa de mundos en vez de
 		# saltar directo al siguiente nivel, para que se vea el avance.

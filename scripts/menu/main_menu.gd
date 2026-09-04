@@ -22,6 +22,11 @@ const WOOD_MARGIN := 46.0
 ## construyen por código y se insertan alrededor del label viejo.
 var _hearts_row: HBoxContainer
 var _refill_button: Button
+## Botón de "ver un anuncio y recuperar una vida". Va al lado del de
+## pagar con monedas y no en su lugar: el que tiene monedas paga y sigue
+## jugando en dos segundos, el que no las tiene mira el anuncio. Sacarle
+## la opción de pagar al que puede pagar es perder la venta.
+var _ad_life_button: Button
 
 const HEART_FULL := preload("res://assets/sprites/ui/ui_corazon.png")
 const HEART_EMPTY := preload("res://assets/sprites/ui/ui_corazon_vacio.png")
@@ -60,6 +65,10 @@ func _ready() -> void:
 	_build_extreme_button()
 	_refresh_labels()
 	_style_buttons()
+
+	# El regalo diario salta solo, una vez por día. Va después de armar el
+	# menú para que al cerrarlo se vea el saldo ya actualizado.
+	DailyRewardPopup.mostrar(self)
 
 	play_button.pressed.connect(_on_play_pressed)
 	shop_button.pressed.connect(_on_shop_pressed)
@@ -205,6 +214,15 @@ func _build_lives_row() -> void:
 	padre.add_child(_refill_button)
 	padre.move_child(_refill_button, indice + 2)
 
+	_ad_life_button = Button.new()
+	_ad_life_button.custom_minimum_size = Vector2(0, 42)
+	_ad_life_button.add_theme_font_size_override("font_size", 16)
+	_ad_life_button.focus_mode = Control.FOCUS_NONE
+	UITheme.style_wood_button(_ad_life_button, Color(1.1, 1.22, 0.88))
+	_ad_life_button.pressed.connect(_on_ad_life_pressed)
+	padre.add_child(_ad_life_button)
+	padre.move_child(_ad_life_button, indice + 3)
+
 	# El label viejo queda, pero sólo con el reloj.
 	lives_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
@@ -219,6 +237,9 @@ func _refresh_lives() -> void:
 	lives_label.visible = not completas
 	if _refill_button:
 		_refill_button.visible = not completas
+	if _ad_life_button:
+		_ad_life_button.visible = not completas and Store.can_watch_rewarded()
+		_ad_life_button.text = tr("Ver anuncio: +1 vida")
 	if completas:
 		return
 
@@ -228,6 +249,12 @@ func _refresh_lives() -> void:
 	# Si no alcanza la plata el botón se apaga en vez de no hacer nada al
 	# tocarlo, que se siente como que el juego se colgó.
 	_refill_button.disabled = GameManager.player_coins < GameManager.REFILL_LIVES_COST
+
+func _on_ad_life_pressed() -> void:
+	AdsService.mostrar_con_premio(self, tr("Una vida más"), func():
+		GameManager.add_lives(1)
+		AudioManager.play_sfx("unlock")
+		_refresh_labels())
 
 func _on_refill_pressed() -> void:
 	if GameManager.refill_lives_with_coins():

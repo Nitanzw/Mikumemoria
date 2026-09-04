@@ -118,8 +118,20 @@ var _base_top: Dictionary = {}
 ## la pantalla antes de que termine (reintento rápido).
 var _intro: Tween = null
 
+## Botón de anuncio con premio del resumen. Es el mismo nodo para los
+## dos usos, porque nunca conviven: al ganar ofrece duplicar la
+## recompensa, al perder sin vidas ofrece una vida para seguir jugando.
+##
+## Los dos son el mismo negocio: el momento en que el jugador MÁS quiere
+## algo es justo cuando acaba de terminar un nivel. Ofrecerle el anuncio
+## en cualquier otro lado convierte muchísimo menos.
+var _ad_button: Button
+## Recompensa del nivel que se está mostrando, para poder duplicarla.
+var _reward_shown: int = 0
+
 func _ready() -> void:
 	visible = false
+	_build_ad_button()
 	for node: Control in _block():
 		_base_top[node] = node.offset_top
 	UITheme.style_wood_button(menu_button)
@@ -129,8 +141,28 @@ func _ready() -> void:
 	menu_button.pressed.connect(func(): menu_pressed.emit())
 	shop_button.pressed.connect(func(): shop_pressed.emit())
 
+## Se arma por código y no en la escena porque es de la versión gratis:
+## así el día que se compile la versión de pago alcanza con que
+## `Store.no_ads()` y el resto quede en su lugar, sin tocar el .tscn.
+func _build_ad_button() -> void:
+	_ad_button = Button.new()
+	_ad_button.name = "AdButton"
+	_ad_button.anchor_left = 0.5
+	_ad_button.anchor_right = 0.5
+	_ad_button.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_ad_button.offset_left = -238.0
+	_ad_button.offset_right = 238.0
+	_ad_button.offset_top = 800.0
+	_ad_button.offset_bottom = 858.0
+	_ad_button.focus_mode = Control.FOCUS_NONE
+	_ad_button.add_theme_font_size_override("font_size", 20)
+	_ad_button.visible = false
+	UITheme.style_wood_button(_ad_button, Color(1.15, 1.25, 0.85))
+	panel.add_child(_ad_button)
+
 func _block() -> Array[Control]:
-	return [title_ribbon, title_label, plaque, frame, inset, rows_box, note_label, buttons_box]
+	return [title_ribbon, title_label, plaque, frame, inset, rows_box, note_label,
+		buttons_box, _ad_button]
 
 ## Acomoda el panel a lo que se muestra. `shift` sube todo el bloque
 ## cuando no hay cartel de racha; `hidden_rows` encoge la placa y sube lo
@@ -182,6 +214,8 @@ func show_results(score: int, combo_max: int, reward: int, was_boss: bool = fals
 	shop_button.visible = true
 	next_button.text = "Seguir"
 	next_button.visible = true
+	_reward_shown = reward
+	_ofrecer_duplicar(reward)
 	await _appear()
 	# Los números suben desde cero: el puntaje del nivel se siente ganado
 	# en vez de aparecer ya escrito.
@@ -189,6 +223,54 @@ func show_results(score: int, combo_max: int, reward: int, was_boss: bool = fals
 	count.set_parallel(true)
 	count.tween_method(_set_score, 0, score, COUNT_TIME).set_delay(0.20)
 	count.tween_method(_set_reward, 0, reward, COUNT_TIME).set_delay(0.32)
+
+## Ofrece duplicar la recompensa mirando un anuncio.
+func _ofrecer_duplicar(reward: int) -> void:
+	_desconectar_ad()
+	_ad_button.visible = reward > 0 and Store.can_watch_rewarded()
+	if not _ad_button.visible:
+		return
+	_ad_button.text = tr("Ver anuncio: recompensa x2")
+	_ad_button.pressed.connect(_on_duplicar_pressed)
+
+func _on_duplicar_pressed() -> void:
+	_ad_button.disabled = true
+	AdsService.mostrar_con_premio(self, tr("Recompensa doble"), func():
+		GameManager.add_coins_and_save(_reward_shown)
+		_set_reward(_reward_shown * 2)
+		AudioManager.play_sfx("unlock")
+		# Se ofrece UNA vez por nivel: si se pudiera repetir, el anuncio
+		# dejaría de ser un premio y pasaría a ser la única forma sensata
+		# de juntar monedas.
+		_ad_button.visible = false)
+
+## Al perder sin vidas: una vida a cambio de un anuncio, para poder
+## reintentar en el momento. Es el anuncio que más se mira de todos —
+## justo ahí el jugador quiere seguir — y de paso evita el peor final
+## posible, que es cerrar el juego porque no queda nada para hacer.
+func _ofrecer_vida() -> void:
+	_desconectar_ad()
+	_ad_button.visible = Store.can_watch_rewarded()
+	if not _ad_button.visible:
+		return
+	_ad_button.text = tr("Ver anuncio: +1 vida")
+	_ad_button.pressed.connect(_on_vida_pressed)
+
+func _on_vida_pressed() -> void:
+	_ad_button.disabled = true
+	AdsService.mostrar_con_premio(self, tr("Una vida más"), func():
+		GameManager.add_lives(1)
+		AudioManager.play_sfx("unlock")
+		_ad_button.visible = false
+		combo_value.text = tr("Vidas: %d") % GameManager.get_lives()
+		note_label.text = tr("Sacudite y volvé a entrar.")
+		next_button.text = "Otra vez"
+		next_button.visible = true)
+
+func _desconectar_ad() -> void:
+	_ad_button.disabled = false
+	for conexion in _ad_button.pressed.get_connections():
+		_ad_button.pressed.disconnect(conexion["callable"])
 
 func _set_score(value: int) -> void:
 	score_value.text = "Total de Puntos: %s" % _thousands(value)
@@ -305,6 +387,7 @@ func show_defeat(reason: String, lives_left: int) -> void:
 	score_value.text = reason
 	combo_value.text = (tr("Vidas: %d") % lives_left) if lives_left > 0 else tr("Sin vidas")
 	shop_button.visible = true
+	_ad_button.visible = false
 	if lives_left > 0:
 		note_label.text = tr("Sacudite y volvé a entrar.") + "\n" + tr("Pasá por la tienda si querés mejorar algo.")
 		next_button.text = "Otra vez"
@@ -312,4 +395,5 @@ func show_defeat(reason: String, lives_left: int) -> void:
 	else:
 		note_label.text = tr("Te quedaste sin vidas.") + "\n" + tr("Regeneran solas, o las recargás en el menú.")
 		next_button.visible = false
+		_ofrecer_vida()
 	await _appear()

@@ -44,6 +44,15 @@ const TIER_HEALTH_STEP := 0.18
 ## de daño, así que triplicarlo ahí lo volvería un muro de 150 golpes en
 ## la primera pelea del juego. De ahí en adelante, cuando el arma ya
 ## empezó a subir, el x3 es lo que pidió el tester.
+## Vida de los jefes, otra vez por tres.
+##
+## El del nivel 40 tenía 402 de vida y el arma del jugador a esa altura
+## pega 19: son 21 golpes, que con multitap son menos de dos segundos.
+## Una pelea de jefe tiene que durar lo suficiente para que el jefe llegue
+## a usar sus habilidades — si se muere antes de enterrarse una vez, todo
+## el trabajo del patrón no se ve nunca.
+const BOSS_HEALTH_MULT := 3.0
+
 const BOSS_TOUGHNESS_MAX := 3.0
 const BOSS_TOUGHNESS_FULL_TIER := 3.0
 
@@ -301,6 +310,7 @@ static func get_boss_config(boss_id: int, cycle: int = 0, tier: int = 0, hardcor
 	health *= 1.0 + float(maxi(tier, 0)) * TIER_HEALTH_STEP
 	health *= WEAPON_REBALANCE
 	health *= get_toughness(tier)
+	health *= BOSS_HEALTH_MULT
 	if hardcore:
 		health *= HARDCORE_MULT
 		speed *= HARDCORE_MULT

@@ -77,6 +77,7 @@ func _refresh() -> void:
 ##
 ## Cuadrícula: sólo íconos, con la barra de nivel y el precio abajo.
 func _build_grid_view() -> void:
+	_build_premium()
 	list.add_child(_build_section("Armas"))
 	list.add_child(_build_grid(WeaponSystem.get_all_weapon_names(), true))
 
@@ -92,6 +93,89 @@ func _build_grid_view() -> void:
 	list.add_child(_build_grid(pasivos, false))
 	list.add_child(_build_section("Poderes"))
 	list.add_child(_build_grid(poderes, false))
+
+## Sección premium: monedas gratis por anuncio y las compras de plata
+## de verdad. Va PRIMERA, arriba de las armas.
+##
+## Va primera y no escondida en un botón aparte porque el que nunca pensó
+## en pagar tiene que verlo sin buscarlo; y arriba del todo está el
+## anuncio que da monedas gratis, no la compra: la tienda tiene que
+## ofrecerle algo al que no puede pagar, si no la única lectura posible
+## es "acá vengo a que me saquen plata".
+func _build_premium() -> void:
+	list.add_child(_build_section("Premium"))
+
+	if Store.can_watch_rewarded():
+		var gratis := Button.new()
+		gratis.custom_minimum_size = Vector2(0, 58)
+		gratis.text = tr("Ver anuncio: +%d monedas") % Store.REWARDED_COINS
+		gratis.add_theme_font_size_override("font_size", 20)
+		gratis.focus_mode = Control.FOCUS_NONE
+		UITheme.style_wood_button(gratis, Color(1.12, 1.24, 0.86))
+		gratis.pressed.connect(func():
+			AdsService.mostrar_con_premio(self, tr("Monedas gratis"), func():
+				GameManager.add_coins_and_save(Store.REWARDED_COINS)
+				AudioManager.play_sfx("unlock")
+				_refresh()))
+		list.add_child(gratis)
+
+	for id in IapData.permanentes():
+		list.add_child(_build_premium_card(id))
+	for id in IapData.packs_monedas():
+		list.add_child(_build_premium_card(id))
+
+func _build_premium_card(id: String) -> Control:
+	var datos := IapData.datos(id)
+	var comprado: bool = IapData.es_permanente(id) and Store.has(id)
+
+	var tarjeta := PanelContainer.new()
+	tarjeta.add_theme_stylebox_override("panel", UITheme.card_style())
+
+	var fila := HBoxContainer.new()
+	fila.add_theme_constant_override("separation", 12)
+	tarjeta.add_child(fila)
+
+	var icono_path: String = str(datos.get("icono", ""))
+	if icono_path != "" and ResourceLoader.exists(icono_path):
+		fila.add_child(UITheme.icon_rect(icono_path, 56.0))
+
+	var texto := VBoxContainer.new()
+	texto.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	texto.add_theme_constant_override("separation", 2)
+	fila.add_child(texto)
+
+	var titulo := Label.new()
+	titulo.text = str(datos.get("titulo", id))
+	titulo.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UITheme.style_title(titulo, 20)
+	texto.add_child(titulo)
+
+	var detalle := Label.new()
+	if datos.has("monedas"):
+		detalle.text = tr("%s monedas") % str(int(datos["monedas"]))
+		if datos.has("extra"):
+			detalle.text += " · " + str(datos["extra"])
+	else:
+		detalle.text = str(datos.get("detalle", ""))
+	detalle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UITheme.style_body(detalle, 15)
+	texto.add_child(detalle)
+
+	var boton := Button.new()
+	boton.custom_minimum_size = Vector2(112, 54)
+	# Sin esto el botón se estira a lo alto de toda la tarjeta y queda un
+	# bloque naranja gigante al lado de tres renglones de texto.
+	boton.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	boton.add_theme_font_size_override("font_size", 17)
+	boton.focus_mode = Control.FOCUS_NONE
+	boton.text = tr("Comprado") if comprado else IapData.precio(id)
+	boton.disabled = comprado
+	UITheme.style_wood_button(boton, Color(0.9, 0.9, 0.9) if comprado else Color(1.2, 1.05, 0.7))
+	if not comprado:
+		boton.pressed.connect(func(): BillingService.comprar(self, id, _refresh))
+	fila.add_child(boton)
+
+	return tarjeta
 
 func _build_grid(ids: Array, are_weapons: bool) -> GridContainer:
 	var grid := GridContainer.new()

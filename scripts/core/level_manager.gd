@@ -29,6 +29,19 @@ const MIN_SPAWN_RATE := 0.55      # piso, para que no sea imposible
 ## cambia, porque el cuello de botella es cada cuánto aparece un bicho,
 ## no cuántas veces alcanzás a tapear.
 const HP_PER_TIER := 5
+
+## Multiplicador global de vida de TODOS los bichos, en los dos modos.
+##
+## Con las armas al día un bicho moría de un toque y el nivel se volvía
+## tapear al azar: "los mato en menos de 5 segundos". Al doble, hasta el
+## bicho más flojo del capítulo aguanta un golpe más, que es lo mínimo
+## para que el jugador tenga que apuntar y no barrer la pantalla.
+##
+## Ojo con el efecto de costado, que es a propósito: matar cuesta más
+## golpes, así que en un nivel se matan menos bichos y entran menos
+## monedas. En la versión gratis eso es justamente lo que le da sentido a
+## la tienda, al regalo diario y al anuncio que duplica la recompensa.
+const GLOBAL_HEALTH_MULT := 2.0
 ## Los jefes duran hasta que cae uno de los dos, pero con un techo: si se
 ## acaba el tiempo y el jefe sigue vivo, se pierde una vida.
 const BOSS_TIME_LIMIT := 90
@@ -128,7 +141,7 @@ func get_level_config(level: int) -> Dictionary:
 		"spawn_rate": maxf(float(chapter_config.get("spawn_rate", 2.0)) * pow(TIER_SPAWN_MULT, tier), MIN_SPAWN_RATE),
 		"enemy_speed_mult": float(chapter_config.get("enemy_speed_mult", 1.0)) * (1.0 + tier * TIER_SPEED_STEP) * extremo,
 		"enemy_health_bonus": tier * HP_PER_TIER,
-		"enemy_health_mult": extremo,
+		"enemy_health_mult": GLOBAL_HEALTH_MULT * extremo,
 		"hardcore": hardcore,
 		"difficulty_tier": tier,
 		"time_limit": BOSS_TIME_LIMIT if is_boss_level(level) else duracion,
