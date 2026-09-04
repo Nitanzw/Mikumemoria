@@ -89,6 +89,7 @@ func _ready() -> void:
 
 	_play_chapter_music()
 	_setup_background()
+	_setup_borde_extremo()
 
 	# Reloj de Arena: segundos extra de nivel. En las peleas de jefe
 	# también suman, que es donde más se agradecen.
@@ -129,10 +130,19 @@ func _ready() -> void:
 		var boss_id: int = int(level_config.get("boss_id", 1))
 		var cycle: int = GameManager.level_manager.get_boss_cycle(GameManager.current_level)
 		var tier: int = GameManager.level_manager.get_difficulty_tier(GameManager.current_level)
-		boss_config = BossData.get_boss_config(boss_id, cycle, tier)
+		boss_config = BossData.get_boss_config(boss_id, cycle, tier, bool(level_config.get("hardcore", false)))
 		hud.setup_boss_bars(GameManager.get_boss_max_hp(PLAYER_MAX_HP), str(boss_config.get("name", "Jefe")))
 
 	_maybe_show_intros()
+
+## Marco rojo palpitante en el Modo Extremo. Se agrega solo si el modo
+## está activo, así el nivel normal no paga ni el _process de más.
+func _setup_borde_extremo() -> void:
+	if not bool(level_config.get("hardcore", false)):
+		return
+	var borde: CanvasLayer = load("res://scripts/ui/hardcore_border.gd").new()
+	borde.name = "BordeExtremo"
+	add_child(borde)
 
 func _process(delta: float) -> void:
 	if level_ended or not gameplay_started:
@@ -345,11 +355,16 @@ func _on_boss_wants_summon(count: int) -> void:
 	var cycle: int = GameManager.level_manager.get_boss_cycle(GameManager.current_level)
 	var minion_speed: float = MINION_SPEED_MULT * pow(MINION_CYCLE_SPEED, cycle)
 	minion_speed *= ItemSystem.get_minion_slow(GameManager.items)
+	# Los minions también entran en el x2.5 del modo extremo: el pedido
+	# fue "lo mismo para los minions".
+	var minion_vida: float = float(level_config.get("enemy_health_mult", 1.0))
+	minion_speed *= minion_vida
 	for i in range(count):
 		var types: Array = BossData.SUMMON_POOL
 		var minion := InsectScene.instantiate() as Insect
 		minion.insect_type = types[randi() % types.size()]
 		minion.speed_mult = minion_speed
+		minion.health_mult = minion_vida
 		insect_container.add_child(minion)
 		var view := get_viewport_rect().size
 		minion.global_position = boss.global_position + Vector2(randf_range(-120.0, 120.0), randf_range(20.0, 90.0))
@@ -658,6 +673,7 @@ func _spawn_random_insect() -> Insect:
 	insect.insect_type = insect_type
 	insect.speed_mult = level_config.get("enemy_speed_mult", 1.0)
 	insect.health_bonus = int(level_config.get("enemy_health_bonus", 0))
+	insect.health_mult = float(level_config.get("enemy_health_mult", 1.0))
 	# El élite se marca ANTES de meterlo al árbol: initialize_by_type corre
 	# en _ready y necesita el flag para calcular vida y recompensa.
 	insect.is_elite = _spawn_index in _elite_spawns

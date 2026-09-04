@@ -33,6 +33,19 @@ const HEART_SIZE := 34
 @onready var story_button: Button = $Margin/VBox/Buttons/StoryButton
 @onready var settings_button: Button = $Margin/VBox/Buttons/SettingsButton
 
+## Botón del Modo Extremo. Se arma por código y se mete justo debajo de
+## "Jugar": es una segunda puerta de entrada al mismo juego, no una
+## opción de configuración, así que va con los otros botones y no en
+## Ajustes. Mientras esté bloqueado se ve igual pero apagado y con el
+## motivo escrito, que enseña que existe algo más adelante.
+var _extreme_button: Button
+## Renglón chico debajo del botón con el motivo del candado. Va aparte y
+## no dentro del botón porque un Button de una línea con dos renglones
+## adentro se desborda del cartel de madera.
+var _extreme_hint: Label
+const EXTREME_TINT := Color(1.35, 0.52, 0.46)
+const EXTREME_TINT_LOCKED := Color(0.72, 0.60, 0.58)
+
 var _logo_phase: float = 0.0
 ## Cada cuánto se refresca el texto de vidas, para que la cuenta regresiva
 ## de la próxima vida avance sola sin recalcular en cada frame.
@@ -44,6 +57,7 @@ func _ready() -> void:
 	# La fila de vidas se arma ANTES del primer refresco: _refresh_lives
 	# escribe en los nodos que crea esta función.
 	_build_lives_row()
+	_build_extreme_button()
 	_refresh_labels()
 	_style_buttons()
 
@@ -73,6 +87,16 @@ func _style_buttons() -> void:
 		button.add_theme_stylebox_override("pressed", _wood_style(wood, Color(0.82, 0.82, 0.82)))
 		button.add_theme_stylebox_override("focus", _wood_style(wood, Color(1, 1, 1)))
 
+	if _extreme_button:
+		# Misma madera que el resto, teñida de rojo: se lee como parte del
+		# menú pero avisa sola que no es el modo de siempre.
+		var tinte: Color = EXTREME_TINT if not _extreme_button.disabled else EXTREME_TINT_LOCKED
+		_extreme_button.add_theme_stylebox_override("normal", _wood_style(wood, tinte))
+		_extreme_button.add_theme_stylebox_override("hover", _wood_style(wood, tinte * 1.1))
+		_extreme_button.add_theme_stylebox_override("pressed", _wood_style(wood, tinte * 0.85))
+		_extreme_button.add_theme_stylebox_override("focus", _wood_style(wood, tinte))
+		_extreme_button.add_theme_stylebox_override("disabled", _wood_style(wood, EXTREME_TINT_LOCKED))
+
 func _wood_style(wood: Texture2D, tint: Color) -> StyleBoxTexture:
 	var style := StyleBoxTexture.new()
 	style.texture = wood
@@ -83,8 +107,51 @@ func _wood_style(wood: Texture2D, tint: Color) -> StyleBoxTexture:
 	style.texture_margin_bottom = WOOD_MARGIN * 0.5
 	return style
 
+## Crea el botón del Modo Extremo y lo inserta debajo de "Jugar".
+func _build_extreme_button() -> void:
+	var padre := play_button.get_parent()
+	if not padre:
+		return
+	_extreme_button = Button.new()
+	_extreme_button.custom_minimum_size = play_button.custom_minimum_size
+	_extreme_button.size_flags_horizontal = play_button.size_flags_horizontal
+	_extreme_button.focus_mode = Control.FOCUS_NONE
+	_extreme_button.add_theme_color_override("font_color", Color(1, 0.94, 0.90))
+	_extreme_button.add_theme_color_override("font_disabled_color", Color(0.86, 0.80, 0.78, 0.75))
+	_extreme_button.pressed.connect(_on_extreme_pressed)
+	padre.add_child(_extreme_button)
+	padre.move_child(_extreme_button, play_button.get_index() + 1)
+
+	_extreme_hint = Label.new()
+	_extreme_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_extreme_hint.add_theme_font_size_override("font_size", 16)
+	_extreme_hint.add_theme_color_override("font_color", Color(1, 0.86, 0.82, 0.9))
+	_extreme_hint.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.75))
+	_extreme_hint.add_theme_constant_override("shadow_offset_y", 2)
+	padre.add_child(_extreme_hint)
+	padre.move_child(_extreme_hint, _extreme_button.get_index() + 1)
+
+	_refresh_extreme_button()
+
+func _refresh_extreme_button() -> void:
+	if not _extreme_button:
+		return
+	var abierto: bool = GameManager.is_hardcore_unlocked()
+	_extreme_button.disabled = not abierto
+	_extreme_button.text = tr("Modo Extremo")
+	if _extreme_hint:
+		# El motivo tiene que estar escrito: un botón gris sin explicación
+		# se lee como "roto", no como "todavía no".
+		_extreme_hint.text = tr("Se abre en el nivel 100")
+		_extreme_hint.visible = not abierto
+
 func _refresh_labels() -> void:
 	level_label.text = tr("Nivel %d / 1000") % GameManager.max_level_unlocked
+	if GameManager.hardcore:
+		# Al volver de una partida extrema el menú sigue en ese modo, y el
+		# avance que muestra es el de ESE modo: sin la marca parecería que
+		# se perdió el progreso del normal.
+		level_label.text += " · " + tr("Extremo")
 	collection_label.text = tr("Incógnitos: %d / 100") % GameManager.get_unlocked_insect_count()
 	_refresh_lives()
 
@@ -168,6 +235,15 @@ func _on_refill_pressed() -> void:
 	_refresh_labels()
 
 func _on_play_pressed() -> void:
+	# Cada botón entra en su modo: así el jugador nunca arranca un nivel
+	# en un modo distinto del que tocó, sin tener que leer ningún estado.
+	GameManager.set_hardcore(false)
+	get_tree().change_scene_to_file("res://scenes/menu/world_map.tscn")
+
+func _on_extreme_pressed() -> void:
+	if not GameManager.is_hardcore_unlocked():
+		return
+	GameManager.set_hardcore(true)
 	get_tree().change_scene_to_file("res://scenes/menu/world_map.tscn")
 
 func _on_shop_pressed() -> void:

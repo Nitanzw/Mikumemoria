@@ -3,7 +3,7 @@
 `el_huerto_de_sofia.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-Versión 0.22.0 (versionCode 30), ~73MB, arquitectura arm64-v8a solamente.
+Versión 0.39.0 (versionCode 47), ~82MB, arquitectura arm64-v8a solamente.
 
 Este build ya es **completo**: incluye la música de los 10 capítulos,
 que los builds anteriores dejaban afuera para no pasarse del límite de
@@ -312,6 +312,41 @@ Comparten fondo ilustrado, botones de madera y tarjetas con
 habilidades los botones y los precios quedaban **cortados fuera de la
 pantalla**: el `ScrollContainer` permitía scroll horizontal y los textos
 largos empujaban la fila más ancha que los 540px del viewport.
+
+## Novedades de la 0.39.0 — Modo Extremo
+
+Botón aparte en el menú, debajo de "Jugar", con el cartel teñido de
+rojo. **Se abre recién cuando terminaste el nivel 100 del modo normal**;
+hasta entonces está apagado y con el motivo escrito abajo, para que se
+vea que existe algo más adelante y no que el botón está roto.
+
+Qué cambia adentro:
+
+- **Todo lo del enemigo por 2,5**: vida, velocidad y daño. Bichos
+  comunes, minions invocados y jefes, los tres.
+- **Lo del jugador queda igual**: armas, objetos, árbol de habilidades y
+  la vida de Sofía no se tocan. La dificultad sale de enfrente, no de
+  recortarte a vos.
+- **Los niveles duran 60 segundos** en vez de 30.
+- **Aura roja latiendo en los bordes** de la pantalla mientras jugás,
+  para saber en qué modo estás sin leer nada.
+- **Progreso separado**: el modo extremo lleva su propia cuenta de
+  niveles. Jugarlo no te mueve el avance del normal, y al revés tampoco.
+  Lo que SÍ se comparte son las monedas, las armas y las mejoras: la idea
+  era que cueste por los enemigos, no por volver a comprar todo.
+
+Aviso honesto sobre la velocidad: en los niveles altos el x2,5 en
+velocidad deja a los bichos prácticamente intapeables (a nivel 1000 una
+hormiga cruza la pantalla en 0,17 segundos). Va así a pedido, y el
+número vive en una sola constante — `LevelManager.HARDCORE_MULT` — para
+poder bajarlo cuando vuelvan los reportes de los testers.
+
+De paso se arregló un bug del modo NORMAL que apareció al hacer las
+cuentas: el daño del jefe crecía exponencial con la vuelta al roster
+(`CYCLE_DAMAGE_MULT` elevado a la vuelta), así que el jefe del nivel 200
+pegaba 1.563 sobre los 1.000 de vida de Sofía — **te mataba de un solo
+golpe**, con botiquín y todo — y el del nivel 1000 pegaba 222.045. Ahora
+hay techo: 340 en normal (tres golpes) y 450 en extremo.
 
 **Para exportar vos mismo**: `export_presets.cfg` está completo en el
 repo. La keystore no, obviamente — pasala por variables de entorno:

@@ -82,6 +82,11 @@ const SPLAT_COLORS := {
 ## el spawner antes de agregar el insecto al árbol.
 var health_bonus: int = 0
 
+## Multiplicador de vida del modo extremo (1.0 en el modo normal). Se
+## aplica sobre la vida ya escalada por el nivel, no sobre la base, para
+## que el bicho del nivel 900 sienta el x2.5 igual que el del 100.
+var health_mult: float = 1.0
+
 ## Bicho élite: aguanta ELITE_HEALTH_MULT veces más y paga el doble. La
 ## marca el spawner ANTES de agregarlo al árbol, porque initialize_by_type
 ## corre en _ready y necesita saberlo para calcular la vida.
@@ -167,7 +172,7 @@ func initialize_by_type() -> void:
 	var data: Dictionary = INSECT_DATA.get(insect_type, INSECT_DATA["hormiga_obrera"])
 	base_speed = float(data["speed"]) * speed_mult * randf_range(SPEED_VARIANCE_MIN, SPEED_VARIANCE_MAX)
 	speed = base_speed
-	health = int(data["health"]) + health_bonus
+	health = int(ceil(float(int(data["health"]) + health_bonus) * health_mult))
 	points = int(data["points"])
 	coin_reward = int(data["coin_reward"])
 	if is_elite:

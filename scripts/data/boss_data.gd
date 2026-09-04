@@ -58,6 +58,21 @@ const BASE_DAMAGE := 200
 const TIER_DAMAGE_STEP := 0.15
 const CYCLE_DAMAGE_MULT := 1.25
 
+## Techo del daño de un jefe, en puntos de la vida de Sofía (arranca con
+## 1000). Es el mismo error que ya tenía la vida antes de sacarle el
+## crecimiento exponencial, pero del lado del daño: CYCLE_DAMAGE_MULT
+## está elevado a la vuelta del roster, así que en el modo NORMAL el jefe
+## del nivel 200 pegaba 1.563 sobre 1.000 de vida (te mataba de UN toque,
+## sin importar el botiquín) y el del nivel 1000 pegaba 222.045.
+##
+## Con techo, el jefe más bravo del juego sigue necesitando tres golpes.
+## Que la pelea tardía sea difícil tiene que salir de que el jefe ataca
+## más seguido y tiene más vida, no de que el primer golpe termine la
+## partida antes de que el jugador entienda qué pasó.
+const DAMAGE_CAP := 340
+## En extremo el techo es más alto: tres golpes justos, sin sobrante.
+const DAMAGE_CAP_HARDCORE := 450
+
 ## Umbrales de vida (fracción) donde el jefe cambia de fase.
 const PHASE_2_HP := 0.6
 const PHASE_3_HP := 0.3
@@ -253,7 +268,13 @@ static func get_toughness(tier: int) -> float:
 	var avance: float = clampf(float(maxi(tier, 0)) / BOSS_TOUGHNESS_FULL_TIER, 0.0, 1.0)
 	return lerpf(1.0, BOSS_TOUGHNESS_MAX, avance)
 
-static func get_boss_config(boss_id: int, cycle: int = 0, tier: int = 0) -> Dictionary:
+## Modo Extremo: vida, velocidad y daño del jefe por 2.5. Es el mismo
+## número que usan los bichos comunes (LevelManager.HARDCORE_MULT); va
+## suelto acá para no meterle a BossData una dependencia con el otro
+## script.
+const HARDCORE_MULT := 2.5
+
+static func get_boss_config(boss_id: int, cycle: int = 0, tier: int = 0, hardcore: bool = false) -> Dictionary:
 	var base: Dictionary = BOSSES.get(boss_id, BOSSES[1])
 	var config := base.duplicate(true)
 
@@ -280,13 +301,20 @@ static func get_boss_config(boss_id: int, cycle: int = 0, tier: int = 0) -> Dict
 	health *= 1.0 + float(maxi(tier, 0)) * TIER_HEALTH_STEP
 	health *= WEAPON_REBALANCE
 	health *= get_toughness(tier)
+	if hardcore:
+		health *= HARDCORE_MULT
+		speed *= HARDCORE_MULT
 	config["health"] = int(round(health))
 	config["speed"] = speed
 
 	var damage := float(BASE_DAMAGE)
 	damage *= 1.0 + float(maxi(tier, 0)) * TIER_DAMAGE_STEP
 	damage *= pow(CYCLE_DAMAGE_MULT, maxi(cycle, 0))
+	damage = minf(damage, float(DAMAGE_CAP))
+	if hardcore:
+		damage = minf(damage * HARDCORE_MULT, float(DAMAGE_CAP_HARDCORE))
 	config["damage"] = int(round(damage))
+	config["hardcore"] = hardcore
 	return config
 
 static func has_ability(config: Dictionary, ability: String) -> bool:

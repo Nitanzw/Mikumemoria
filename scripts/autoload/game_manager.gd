@@ -11,6 +11,50 @@ var current_chapter: int = 1
 ## Nivel más alto desbloqueado. Se separa de current_level para poder
 ## rejugar uno viejo sin perder el avance (ver el selector de niveles).
 var max_level_unlocked: int = 1
+
+## Modo Extremo.
+##
+## El truco para no tocar medio juego: `current_level` y
+## `max_level_unlocked` siguen siendo "los del modo activo". Al cambiar de
+## modo se guarda el avance del que se deja y se carga el del otro. Todo
+## el código que ya leía current_level sigue andando sin enterarse.
+##
+## Lo que NO se separa son las armas, los objetos y el árbol: obligar a
+## rehacer los 180 escalones de la escalera sería otro juego de 1000
+## niveles, y lo que el jugador pidió es que cueste por los enemigos, no
+## por volver a comprar todo.
+var hardcore: bool = false
+var hardcore_level: int = 1
+var hardcore_max_level: int = 1
+## Avance del modo normal mientras se juega en extremo.
+var normal_level: int = 1
+var normal_max_level: int = 1
+
+## Nivel del modo normal que hay que superar para desbloquear el extremo.
+const HARDCORE_UNLOCK_LEVEL := 100
+
+func is_hardcore_unlocked() -> bool:
+	var tope: int = normal_max_level if hardcore else max_level_unlocked
+	return tope > HARDCORE_UNLOCK_LEVEL
+
+## Entra o sale del modo extremo, moviendo el avance de un lado al otro.
+func set_hardcore(activo: bool) -> void:
+	if activo == hardcore:
+		return
+	if activo:
+		normal_level = current_level
+		normal_max_level = max_level_unlocked
+		current_level = hardcore_level
+		max_level_unlocked = hardcore_max_level
+	else:
+		hardcore_level = current_level
+		hardcore_max_level = max_level_unlocked
+		current_level = normal_level
+		max_level_unlocked = normal_max_level
+	hardcore = activo
+	level_manager.hardcore = activo
+	current_chapter = level_manager.get_chapter_for_level(current_level)
+	SaveManager.save_game(_build_save_dict())
 var player_coins: int = 0
 var player_score: int = 0
 var combo_hits: int = 0
@@ -109,6 +153,12 @@ func load_game_data() -> void:
 		seen_tutorials = data.get("seen_tutorials", [])
 		seen_story_beats = data.get("seen_story_beats", [])
 		max_level_unlocked = int(data.get("max_level_unlocked", current_level))
+		hardcore = bool(data.get("hardcore", false))
+		hardcore_level = int(data.get("hardcore_level", 1))
+		hardcore_max_level = int(data.get("hardcore_max_level", 1))
+		normal_level = int(data.get("normal_level", current_level))
+		normal_max_level = int(data.get("normal_max_level", max_level_unlocked))
+		level_manager.hardcore = hardcore
 		player_lives = int(data.get("player_lives", MAX_LIVES))
 		lives_timestamp = int(data.get("lives_timestamp", Time.get_unix_time_from_system()))
 		_regenerate_lives()
@@ -135,6 +185,12 @@ func reset_game() -> void:
 	seen_tutorials = []
 	seen_story_beats = []
 	max_level_unlocked = 1
+	hardcore = false
+	level_manager.hardcore = false
+	hardcore_level = 1
+	hardcore_max_level = 1
+	normal_level = 1
+	normal_max_level = 1
 	player_lives = MAX_LIVES
 	lives_timestamp = Time.get_unix_time_from_system()
 
@@ -320,6 +376,13 @@ func _build_save_dict() -> Dictionary:
 		"max_level_unlocked": max_level_unlocked,
 		"player_lives": player_lives,
 		"lives_timestamp": lives_timestamp,
+		"hardcore": hardcore,
+		# Se guarda el avance de LOS DOS modos: el activo sale de
+		# current_level/max_level_unlocked y el otro de su par guardado.
+		"hardcore_level": current_level if hardcore else hardcore_level,
+		"hardcore_max_level": max_level_unlocked if hardcore else hardcore_max_level,
+		"normal_level": normal_level if hardcore else current_level,
+		"normal_max_level": normal_max_level if hardcore else max_level_unlocked,
 	}
 
 # --- Vidas ---

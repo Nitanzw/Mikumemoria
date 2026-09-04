@@ -33,6 +33,29 @@ const HP_PER_TIER := 5
 ## acaba el tiempo y el jefe sigue vivo, se pierde una vida.
 const BOSS_TIME_LIMIT := 90
 
+# --- Modo Extremo ---
+#
+## Todo lo que sea del enemigo se multiplica por esto: vida, velocidad y
+## daño, de los bichos comunes, de los minions y de los jefes. Lo del
+## jugador (armas, objetos, árbol, vida de Sofía) queda igual.
+##
+## Aviso que ya le di al tester y queda escrito acá: a nivel 1000 una
+## hormiga va a 900 px/s y por 2.5 pasa a 2250, o sea cruza los 960 px de
+## pantalla en 0,43 segundos. En los niveles altos esto no es difícil,
+## es intapeable. Va así igual porque es lo que se pidió — "quiero verlos
+## llorar" — y el número está en una sola constante para poder bajarlo
+## cuando vuelvan los reportes.
+const HARDCORE_MULT := 2.5
+
+## Un nivel extremo dura el doble que uno normal: aguantar 30 segundos
+## era demasiado corto para que se sienta la paliza.
+const HARDCORE_TIME_LIMIT := 60
+
+## Lo prende GameManager al entrar o salir del modo (y al cargar la
+## partida). Se guarda acá para no tener que leer el autoload desde
+## adentro del RefCounted que el propio autoload construye.
+var hardcore: bool = false
+
 var chapter_configs := {
 	1: {"name": "El Huerto de Tomates", "enemy_speed_mult": 1.0, "spawn_rate": 1.1, "background": "res://assets/sprites/backgrounds/chapter_1_huerto.jpg"},
 	2: {"name": "El Invernadero", "enemy_speed_mult": 1.2, "spawn_rate": 1.8, "background": "res://assets/sprites/backgrounds/chapter_2_invernadero.jpg"},
@@ -80,6 +103,8 @@ func get_level_config(level: int) -> Dictionary:
 	# exactamente iguales, así que el juego se volvía más fácil a medida
 	# que avanzabas.
 	var tier := get_difficulty_tier(level)
+	var extremo: float = HARDCORE_MULT if hardcore else 1.0
+	var duracion: int = HARDCORE_TIME_LIMIT if hardcore else 30
 
 	return {
 		"level": level,
@@ -87,10 +112,12 @@ func get_level_config(level: int) -> Dictionary:
 		"chapter_name": chapter_config.get("name", "Desconocido"),
 		"background": chapter_config.get("background", ""),
 		"spawn_rate": maxf(float(chapter_config.get("spawn_rate", 2.0)) * pow(TIER_SPAWN_MULT, tier), MIN_SPAWN_RATE),
-		"enemy_speed_mult": float(chapter_config.get("enemy_speed_mult", 1.0)) * (1.0 + tier * TIER_SPEED_STEP),
+		"enemy_speed_mult": float(chapter_config.get("enemy_speed_mult", 1.0)) * (1.0 + tier * TIER_SPEED_STEP) * extremo,
 		"enemy_health_bonus": tier * HP_PER_TIER,
+		"enemy_health_mult": extremo,
+		"hardcore": hardcore,
 		"difficulty_tier": tier,
-		"time_limit": BOSS_TIME_LIMIT if is_boss_level(level) else 30,
+		"time_limit": BOSS_TIME_LIMIT if is_boss_level(level) else duracion,
 		"enemy_types": get_available_enemies(level),
 		"has_mystery_bug": has_mystery_bug(level) and not is_boss_level(level),
 		"mystery_index": get_mystery_bug_index(level),
