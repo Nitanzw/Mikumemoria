@@ -3,7 +3,7 @@
 `el_huerto_de_sofia.apk` es un build de Android **release**, firmado
 con una keystore de prueba (no es la keystore de producción — para
 publicar en Play Store hay que generar una propia y no commitearla).
-Versión 0.43.0 (versionCode 51), ~82MB, arquitectura arm64-v8a solamente.
+Versión 0.44.0 (versionCode 52), ~82MB, arquitectura arm64-v8a solamente.
 
 Este build ya es **completo**: incluye la música de los 10 capítulos,
 que los builds anteriores dejaban afuera para no pasarse del límite de
@@ -312,6 +312,36 @@ Comparten fondo ilustrado, botones de madera y tarjetas con
 habilidades los botones y los precios quedaban **cortados fuera de la
 pantalla**: el `ScrollContainer` permitía scroll horizontal y los textos
 largos empujaban la fila más ancha que los 540px del viewport.
+
+## Novedades de la 0.44.0 — listo para subir a Play
+
+Dos presets de exportación en vez de uno:
+
+| Preset | Formato | Para qué |
+|---|---|---|
+| **Android (Play - AAB)** | `.aab` | lo que se sube a Play Store |
+| **Android (APK de prueba)** | `.apk` | instalar en el celular por cable, como venimos haciendo |
+
+Los dos con **targetSdk 36** (antes 34, que Play rechaza por apuntar
+bajo) y minSdk 24.
+
+El AAB además incluye **armeabi-v7a** junto con arm64-v8a. En un APK eso
+duplicaría el peso, pero en un AAB no: Play arma un paquete por
+arquitectura y cada celular baja sólo el suyo. Lo que se gana son todos
+los celulares de 32 bits, que en los mercados a los que apunta la
+traducción no son pocos.
+
+**El AAB no está en el repo**: pesa 106 MB con las dos arquitecturas y
+GitHub no acepta archivos de más de 100 MB. Se genera cuando haga falta:
+
+```bash
+godot --headless --export-release "Android (Play - AAB)" build/android/el_huerto_de_sofia.aab
+```
+
+Cada celular igual baja unos 82 MB, bien abajo del límite de Play.
+
+También quedó `android/plugins/` con su LEEME, que es donde van el `.aar`
+y el `.gdap` de AdMob y de Play Billing.
 
 ## Novedades de la 0.43.0 — el banner de abajo, con su lugar reservado
 
