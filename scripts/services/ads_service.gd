@@ -29,6 +29,7 @@ static func mostrar_con_premio(padre: Node, titulo: String, al_terminar: Callabl
 	if not Store.can_watch_rewarded():
 		_aviso(padre, "Por hoy no quedan más anuncios con premio.\nVolvé mañana.")
 		return
+	print(AdsConfig.aviso("recompensado", AdsConfig.recompensado()))
 	_abrir(padre, titulo, DURACION_PREMIO, true, func():
 		Store.note_rewarded_watched()
 		if al_terminar.is_valid():
@@ -42,6 +43,7 @@ static func mostrar_entre_niveles(padre: Node, al_terminar: Callable = Callable(
 			al_terminar.call()
 		return
 	Store.note_interstitial_shown()
+	print(AdsConfig.aviso("intersticial", AdsConfig.intersticial()))
 	_abrir(padre, "Publicidad", DURACION_ENTRE_NIVELES, false, al_terminar)
 
 # --- El cartel simulado ---

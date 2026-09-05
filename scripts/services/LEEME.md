@@ -19,20 +19,43 @@ probar el circuito entero en el celular antes de tener las cuentas.
 
 ## Para enchufar AdMob de verdad
 
-1. Crear la cuenta en AdMob y dar de alta la app. Salen de ahí el
-   **App ID** (`ca-app-pub-XXXX~YYYY`) y un **ad unit id** por formato
-   (uno para el de premio, otro para el de entre niveles).
-2. Agregar el plugin de Godot para Android de AdMob (un `.aar` más su
+Los números **ya están dados de alta y guardados** en
+`scripts/data/ads_config.gd`, con un interruptor `USAR_PRUEBA` arriba de
+todo:
+
+| | ID |
+|---|---|
+| App ID | `ca-app-pub-2714414375957960~7276707362` |
+| Banner (franja de abajo) | `ca-app-pub-2714414375957960/6949404308` |
+| Intersticial (cada 3 niveles) | `ca-app-pub-2714414375957960/4711816877` |
+| Recompensado (los 5 premios) | `ca-app-pub-2714414375957960/5444750948` |
+
+Mientras `USAR_PRUEBA` esté en `true`, el juego usa los de prueba de
+Google y estos ni se tocan. **Se pone en `false` una sola vez, en el
+build que se sube a producción.** Tocar tus propios anuncios de
+producción, aunque sea probando, es motivo de suspensión de la cuenta y
+de que no te paguen lo acumulado.
+
+Pasos que faltan:
+
+1. Agregar el plugin de Godot para Android de AdMob (un `.aar` más su
    `.gdap` en `android/plugins/`) y prenderlo en el preset de exportación.
-3. El App ID va en el `AndroidManifest`, como `meta-data` de
-   `com.google.android.gms.ads.APPLICATION_ID`.
-4. En `ads_service.gd` reemplazar el cuerpo de `mostrar_con_premio()` y
-   `mostrar_entre_niveles()` por las llamadas del plugin. **La firma no
-   cambia**: el juego sigue llamando igual, y el premio se entrega en el
-   callback del evento "el usuario ganó la recompensa" — nunca al abrir
-   el anuncio, o se puede cobrar sin verlo.
-5. Probar SIEMPRE primero con los ad unit de prueba de Google. Usar los
-   de producción sobre uno mismo es motivo de baneo de la cuenta.
+   Tiene que ser uno que soporte Godot 4.
+2. El App ID va en el `AndroidManifest`, como `meta-data` de
+   `com.google.android.gms.ads.APPLICATION_ID`. Casi todos los plugins lo
+   resuelven solos con un campo en el `.gdap`; si no, hay que agregarlo a
+   mano al proyecto de gradle en `android/build/`.
+3. En `ads_service.gd` reemplazar el cuerpo de `mostrar_con_premio()` y
+   `mostrar_entre_niveles()` por las llamadas del plugin, y en
+   `banner_ad.gd` el cuerpo de `mostrar()`. **Las firmas no cambian**: el
+   juego sigue llamando igual y el espacio del banner ya está reservado
+   en todas las pantallas.
+4. El premio se entrega en el callback del evento "el usuario ganó la
+   recompensa" — **nunca** al abrir el anuncio, o se puede cobrar sin
+   verlo.
+5. Para confirmar que cada anuncio sale donde corresponde, el juego ya
+   escribe en el log de Android una línea por cada uno:
+   `[Ads] recompensado -> ca-app-pub-… (PRUEBA)`.
 
 ## Para enchufar Google Play Billing
 

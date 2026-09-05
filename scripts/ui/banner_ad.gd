@@ -84,6 +84,7 @@ static func mostrar(nodo: Node) -> void:
 	if vieja:
 		return
 
+	print(AdsConfig.aviso("banner", AdsConfig.banner()))
 	var franja := alto(nodo) - AIRE
 	var capa := CanvasLayer.new()
 	capa.name = NOMBRE_CAPA
