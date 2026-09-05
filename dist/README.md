@@ -331,14 +331,41 @@ arquitectura y cada celular baja sólo el suyo. Lo que se gana son todos
 los celulares de 32 bits, que en los mercados a los que apunta la
 traducción no son pocos.
 
-**El AAB no está en el repo**: pesa 106 MB con las dos arquitecturas y
-GitHub no acepta archivos de más de 100 MB. Se genera cuando haga falta:
+### El AAB para subir a Play
+
+`el_huerto_de_sofia.aab` es el archivo que se sube a Play Store, y está
+**SIN FIRMAR** a propósito: la keystore de producción no pasa por este
+repo ni por un chat. Hay que firmarlo antes de subirlo, con un solo
+comando (ver "Cómo firmarlo" abajo).
+
+Sale del preset **"Android (AAB sin firmar)"**, que es igual al de Play
+pero con `package/signed=false` y sólo arm64-v8a. Lo de una sola
+arquitectura es por el límite de 100 MB por archivo de GitHub: con las
+dos son 106 MB y no entra. Con arm64 solo son 82 MB y entra.
+
+Qué se pierde: los celulares de **32 bits** no van a poder instalarlo.
+Son pocos y viejos, y se arregla en la actualización siguiente generando
+el AAB desde el preset "Android (Play - AAB)", que sí lleva las dos.
+
+### Cómo firmarlo (hace falta Java, el mismo que usa keytool)
 
 ```bash
-godot --headless --export-release "Android (Play - AAB)" build/android/el_huerto_de_sofia.aab
+jarsigner -keystore huerto-release.keystore \
+  -sigalg SHA256withRSA -digestalg SHA-256 \
+  el_huerto_de_sofia.aab huerto
 ```
 
-Cada celular igual baja unos 82 MB, bien abajo del límite de Play.
+`huerto` al final es el alias de la keystore. Pide la contraseña y
+termina diciendo `jar signed.`
+
+Para comprobar antes de subir:
+
+```bash
+jarsigner -verify el_huerto_de_sofia.aab
+```
+
+Tiene que decir `jar verified.` El aviso de "certificado autofirmado" es
+normal y no molesta: Play lo espera así.
 
 También quedó `android/plugins/` con su LEEME, que es donde van el `.aar`
 y el `.gdap` de AdMob y de Play Billing.

@@ -11,10 +11,12 @@ build/
 *.pck
 *.exe
 
-# Excepción: APK de demo commiteado a propósito para probar sin exportar
-# (ver dist/README.md). Build reducido: solo música de menú + capítulo 1,
-# para entrar bajo el límite de 100MB de GitHub.
+# Excepción: el APK de prueba y el AAB SIN FIRMAR van commiteados a
+# propósito (ver dist/README.md). El APK es para instalar en el celular
+# por cable; el AAB es el que se sube a Play, y va sin firmar porque la
+# keystore de producción no pasa por acá ni por el repo.
 !dist/*.apk
+!dist/*.aab
 
 # OS / editor
 .DS_Store
