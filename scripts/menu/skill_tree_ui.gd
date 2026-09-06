@@ -76,13 +76,13 @@ func _build_row(branch: String) -> Control:
 	info.add_theme_constant_override("separation", 2)
 
 	var name_label := Label.new()
-	name_label.text = "%s  ·  %d/%d" % [branch_data.display_name, tier, MAX_TIER]
+	name_label.text = "%s  ·  %d/%d" % [tr(str(branch_data.display_name)), tier, MAX_TIER]
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UITheme.style_body(name_label, 22)
 	info.add_child(name_label)
 
 	var desc := Label.new()
-	desc.text = str(branch_data.description)
+	desc.text = tr(str(branch_data.description))
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UITheme.style_body(desc, 16)
 	desc.add_theme_color_override("font_color", Color(0.92, 0.88, 0.78))

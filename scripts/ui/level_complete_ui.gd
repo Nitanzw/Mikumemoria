@@ -206,7 +206,7 @@ func show_results(score: int, combo_max: int, reward: int, was_boss: bool = fals
 	_layout(0.0 if show_banner else BANNER_SHIFT, 0)
 
 	medal_row.visible = true
-	medal_value.text = _pick_medal(combo_max)
+	medal_value.text = tr(_pick_medal(combo_max))
 	score_icon.texture = ICON_STAR
 	combo_icon.texture = ICON_MEDAL
 	_set_score(score)
@@ -344,7 +344,7 @@ func _pick_title(combo_max: int, was_boss: bool) -> String:
 		pool = WIN_TITLES_PERFECT
 	elif combo_max >= GOOD_COMBO:
 		pool = WIN_TITLES_GOOD
-	return pool[randi() % pool.size()]
+	return tr(pool[randi() % pool.size()])
 
 func _pick_medal(combo_max: int) -> String:
 	if combo_max >= PERFECT_COMBO:
@@ -363,12 +363,12 @@ func _pick_note(combo_max: int, misses: int = -1) -> String:
 	# aire todo el nivel, encadenar quince al final y que igual te
 	# felicitara por no haber errado.
 	if combo_max >= PERFECT_COMBO and misses == 0:
-		return WIN_NOTES["perfect"]
+		return tr(WIN_NOTES["perfect"])
 	if combo_max >= GOOD_COMBO:
-		return WIN_NOTES["great"]
+		return tr(WIN_NOTES["great"])
 	if combo_max >= 3:
-		return WIN_NOTES["ok"]
-	return WIN_NOTES["low"]
+		return tr(WIN_NOTES["ok"])
+	return tr(WIN_NOTES["low"])
 
 ## Separador de miles, igual que en el HUD: "12500" se lee mal de reojo,
 ## "12.500" no.
@@ -387,7 +387,7 @@ func _thousands(value: int) -> String:
 ## "otra vez", y desaparece si ya no quedan vidas: sin vidas no se puede
 ## reintentar hasta que regeneren o se paguen.
 func show_defeat(reason: String, lives_left: int) -> void:
-	title_label.text = DEFEAT_TITLES[randi() % DEFEAT_TITLES.size()]
+	title_label.text = tr(DEFEAT_TITLES[randi() % DEFEAT_TITLES.size()])
 	# En una derrota no hay racha ni medalla que festejar.
 	combo_banner.visible = false
 	combo_caption.visible = false

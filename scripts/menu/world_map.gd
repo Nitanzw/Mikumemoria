@@ -76,7 +76,7 @@ func _build_chapter_node(chapter: int, total_height: int) -> Control:
 	button.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 
 	var name_label := Label.new()
-	name_label.text = GameManager.level_manager.get_chapter_name(chapter)
+	name_label.text = tr(GameManager.level_manager.get_chapter_name(chapter))
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.position = Vector2(center_x - 90.0, NODE_SIZE + 4.0)
 	name_label.custom_minimum_size = Vector2(180, 40)

@@ -519,13 +519,13 @@ func _build_item_row(item_id: String) -> Control:
 	info.add_theme_constant_override("separation", 2)
 
 	var name_label := Label.new()
-	name_label.text = "%s  ·  %d/%d" % [data.get("display_name", item_id), level, max_level]
+	name_label.text = "%s  ·  %d/%d" % [tr(str(data.get("display_name", item_id))), level, max_level]
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UITheme.style_body(name_label, 21)
 	info.add_child(name_label)
 
 	var desc := Label.new()
-	var text: String = str(data.get("description", ""))
+	var text: String = tr(str(data.get("description", "")))
 	if data.get("active", false):
 		text += "\nCada uso: %d monedas" % ItemSystem.get_power_use_cost(item_id)
 	desc.text = text
@@ -594,7 +594,7 @@ func _build_row(weapon_name: String) -> Control:
 	info.add_theme_constant_override("separation", 2)
 
 	var name_label := Label.new()
-	name_label.text = str(data.get("display_name", weapon_name))
+	name_label.text = tr(str(data.get("display_name", weapon_name)))
 	if owned:
 		name_label.text += "  ·  nivel %d/%d" % [level, WeaponSystem.MAX_LEVEL]
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

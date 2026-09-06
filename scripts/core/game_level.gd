@@ -135,7 +135,7 @@ func _ready() -> void:
 		var cycle: int = GameManager.level_manager.get_boss_cycle(GameManager.current_level)
 		var tier: int = GameManager.level_manager.get_difficulty_tier(GameManager.current_level)
 		boss_config = BossData.get_boss_config(boss_id, cycle, tier, bool(level_config.get("hardcore", false)))
-		hud.setup_boss_bars(GameManager.get_boss_max_hp(PLAYER_MAX_HP), str(boss_config.get("name", "Jefe")))
+		hud.setup_boss_bars(GameManager.get_boss_max_hp(PLAYER_MAX_HP), tr(str(boss_config.get("name", "Jefe"))))
 
 	_maybe_show_intros()
 

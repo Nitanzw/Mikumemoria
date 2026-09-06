@@ -39,7 +39,7 @@ func _ready() -> void:
 	chapter = GameManager.selected_chapter
 	back_button.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/menu/world_map.tscn"))
 
-	title.text = "%d. %s" % [chapter, GameManager.level_manager.get_chapter_name(chapter)]
+	title.text = "%d. %s" % [chapter, tr(GameManager.level_manager.get_chapter_name(chapter))]
 	var done := _levels_completed_in_chapter()
 	subtitle.text = (tr("%d / %d niveles") % [done, LevelManager.LEVELS_PER_CHAPTER]) + " · " + tr("Los de calavera son jefes")
 

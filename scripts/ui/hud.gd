@@ -18,7 +18,9 @@ func _ready() -> void:
 	add_to_group(GRUPO)
 
 func set_level_label(level: int, chapter_name: String) -> void:
-	level_label.text = tr("Nivel %d · %s") % [level, chapter_name]
+	# El nombre del capítulo viene del LevelManager en castellano y se
+	# traduce acá, que es el único lado donde se dibuja.
+	level_label.text = tr("Nivel %d · %s") % [level, tr(chapter_name)]
 
 func set_score(value: int) -> void:
 	score_label.text = str(value)
