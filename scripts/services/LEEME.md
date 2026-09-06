@@ -76,6 +76,38 @@ Pasos que faltan:
 6. Mostrar el precio que devuelve Google, no el de `IapData`: el precio
    real cambia por país y por promoción.
 
+## ⚠️ Al meter el plugin de AdMob, hay que volver a Play Console
+
+Esto es lo más fácil de olvidar y lo que más caro sale: **declarar "no
+recopila datos" teniendo AdMob adentro es de las causas más comunes de
+que Google baje la app**, sin aviso previo.
+
+Mientras el juego no tenga el SDK de anuncios, la declaración de
+**Seguridad de los datos** en "No recopila ni comparte datos" es
+correcta: el juego no manda nada a ningún lado. En el momento en que se
+agrega el plugin, deja de serlo.
+
+Entonces, junto con el `.aar`, en Play Console → Política → Contenido de
+la app → **Seguridad de los datos**, hay que pasar la respuesta a **Sí**
+y declarar:
+
+| Tipo de dato | Recopilado | Compartido | Necesario | Para qué |
+|---|---|---|---|---|
+| ID del dispositivo o de otro tipo | Sí | Sí | Necesaria | Publicidad + Estadísticas |
+| Ubicación aproximada | Sí | Sí | Necesaria | Publicidad |
+| Interacciones con la app | Sí | Sí | Necesaria | Publicidad + Estadísticas |
+
+Ninguno se procesa de forma efímera (Google registra las solicitudes de
+anuncios de su lado).
+
+**No** declarar registros de fallos ni diagnósticos: el proyecto no tiene
+ningún SDK de analítica ni de reporte de errores, está verificado. Si la
+página de ayuda de AdMob dice que esa versión del SDK sí los reporta,
+ahí sí hay que sumarlos — esa página es la que manda.
+
+Y declarar de más tampoco es gratis: la lista se le muestra al jugador en
+la ficha, y cuanto más larga, más invasivo parece el juego.
+
 ## Antes de publicar la versión gratis
 
 - Política de privacidad publicada y declarada en Play (**obligatoria**,
